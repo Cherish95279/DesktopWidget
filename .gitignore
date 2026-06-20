@@ -1,0 +1,22 @@
+# Python 虚拟环境
+.venv/
+venv/
+
+# Python 缓存
+__pycache__/
+*.pyc
+*.pyo
+
+# 打包目录
+dist/
+build/
+*.spec
+
+# IDE 配置
+.idea/
+.vscode/
+
+# 其他
+*.exe
+*.log
+*.db
