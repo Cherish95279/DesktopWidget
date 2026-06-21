@@ -14,6 +14,7 @@ from .solar_terms import get_next_term_info
 from .threads import ServerScanner, WeatherThread, NetSpeedThread
 from .settings_dialog import SettingsDialog
 from .tray_icon import TrayIcon
+from .updater import UpdateChecker
 
 try:
     import GPUtil
@@ -139,6 +140,12 @@ class MainWindow(QWidget):
                                self.height() - self.settings_btn.height() - 1)
         self.settings_btn.mousePressEvent = self.on_settings_click
 
+        # ---------- 更新检查 ----------
+        self.update_checker = None
+        self.has_update = False
+        self.latest_version_info = {}
+        QTimer.singleShot(3000, self.check_for_updates_auto)
+
         self.update_perf()
         self.update_clock()
         self.move_to_top_right()
@@ -191,7 +198,7 @@ class MainWindow(QWidget):
         menu.addAction(act_theme)
 
         act_update = QAction("🔄 检查更新", self)
-        act_update.triggered.connect(lambda: self.show_message("提示", "检查更新功能开发中..."))
+        act_update.triggered.connect(lambda: self.open_settings(initial_page="about"))
         menu.addAction(act_update)
 
         menu.addSeparator()
@@ -240,6 +247,31 @@ class MainWindow(QWidget):
         if reply == QMessageBox.StandardButton.Yes:
             self._exiting = True
             QApplication.quit()
+
+    # ---------- 更新检查 ----------
+    def check_for_updates_auto(self):
+        self.update_checker = UpdateChecker()
+        self.update_checker.check_finished.connect(self.on_update_check_finished)
+        self.update_checker.start()
+
+    def on_update_check_finished(self, result):
+        if result.get("has_update", False):
+            self.has_update = True
+            self.latest_version_info = result
+            self.settings_btn.setText("设置 ●")
+            self.tray.showMessage(
+                "发现新版本",
+                f"最新版本 {result['latest_version']} 已发布，点击设置查看",
+                QSystemTrayIcon.MessageIcon.Information,
+                3000
+            )
+        else:
+            self.has_update = False
+            if "●" in self.settings_btn.text():
+                self.settings_btn.setText("设置")
+
+    def get_latest_version_info(self):
+        return self.latest_version_info if self.has_update else None
 
     # ---------- 天气线程管理 ----------
     def start_weather_thread(self):

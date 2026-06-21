@@ -40,7 +40,7 @@ class TrayIcon(QSystemTrayIcon):
         self.menu.addAction(theme_action)
 
         update_action = QAction("检查更新", self)
-        update_action.triggered.connect(lambda: self.parent_window.show_message("提示", "检查更新功能开发中..."))
+        update_action.triggered.connect(lambda: self.parent_window.open_settings(initial_page="about"))
         self.menu.addAction(update_action)
 
         self.menu.addSeparator()

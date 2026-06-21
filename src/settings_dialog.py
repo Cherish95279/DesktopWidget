@@ -2,7 +2,12 @@ from PyQt6.QtWidgets import *
 from PyQt6.QtCore import *
 import requests
 import certifi
+import sys
+import tempfile
+import os
+
 from .constants import VERSION
+from .updater import UpdateChecker, Downloader
 
 class SettingsDialog(QDialog):
     def __init__(self, parent=None, initial_page="weather"):
@@ -178,6 +183,27 @@ class SettingsDialog(QDialog):
         info.setWordWrap(True)
         about_layout.addWidget(info)
 
+        # ---------- 更新区域 ----------
+        update_group = QGroupBox("更新")
+        update_layout = QVBoxLayout(update_group)
+        self.version_label = QLabel(f"当前版本：{VERSION}")
+        update_layout.addWidget(self.version_label)
+        self.latest_version_label = QLabel("最新版本：检查中...")
+        update_layout.addWidget(self.latest_version_label)
+        self.update_status_label = QLabel("")
+        update_layout.addWidget(self.update_status_label)
+        self.progress_bar = QProgressBar()
+        self.progress_bar.setVisible(False)
+        update_layout.addWidget(self.progress_bar)
+        self.check_update_btn = QPushButton("检查更新")
+        self.check_update_btn.clicked.connect(self.check_update_manually)
+        update_layout.addWidget(self.check_update_btn)
+        self.install_update_btn = QPushButton("立即重启安装")
+        self.install_update_btn.setVisible(False)
+        self.install_update_btn.clicked.connect(self.install_update)
+        update_layout.addWidget(self.install_update_btn)
+        about_layout.addWidget(update_group)
+
         about_layout.addStretch()
         self.stacked.addWidget(page_about)
 
@@ -212,6 +238,10 @@ class SettingsDialog(QDialog):
         # 加载设置
         self.load_settings()
 
+        # 存储下载相关
+        self.download_url = None
+        self.downloader = None
+
     def switch_page(self, page):
         if page == "weather":
             self.stacked.setCurrentIndex(0)
@@ -221,6 +251,12 @@ class SettingsDialog(QDialog):
             self.stacked.setCurrentIndex(1)
             self.cat_buttons[0].setChecked(False)
             self.cat_buttons[1].setChecked(True)
+            # 切换到关于页时，如果未检查且未显示最新版本，自动检查（但只检查一次）
+            if not hasattr(self, '_auto_checked'):
+                self._auto_checked = False
+            if not self._auto_checked:
+                self._auto_checked = True
+                self.check_update_manually()
 
     def on_provider_changed(self, text):
         if text == "高德":
@@ -279,3 +315,54 @@ class SettingsDialog(QDialog):
     def closeEvent(self, event):
         self.reject()
         event.accept()
+
+    # ---------- 更新相关 ----------
+    def check_update_manually(self):
+        self.update_status_label.setText("正在检查...")
+        self.check_update_btn.setEnabled(False)
+        self.checker = UpdateChecker()
+        self.checker.check_finished.connect(self.on_manual_check_finished)
+        self.checker.start()
+
+    def on_manual_check_finished(self, result):
+        self.check_update_btn.setEnabled(True)
+        if "error" in result:
+            self.update_status_label.setText(f"检查失败：{result['error']}")
+            return
+        if result.get("has_update", False):
+            self.latest_version_label.setText(f"最新版本：{result['latest_version']}")
+            self.update_status_label.setText("有新版本可用！")
+            self.check_update_btn.setVisible(False)
+            self.install_update_btn.setVisible(True)
+            self.download_url = result['download_url']
+        else:
+            self.latest_version_label.setText(f"最新版本：{VERSION} (已是最新)")
+            self.update_status_label.setText("已是最新版本")
+
+    def install_update(self):
+        if not self.download_url:
+            return
+        self.install_update_btn.setEnabled(False)
+        self.update_status_label.setText("正在下载...")
+        self.progress_bar.setVisible(True)
+        self.progress_bar.setValue(0)
+        dest = os.path.join(tempfile.gettempdir(), "DesktopWidget_new.exe")
+        self.downloader = Downloader(self.download_url, dest)
+        self.downloader.progress.connect(self.progress_bar.setValue)
+        self.downloader.finished.connect(self.on_download_finished)
+        self.downloader.start()
+
+    def on_download_finished(self, success, path_or_error):
+        self.progress_bar.setVisible(False)
+        if success:
+            self.update_status_label.setText("下载完成，准备重启安装")
+            from .updater import Updater
+            current_exe = sys.executable
+            if Updater.perform_update(path_or_error, current_exe):
+                QApplication.quit()
+            else:
+                self.update_status_label.setText("安装失败，请手动替换")
+                self.install_update_btn.setEnabled(True)
+        else:
+            self.update_status_label.setText(f"下载失败：{path_or_error}")
+            self.install_update_btn.setEnabled(True)
