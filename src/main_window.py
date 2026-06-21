@@ -48,6 +48,9 @@ class MainWindow(QWidget):
         )
         self.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
 
+        # 标记是否正在退出（用于关闭事件判断）
+        self._exiting = False
+
         # 加载图片
         self.bg = QPixmap(resource_path("bg.png"))
         self.hour = QPixmap(resource_path("Hour_Hand.png"))
@@ -235,6 +238,7 @@ class MainWindow(QWidget):
             QMessageBox.StandardButton.No
         )
         if reply == QMessageBox.StandardButton.Yes:
+            self._exiting = True
             QApplication.quit()
 
     # ---------- 天气线程管理 ----------
@@ -263,6 +267,9 @@ class MainWindow(QWidget):
 
     # ---------- 关闭事件 ----------
     def closeEvent(self, event):
+        if self._exiting:
+            event.accept()
+            return
         if self.tray.isVisible():
             self.hide()
             self.tray.showMessage(
