@@ -6,6 +6,7 @@ import sys
 import os
 import tempfile
 import subprocess
+import time
 
 import requests
 from PyQt6.QtCore import QThread, pyqtSignal
@@ -15,30 +16,68 @@ from .constants import VERSION, GITHUB_REPO
 # GitHub API 地址
 GITHUB_API_URL = f"https://api.github.com/repos/{GITHUB_REPO}/releases/latest"
 
+GITHUB_TOKEN = "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"  # 请填写你的 Token
+if GITHUB_TOKEN:
+    GITHUB_HEADERS = {
+        "Authorization": f"token {GITHUB_TOKEN}",
+        "Accept": "application/vnd.github.v3+json"
+    }
+else:
+    GITHUB_HEADERS = {
+        "Accept": "application/vnd.github.v3+json"
+    }
+
+
+def parse_version(version_str):
+    """将版本号字符串转换为整数列表，用于语义化比较"""
+    # 移除 'v' 前缀
+    if version_str.startswith('v'):
+        version_str = version_str[1:]
+    parts = version_str.split('.')
+    # 将每个部分转换为整数，不足3位补0
+    result = []
+    for p in parts:
+        try:
+            result.append(int(p))
+        except ValueError:
+            result.append(0)
+    # 补齐到3位
+    while len(result) < 3:
+        result.append(0)
+    return result
+
+
+def compare_versions(v1, v2):
+    """
+    语义化版本比较
+    返回: True 如果 v1 < v2 (即 v1 是旧版本)
+    """
+    p1 = parse_version(v1)
+    p2 = parse_version(v2)
+    return p1 < p2
+
 
 class UpdateChecker(QThread):
-    """检查更新的后台线程"""
     check_finished = pyqtSignal(dict)
 
     def run(self):
         try:
-            resp = requests.get(GITHUB_API_URL, timeout=10)
+            resp = requests.get(GITHUB_API_URL, headers=GITHUB_HEADERS, timeout=10)
             resp.raise_for_status()
             data = resp.json()
             latest_version = data.get("tag_name", "").strip()
-            # 获取附件下载链接（匹配当前平台和品牌）
             assets = data.get("assets", [])
             download_url = None
             for asset in assets:
                 name = asset.get("name", "")
-                # 匹配命名规则: DesktopWidget-{version}-win64-Cherish.exe
-                if name.startswith("DesktopWidget-") and name.endswith("-win64-Cherish.exe"):
+                if name.startswith("DesktopWidget-") and name.endswith("-win64-Cherish-Setup.exe"):
                     download_url = asset.get("browser_download_url")
                     break
             release_notes = data.get("body", "")
             has_update = False
             if latest_version and download_url:
-                if latest_version != VERSION:
+                # 使用语义化版本比较
+                if compare_versions(VERSION, latest_version):
                     has_update = True
             self.check_finished.emit({
                 "has_update": has_update,
@@ -54,9 +93,8 @@ class UpdateChecker(QThread):
 
 
 class Downloader(QThread):
-    """下载新版本的线程"""
-    progress = pyqtSignal(int)  # 0-100
-    finished = pyqtSignal(bool, str)  # (success, file_path_or_error)
+    progress = pyqtSignal(int)
+    finished = pyqtSignal(bool, str)
 
     def __init__(self, url, dest_path):
         super().__init__()
@@ -83,33 +121,17 @@ class Downloader(QThread):
 
 
 class Updater:
-    """执行更新操作（外部脚本）"""
     @staticmethod
-    def perform_update(new_exe_path: str, current_exe_path: str) -> bool:
+    def perform_update(new_setup_path: str) -> bool:
         """
-        生成并执行更新脚本
-        new_exe_path: 新下载的exe路径
-        current_exe_path: 当前运行的exe路径
+        执行更新：直接启动安装程序（让用户看到安装界面）
         """
         try:
-            # 创建临时bat文件
-            bat_script = f"""
-@echo off
-timeout /t 2 /nobreak > nul
-move /Y "{new_exe_path}" "{current_exe_path}"
-start "" "{current_exe_path}"
-del "%~f0"
-"""
-            bat_path = os.path.join(tempfile.gettempdir(), "update.bat")
-            with open(bat_path, 'w', encoding='gbk') as f:
-                f.write(bat_script)
-            # 隐藏窗口执行
             subprocess.Popen(
-                [bat_path],
-                creationflags=subprocess.CREATE_NO_WINDOW if sys.platform == 'win32' else 0,
-                shell=True
+                [new_setup_path],
+                shell=True,
+                env=os.environ.copy()
             )
             return True
         except Exception as e:
-            print("Update failed:", e)
             return False

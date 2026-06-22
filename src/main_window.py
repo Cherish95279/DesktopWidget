@@ -71,7 +71,7 @@ class MainWindow(QWidget):
         self.mem = 0
         self.local_ip = self.get_local_ip()
         self.server_ip = "扫描中..."
-        self.weather = {"weather": "--", "temp": "--", "wind": ""}
+        self.weather = {"city": "--", "weather": "--", "temp": "--", "wind": ""}
         self.down_speed = 0.0
         self.up_speed = 0.0
         self.fps = 0
@@ -183,55 +183,32 @@ class MainWindow(QWidget):
                 background: rgba(255,255,255,60);
             }
         """))
-        QTimer.singleShot(50, self.show_menu)
-
-    # ---------- 菜单 ----------
-    def show_menu(self):
-        menu = QMenu(self)
-
-        act_settings = QAction("⚙️ 设置", self)
-        act_settings.triggered.connect(self.open_settings)
-        menu.addAction(act_settings)
-
-        act_theme = QAction("🎨 主题", self)
-        act_theme.triggered.connect(lambda: self.show_message("提示", "主题功能开发中..."))
-        menu.addAction(act_theme)
-
-        act_update = QAction("🔄 检查更新", self)
-        act_update.triggered.connect(lambda: self.open_settings(initial_page="about"))
-        menu.addAction(act_update)
-
-        menu.addSeparator()
-
-        act_about = QAction("ℹ️ 关于", self)
-        act_about.triggered.connect(self.show_about)
-        menu.addAction(act_about)
-
-        menu.addSeparator()
-
-        act_exit = QAction("❌ 退出", self)
-        act_exit.triggered.connect(self.confirm_exit)
-        menu.addAction(act_exit)
-
-        pos = self.settings_btn.mapToGlobal(self.settings_btn.rect().bottomRight())
-        menu.exec(pos)
+        # 直接打开设置对话框，不再弹出菜单
+        self.open_settings()
 
     def open_settings(self, initial_page="weather"):
         try:
             dialog = SettingsDialog(self, initial_page=initial_page)
             dialog.setWindowFlags(Qt.WindowType.Window | Qt.WindowType.WindowCloseButtonHint)
             dialog.setWindowModality(Qt.WindowModality.ApplicationModal)
-            dialog.move(
-                self.x() + (self.width() - dialog.width()) // 2,
-                self.y() + (self.height() - dialog.height()) // 2
-            )
+            # 定位：距右100px，距下300px
+            screen = QApplication.primaryScreen()
+            if screen:
+                geometry = screen.availableGeometry()
+                x = geometry.right() - dialog.width() - 100
+                y = geometry.bottom() - dialog.height() - 200
+                if y < 0:
+                    y = 0
+                dialog.move(x, y)
+            else:
+                dialog.move(
+                    self.x() + (self.width() - dialog.width()) // 2,
+                    self.y() + (self.height() - dialog.height()) // 2
+                )
             if dialog.exec() == QDialog.DialogCode.Accepted:
                 self.start_weather_thread()
         except Exception as e:
             QMessageBox.critical(self, "错误", f"打开设置失败：{str(e)}")
-
-    def show_about(self):
-        self.open_settings(initial_page="about")
 
     def show_message(self, title, text):
         QMessageBox.information(self, title, text)
@@ -259,12 +236,7 @@ class MainWindow(QWidget):
             self.has_update = True
             self.latest_version_info = result
             self.settings_btn.setText("设置 ●")
-            self.tray.showMessage(
-                "发现新版本",
-                f"最新版本 {result['latest_version']} 已发布，点击设置查看",
-                QSystemTrayIcon.MessageIcon.Information,
-                3000
-            )
+            # 移除托盘消息
         else:
             self.has_update = False
             if "●" in self.settings_btn.text():
@@ -280,21 +252,22 @@ class MainWindow(QWidget):
         api_key = settings.value("api_key", "")
         refresh_minutes = int(settings.value("refresh_minutes", 120))
 
+        # 停止旧线程（如果存在）
         if self.weather_thread is not None:
-            self.weather_thread.quit()
-            self.weather_thread.wait()
+            self.weather_thread.stop()
+            # 注意：stop 内部已经 wait，这里不再等待
 
+        # 创建并启动新线程
         self.weather_thread = WeatherThread(api_url, api_key, refresh_minutes)
         self.weather_thread.data_updated.connect(self.update_weather)
         self.weather_thread.error_signal.connect(self.on_weather_error)
         self.weather_thread.start()
-
     def update_weather(self, data):
         self.weather = data
         self.update()
 
     def on_weather_error(self, err_msg):
-        self.weather = {"weather": "⚠️", "temp": "?", "wind": err_msg[:10] + "..."}
+        self.weather = {"city": "⚠️", "weather": "⚠️", "temp": "?", "wind": err_msg[:10] + "..."}
         self.update()
 
     # ---------- 关闭事件 ----------
@@ -393,16 +366,19 @@ class MainWindow(QWidget):
         painter.setFont(font)
         painter.setPen(QPen(QColor("#1c344d")))
 
+        # 天气：第一行地区名，第二行天气图标+天气+温度
+        city_text = self.weather.get('city', '--')
         weather_icon = get_weather_icon(self.weather['weather'])
-        weather_text = f"{weather_icon} {self.weather['weather']} {self.weather['temp']}℃"
+        weather_detail_text = f"{weather_icon} {self.weather['weather']} {self.weather['temp']}℃"
 
         items = [
             (20, 30, 105, 15, f"{self.local_ip}", Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter),
-            (280, 30, 94, 15, weather_text, Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter),
+            (280, 30, 94, 15, city_text, Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter),
+            (280, 48, 94, 15, weather_detail_text, Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter),
             (20, 86, 85, 43, f"↓{self.down_speed:.1f}Mb/s\n↑{self.up_speed:.1f}Mb/s", Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter),
             (314, 86, 71, 43, f"CPU{int(self.cpu)}%\nGPU{int(self.gpu)}%", Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter),
             (20, 166, 70, 50, f"刷新率: {self.fps}\n{self.screen_res}", Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter),
-            (319, 166, 60, 50, f"内存\n{int(self.mem)}%", Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter),
+            (324, 166, 60, 50, f"内存\n{int(self.mem)}%", Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter),
             (20, 235, 88, 50, f"{self.now.strftime('%Y/%m/%d')}\n  星期{['一','二','三','四','五','六','日'][self.now.weekday()]}", Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter),
             (273, 238, 97, 43, f"农历{self.lunar_text}\n{self.term_display}", Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter),
         ]

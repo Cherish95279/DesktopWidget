@@ -25,27 +25,27 @@ class TrayIcon(QSystemTrayIcon):
     def setup_menu(self):
         self.menu.clear()
 
-        show_action = QAction("显示主窗口", self)
+        show_action = QAction("🖥️ 显示主窗口", self)
         show_action.triggered.connect(self.show_window)
         self.menu.addAction(show_action)
 
         self.menu.addSeparator()
 
-        settings_action = QAction("设置", self)
+        settings_action = QAction("⚙️ 设置", self)
         settings_action.triggered.connect(self.parent_window.open_settings)
         self.menu.addAction(settings_action)
 
-        theme_action = QAction("主题", self)
-        theme_action.triggered.connect(lambda: self.parent_window.show_message("提示", "主题功能开发中..."))
+        theme_action = QAction("🎨 主题", self)
+        theme_action.triggered.connect(lambda: self.parent_window.open_settings(initial_page="theme"))
         self.menu.addAction(theme_action)
 
-        update_action = QAction("检查更新", self)
-        update_action.triggered.connect(lambda: self.parent_window.open_settings(initial_page="about"))
+        update_action = QAction("🔄 检查更新", self)
+        update_action.triggered.connect(lambda: self.parent_window.open_settings(initial_page="update"))
         self.menu.addAction(update_action)
 
         self.menu.addSeparator()
 
-        exit_action = QAction("退出", self)
+        exit_action = QAction("❌ 退出", self)
         exit_action.triggered.connect(self.quit_app)
         self.menu.addAction(exit_action)
 
@@ -70,4 +70,5 @@ class TrayIcon(QSystemTrayIcon):
             self.parent_window.activateWindow()
 
     def quit_app(self):
+        self.parent_window._exiting = True
         QApplication.quit()
