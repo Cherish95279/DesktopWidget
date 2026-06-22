@@ -19,6 +19,8 @@
 - 🖥️ **系统托盘**：支持最小化到托盘，左键单击显示/隐藏窗口，双击恢复窗口
 - 🔄 **自动更新**：启动时自动检测新版本，支持一键下载安装
 - 🚀 **开机自启动**：支持设置开机自动运行
+=======
+- 🚀 **开机自启动**：支持设置开机自动运行，默认开启
 - 🗺️ **地区选择**：支持手动选择省/市/县，天气跟随地区切换
 
 ---
@@ -44,7 +46,6 @@ pip install PyQt6 psutil requests zhdate GPUtil
 
 # 运行
 python widget.py
-
 🛠️ 技术栈
 技术	用途
 Python 3.12	编程语言
@@ -72,6 +73,13 @@ MIT License
 https://raw.githubusercontent.com/Cherish95279/DesktopWidget/main/screenshots/preview1.1.8.png
 
 text
+
+### 5. 提交
+
+拉到页面底部：
+- **Commit message** 填写：`docs: 添加 README 说明文档`
+- 确保选择 **`Commit directly to the main branch`**
+- 点击绿色的 **`Commit new file`** 按钮
 
 ---
 
@@ -131,4 +139,5 @@ README.md 已更新
 
 现在用户可以通过 https://github.com/Cherish95279/DesktopWidget/releases 下载 v1.1.8 版本了。😊
 
+=======
 
