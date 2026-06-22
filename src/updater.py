@@ -16,7 +16,7 @@ from .constants import VERSION, GITHUB_REPO
 # GitHub API 地址
 GITHUB_API_URL = f"https://api.github.com/repos/{GITHUB_REPO}/releases/latest"
 
-GITHUB_TOKEN = "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"  # 请填写你的 Token
+GITHUB_TOKEN = ""  # 请填写你的 Token
 if GITHUB_TOKEN:
     GITHUB_HEADERS = {
         "Authorization": f"token {GITHUB_TOKEN}",
