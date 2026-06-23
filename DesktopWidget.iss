@@ -1,5 +1,5 @@
 #define MyAppName "DesktopWidget"
-#define MyAppVersion "1.1.6"
+#define MyAppVersion "1.1.9"
 #define MyAppPublisher "Cherish"
 #define MyAppExeName "DesktopWidget.exe"
 #define MyAppId "{{8E2B3C4D-5F6A-7B8C-9D0E-1F2A3B4C5D6E}}"
@@ -13,6 +13,7 @@ DefaultDirName={localappdata}\Programs\{#MyAppName}
 DefaultGroupName={#MyAppName}
 OutputDir=dist
 OutputBaseFilename=DesktopWidget-v{#MyAppVersion}-win64-Cherish-Setup
+SetupIconFile=icons\app.ico
 Compression=lzma
 SolidCompression=yes
 PrivilegesRequired=lowest
@@ -21,11 +22,18 @@ DisableProgramGroupPage=yes
 DisableWelcomePage=no
 UninstallDisplayIcon={app}\{#MyAppExeName}
 
+AppPublisherURL=https://github.com/Cherish95279
+AppSupportURL=https://github.com/Cherish95279/DesktopWidget/issues
+AppUpdatesURL=https://github.com/Cherish95279/DesktopWidget/releases
+VersionInfoDescription=珍爱桌面小工具安装程序
+VersionInfoCopyright=Copyright (C) 2026 Cherish
+VersionInfoCompany=Cherish
+VersionInfoTextVersion=1.1.9
+
 [Files]
 Source: "dist\DesktopWidget\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs
 
 [Icons]
-; 只给当前用户创建快捷方式（不需要管理员权限）
 Name: "{userdesktop}\{#MyAppName}"; Filename: "{app}\{#MyAppExeName}"
 Name: "{userstartmenu}\{#MyAppName}"; Filename: "{app}\{#MyAppExeName}"
 

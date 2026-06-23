@@ -183,15 +183,13 @@ class MainWindow(QWidget):
                 background: rgba(255,255,255,60);
             }
         """))
-        # 直接打开设置对话框，不再弹出菜单
         self.open_settings()
 
-    def open_settings(self, initial_page="weather"):
+    def open_settings(self, initial_page="general"):
         try:
             dialog = SettingsDialog(self, initial_page=initial_page)
             dialog.setWindowFlags(Qt.WindowType.Window | Qt.WindowType.WindowCloseButtonHint)
             dialog.setWindowModality(Qt.WindowModality.ApplicationModal)
-            # 定位：距右100px，距下300px
             screen = QApplication.primaryScreen()
             if screen:
                 geometry = screen.availableGeometry()
@@ -236,7 +234,6 @@ class MainWindow(QWidget):
             self.has_update = True
             self.latest_version_info = result
             self.settings_btn.setText("设置 ●")
-            # 移除托盘消息
         else:
             self.has_update = False
             if "●" in self.settings_btn.text():
@@ -252,16 +249,14 @@ class MainWindow(QWidget):
         api_key = settings.value("api_key", "")
         refresh_minutes = int(settings.value("refresh_minutes", 120))
 
-        # 停止旧线程（如果存在）
         if self.weather_thread is not None:
             self.weather_thread.stop()
-            # 注意：stop 内部已经 wait，这里不再等待
 
-        # 创建并启动新线程
         self.weather_thread = WeatherThread(api_url, api_key, refresh_minutes)
         self.weather_thread.data_updated.connect(self.update_weather)
         self.weather_thread.error_signal.connect(self.on_weather_error)
         self.weather_thread.start()
+
     def update_weather(self, data):
         self.weather = data
         self.update()
@@ -360,13 +355,16 @@ class MainWindow(QWidget):
         # 1. 背景
         painter.drawPixmap(0, 0, self.bg)
 
-        # 2. 文字
-        font = QFont()
-        font.setPixelSize(12)
-        painter.setFont(font)
-        painter.setPen(QPen(QColor("#1c344d")))
+        # 2. 文字（从 QSettings 读取字体设置）
+        settings = QSettings("MyDesktopApp", "WeatherSettings")
+        font_family = settings.value("font_family", "Microsoft YaHei")
+        font_size = int(settings.value("font_size", 10))
+        font_color = settings.value("font_color", "#1c344d")
 
-        # 天气：第一行地区名，第二行天气图标+天气+温度
+        font = QFont(font_family, font_size)
+        painter.setFont(font)
+        painter.setPen(QPen(QColor(font_color)))
+
         city_text = self.weather.get('city', '--')
         weather_icon = get_weather_icon(self.weather['weather'])
         weather_detail_text = f"{weather_icon} {self.weather['weather']} {self.weather['temp']}℃"
@@ -415,9 +413,11 @@ class MainWindow(QWidget):
     def mousePressEvent(self, e):
         if e.button() == Qt.MouseButton.LeftButton:
             self.drag_pos = e.globalPosition().toPoint()
+
     def mouseMoveEvent(self, e):
         if self.drag_pos:
             self.move(self.pos() + e.globalPosition().toPoint() - self.drag_pos)
             self.drag_pos = e.globalPosition().toPoint()
+
     def mouseReleaseEvent(self, e):
         self.drag_pos = None

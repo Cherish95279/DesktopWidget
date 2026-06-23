@@ -20,3 +20,6 @@ build/
 *.exe
 *.log
 *.db
+
+# 本地打包提示文件（不上传）
+python build.py v*

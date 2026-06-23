@@ -1,6 +1,6 @@
 from PyQt6.QtWidgets import *
 from PyQt6.QtCore import *
-from PyQt6.QtGui import QIcon
+from PyQt6.QtGui import QIcon, QFontDatabase, QColor
 import requests
 import certifi
 import sys
@@ -12,47 +12,11 @@ from .constants import VERSION
 from .updater import UpdateChecker, Downloader, Updater
 from .utils import resource_path
 from .region_data import REGIONS
-
-
-def set_autostart(enabled: bool):
-    """设置开机自启动"""
-    key_path = r"Software\Microsoft\Windows\CurrentVersion\Run"
-    app_name = "DesktopWidget"
-    exe_path = sys.executable
-    try:
-        key = winreg.OpenKey(winreg.HKEY_CURRENT_USER, key_path, 0, winreg.KEY_SET_VALUE)
-        if enabled:
-            winreg.SetValueEx(key, app_name, 0, winreg.REG_SZ, f'"{exe_path}"')
-        else:
-            try:
-                winreg.DeleteValue(key, app_name)
-            except FileNotFoundError:
-                pass
-        winreg.CloseKey(key)
-        return True
-    except PermissionError:
-        return False
-    except OSError:
-        return False
-
-
-def get_autostart_status() -> bool:
-    """获取开机自启动状态"""
-    key_path = r"Software\Microsoft\Windows\CurrentVersion\Run"
-    app_name = "DesktopWidget"
-    try:
-        key = winreg.OpenKey(winreg.HKEY_CURRENT_USER, key_path, 0, winreg.KEY_READ)
-        winreg.QueryValueEx(key, app_name)
-        winreg.CloseKey(key)
-        return True
-    except FileNotFoundError:
-        return False
-    except PermissionError:
-        return False
+from .autostart import set_autostart, get_autostart_status
 
 
 class SettingsDialog(QDialog):
-    def __init__(self, parent=None, initial_page="weather"):
+    def __init__(self, parent=None, initial_page="general"):
         super().__init__(parent)
         self.setWindowTitle("设置")
         self.setFixedSize(400, 300)
@@ -65,6 +29,8 @@ class SettingsDialog(QDialog):
         self.has_update = False
         self.latest_version_info = {}
         self.checker = None
+        self._token_changed = False
+        self._current_color = "#1c344d"
 
         main_layout = QHBoxLayout(self)
         main_layout.setContentsMargins(0, 0, 0, 0)
@@ -120,7 +86,7 @@ class SettingsDialog(QDialog):
         general_layout.setContentsMargins(15, 20, 15, 15)
         general_layout.setSpacing(10)
 
-        # ---------- 开机自启动（默认勾选） ----------
+        # ---------- 开机自启动 ----------
         self.autostart_widget = QWidget(self)
         autostart_layout = QHBoxLayout(self.autostart_widget)
         autostart_layout.setContentsMargins(0, 0, 0, 0)
@@ -139,14 +105,53 @@ class SettingsDialog(QDialog):
         self.autostart_widget.setCursor(Qt.CursorShape.PointingHandCursor)
         self.autostart_widget.mousePressEvent = self.on_autostart_widget_clicked
 
-        # 强制默认勾选，并写入注册表
-        self.autostart_checked = True
-        set_autostart(True)
+        self.autostart_checked = get_autostart_status()
         self.update_autostart_display()
 
         general_layout.addWidget(self.autostart_widget)
 
-        # 天气显示地区
+        # ---------- 字体设置 ----------
+        font_label = QLabel("字体设置")
+        font_label.setStyleSheet("font-weight: bold; margin-top: 10px;")
+        general_layout.addWidget(font_label)
+
+        font_layout = QHBoxLayout()
+        font_layout.setSpacing(10)
+
+        # 字体下拉框
+        self.font_combo = QComboBox()
+        self.font_combo.setMinimumWidth(100)
+        font_families = QFontDatabase.families()
+        self.font_combo.addItems(font_families)
+        font_layout.addWidget(self.font_combo)
+
+        # 字号下拉框
+        self.size_combo = QComboBox()
+        self.size_combo.setMinimumWidth(50)
+        for size in range(8, 16):
+            self.size_combo.addItem(str(size))
+        font_layout.addWidget(self.size_combo)
+
+        # 颜色按钮（显示当前颜色）
+        self.color_btn = QPushButton()
+        self.color_btn.setFixedSize(30, 28)
+        self.color_btn.setStyleSheet(f"""
+            QPushButton {{
+                background-color: {self._current_color};
+                border: 1px solid #999;
+                border-radius: 4px;
+            }}
+            QPushButton:hover {{
+                border: 2px solid #666;
+            }}
+        """)
+        self.color_btn.clicked.connect(self.choose_color)
+        font_layout.addWidget(self.color_btn)
+        font_layout.addStretch()
+
+        general_layout.addLayout(font_layout)
+
+        # ---------- 天气显示地区 ----------
         region_label = QLabel("天气显示地区")
         region_label.setStyleSheet("font-weight: bold; margin-top: 10px;")
         general_layout.addWidget(region_label)
@@ -262,11 +267,53 @@ class SettingsDialog(QDialog):
         self.check_update_btn.clicked.connect(self.check_update_manually)
         update_layout.addWidget(self.check_update_btn)
 
-        self.install_update_btn = QPushButton("立即重启安装")
+        self.install_update_btn = QPushButton("检查更新")
         self.install_update_btn.setVisible(False)
         self.install_update_btn.setMinimumHeight(28)
         self.install_update_btn.clicked.connect(self.install_update)
         update_layout.addWidget(self.install_update_btn)
+
+        # ---------- Token 区域 ----------
+        token_label = QLabel("GitHub Token")
+        token_label.setStyleSheet("font-size: 12px; color: #333;")
+        update_layout.addWidget(token_label)
+
+        token_input_layout = QHBoxLayout()
+        self.token_edit = QLineEdit()
+        self.token_edit.setPlaceholderText("GitHub Token（可选）")
+        self.token_edit.setEchoMode(QLineEdit.EchoMode.Password)
+        self.token_edit.setMinimumHeight(28)
+        self.token_edit.textChanged.connect(self.on_token_text_changed)
+        token_input_layout.addWidget(self.token_edit)
+
+        self.token_visibility_btn = QPushButton("👁")
+        self.token_visibility_btn.setFixedSize(28, 28)
+        self.token_visibility_btn.setCheckable(True)
+        self.token_visibility_btn.setToolTip("显示/隐藏 Token")
+        self.token_visibility_btn.clicked.connect(self.toggle_token_visibility)
+        self.token_visibility_btn.setStyleSheet("""
+            QPushButton {
+                border: 1px solid #ccc;
+                border-radius: 4px;
+                background: white;
+                font-size: 14px;
+            }
+            QPushButton:hover {
+                background: #f0f0f0;
+            }
+        """)
+        token_input_layout.addWidget(self.token_visibility_btn)
+        update_layout.addLayout(token_input_layout)
+
+        token_btn_layout = QHBoxLayout()
+        token_btn_layout.addStretch()
+        self.save_token_btn = QPushButton("保存 Token")
+        self.save_token_btn.setMinimumHeight(28)
+        self.save_token_btn.setStyleSheet("font-size: 12px; color: #333;")
+        self.save_token_btn.clicked.connect(self.save_token)
+        self.save_token_btn.setFixedWidth(self.save_token_btn.fontMetrics().boundingRect("保存 Token").width() + 24)
+        token_btn_layout.addWidget(self.save_token_btn)
+        update_layout.addLayout(token_btn_layout)
 
         update_layout.addStretch()
         self.stacked.addWidget(page_update)
@@ -328,7 +375,14 @@ class SettingsDialog(QDialog):
         self.regions_data = REGIONS
         self.load_regions_data()
 
+        # 加载设置（包括 Token、字体设置）
         self.load_settings()
+        self.load_token()
+        self.load_font_settings()
+
+        # ---------- 实时生效：字体/字号/颜色修改立即更新 ----------
+        self.font_combo.currentTextChanged.connect(self.apply_font_settings_to_mainwindow)
+        self.size_combo.currentTextChanged.connect(self.apply_font_settings_to_mainwindow)
 
         page_index = {"general": 0, "weather": 1, "theme": 2, "update": 3, "about": 4}.get(initial_page, 0)
         self.switch_page(page_index)
@@ -336,9 +390,96 @@ class SettingsDialog(QDialog):
         self._auto_checked = False
         self.update_red_dot()
 
+    # ---------- 字体设置 ----------
+    def load_font_settings(self):
+        settings = QSettings("MyDesktopApp", "WeatherSettings")
+        font_family = settings.value("font_family", "Microsoft YaHei")
+        font_size = int(settings.value("font_size", 10))
+        font_color = settings.value("font_color", "#1c344d")
+
+        idx = self.font_combo.findText(font_family)
+        if idx >= 0:
+            self.font_combo.setCurrentIndex(idx)
+
+        idx = self.size_combo.findText(str(font_size))
+        if idx >= 0:
+            self.size_combo.setCurrentIndex(idx)
+
+        self._current_color = font_color
+        self.update_color_button()
+
+    def update_color_button(self):
+        self.color_btn.setStyleSheet(f"""
+            QPushButton {{
+                background-color: {self._current_color};
+                border: 1px solid #999;
+                border-radius: 4px;
+            }}
+            QPushButton:hover {{
+                border: 2px solid #666;
+            }}
+        """)
+
+    def choose_color(self):
+        """颜色选择（使用实例化 QColorDialog，避免闪退）"""
+        try:
+            dialog = QColorDialog(self)
+            dialog.setCurrentColor(QColor(self._current_color))
+            dialog.setWindowTitle("选择文字颜色")
+            if dialog.exec() == QDialog.DialogCode.Accepted:
+                color = dialog.selectedColor()
+                if color.isValid():
+                    self._current_color = color.name()
+                    self.update_color_button()
+                    # 延迟刷新，避免在对话框事件循环中触发重绘导致闪退
+                    QTimer.singleShot(0, self.apply_font_settings_to_mainwindow)
+        except Exception as e:
+            print(f"颜色选择异常: {e}")
+            QMessageBox.warning(self, "错误", f"颜色选择失败: {e}")
+
+    def apply_font_settings_to_mainwindow(self):
+        """保存字体设置并立即刷新主窗口"""
+        settings = QSettings("MyDesktopApp", "WeatherSettings")
+        settings.setValue("font_family", self.font_combo.currentText())
+        settings.setValue("font_size", int(self.size_combo.currentText()))
+        settings.setValue("font_color", self._current_color)
+        # 刷新主窗口
+        parent = self.parent()
+        if parent and hasattr(parent, 'update'):
+            parent.update()
+
+    # ---------- Token 相关 ----------
+    def load_token(self):
+        settings = QSettings("MyDesktopApp", "WeatherSettings")
+        token = settings.value("github_token", "")
+        if token:
+            self.token_edit.setText(token)
+
+    def save_token(self):
+        token = self.token_edit.text().strip()
+        settings = QSettings("MyDesktopApp", "WeatherSettings")
+        if token:
+            settings.setValue("github_token", token)
+            self.update_status_label.setText("Token 已保存")
+            self.check_update_manually()
+        else:
+            settings.remove("github_token")
+            self.update_status_label.setText("Token 已清除")
+            self.check_update_manually()
+
+    def on_token_text_changed(self):
+        pass
+
+    def toggle_token_visibility(self):
+        if self.token_visibility_btn.isChecked():
+            self.token_edit.setEchoMode(QLineEdit.EchoMode.Normal)
+            self.token_visibility_btn.setText("🙈")
+        else:
+            self.token_edit.setEchoMode(QLineEdit.EchoMode.Password)
+            self.token_visibility_btn.setText("👁")
+
     # ---------- 开机自启动 ----------
     def update_autostart_display(self):
-        """只更新图标，文字颜色永远不变"""
         if self.autostart_checked:
             self.autostart_icon.setText("✅")
         else:
@@ -458,6 +599,11 @@ class SettingsDialog(QDialog):
         settings.setValue("api_key", key)
         settings.setValue("refresh_minutes", freq)
 
+        # 字体设置已在实时保存中写入，但为了统一，再保存一次（无副作用）
+        settings.setValue("font_family", self.font_combo.currentText())
+        settings.setValue("font_size", int(self.size_combo.currentText()))
+        settings.setValue("font_color", self._current_color)
+
         province = self.province_combo.currentText()
         city = self.city_combo.currentText()
         county = self.county_combo.currentText()
@@ -500,12 +646,13 @@ class SettingsDialog(QDialog):
             self.update_status_label.setText("安装包已下载")
             self.check_update_btn.setVisible(False)
             self.install_update_btn.setVisible(True)
-            self.install_update_btn.setText("继续安装")
+            self.install_update_btn.setText("检查更新")
             self.install_update_btn.setEnabled(True)
             return
 
         self.update_status_label.setText("正在检查...")
         self.check_update_btn.setEnabled(False)
+        self.install_update_btn.setVisible(False)
         self.checker = UpdateChecker()
         self.checker.check_finished.connect(self.on_manual_check_finished)
         self.checker.start()
@@ -514,13 +661,16 @@ class SettingsDialog(QDialog):
         self.check_update_btn.setEnabled(True)
         if "error" in result:
             self.update_status_label.setText(f"检查失败：{result['error']}")
+            if result.get("token_invalid", False):
+                self.token_edit.clear()
+                self.update_status_label.setText("Token 已失效，已自动清除")
             return
         if result.get("has_update", False):
             self.latest_version_label.setText(f"最新版本：{result['latest_version']}")
             self.update_status_label.setText("有新版本可用！")
             self.check_update_btn.setVisible(False)
             self.install_update_btn.setVisible(True)
-            self.install_update_btn.setText("立即重启安装")
+            self.install_update_btn.setText("检查更新")
             self.download_url = result['download_url']
             self.has_update = True
             self.update_red_dot()
@@ -568,7 +718,7 @@ class SettingsDialog(QDialog):
             self.downloaded_setup_path = path_or_error
             self.update_status_label.setText("下载完成")
             self.install_update_btn.setEnabled(True)
-            self.install_update_btn.setText("立即安装")
+            self.install_update_btn.setText("检查更新")
 
             reply = QMessageBox.question(
                 self,
@@ -590,9 +740,9 @@ class SettingsDialog(QDialog):
                 self.update_status_label.setText("更新已取消，下次启动或点击'继续安装'可继续")
                 self.install_update_btn.setEnabled(True)
                 self.install_update_btn.setVisible(True)
-                self.install_update_btn.setText("继续安装")
+                self.install_update_btn.setText("检查更新")
                 self.check_update_btn.setVisible(False)
         else:
             self.update_status_label.setText(f"下载失败：{path_or_error}")
             self.install_update_btn.setEnabled(True)
-            self.install_update_btn.setText("重试下载")
+            self.install_update_btn.setText("检查更新")

@@ -9,52 +9,45 @@ import subprocess
 import time
 
 import requests
-from PyQt6.QtCore import QThread, pyqtSignal
+from PyQt6.QtCore import QThread, pyqtSignal, QSettings
 
 from .constants import VERSION, GITHUB_REPO
 
-# GitHub API 地址
-GITHUB_API_URL = f"https://api.github.com/repos/{GITHUB_REPO}/releases/latest"
 
-GITHUB_TOKEN = ""  # 请填写你的 Token
-if GITHUB_TOKEN:
-    GITHUB_HEADERS = {
-        "Authorization": f"token {GITHUB_TOKEN}",
-        "Accept": "application/vnd.github.v3+json"
-    }
-else:
-    GITHUB_HEADERS = {
-        "Accept": "application/vnd.github.v3+json"
-    }
+def _get_github_headers():
+    """从 QSettings 读取 Token，构造请求头"""
+    settings = QSettings("MyDesktopApp", "WeatherSettings")
+    token = settings.value("github_token", "").strip()
+    if token:
+        return {
+            "Authorization": f"token {token}",
+            "Accept": "application/vnd.github.v3+json"
+        }
+    else:
+        return {
+            "Accept": "application/vnd.github.v3+json"
+        }
 
 
 def parse_version(version_str):
     """将版本号字符串转换为整数列表，用于语义化比较"""
-    # 移除 'v' 前缀
     if version_str.startswith('v'):
         version_str = version_str[1:]
     parts = version_str.split('.')
-    # 将每个部分转换为整数，不足3位补0
     result = []
     for p in parts:
         try:
             result.append(int(p))
         except ValueError:
             result.append(0)
-    # 补齐到3位
     while len(result) < 3:
         result.append(0)
     return result
 
 
 def compare_versions(v1, v2):
-    """
-    语义化版本比较
-    返回: True 如果 v1 < v2 (即 v1 是旧版本)
-    """
-    p1 = parse_version(v1)
-    p2 = parse_version(v2)
-    return p1 < p2
+    """语义化版本比较，返回 True 如果 v1 < v2"""
+    return parse_version(v1) < parse_version(v2)
 
 
 class UpdateChecker(QThread):
@@ -62,7 +55,30 @@ class UpdateChecker(QThread):
 
     def run(self):
         try:
-            resp = requests.get(GITHUB_API_URL, headers=GITHUB_HEADERS, timeout=10)
+            headers = _get_github_headers()
+            resp = requests.get(
+                f"https://api.github.com/repos/{GITHUB_REPO}/releases/latest",
+                headers=headers,
+                timeout=10
+            )
+            # 如果返回 401，说明 Token 无效，清除保存的 Token 并重试
+            if resp.status_code == 401:
+                settings = QSettings("MyDesktopApp", "WeatherSettings")
+                settings.remove("github_token")
+                # 使用未认证请求重试
+                resp = requests.get(
+                    f"https://api.github.com/repos/{GITHUB_REPO}/releases/latest",
+                    headers={"Accept": "application/vnd.github.v3+json"},
+                    timeout=10
+                )
+                resp.raise_for_status()
+                self.check_finished.emit({
+                    "has_update": False,
+                    "error": "Token 已失效，已清除，请重新填写",
+                    "token_invalid": True
+                })
+                return
+
             resp.raise_for_status()
             data = resp.json()
             latest_version = data.get("tag_name", "").strip()
@@ -76,7 +92,6 @@ class UpdateChecker(QThread):
             release_notes = data.get("body", "")
             has_update = False
             if latest_version and download_url:
-                # 使用语义化版本比较
                 if compare_versions(VERSION, latest_version):
                     has_update = True
             self.check_finished.emit({
