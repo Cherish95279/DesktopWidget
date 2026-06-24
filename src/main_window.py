@@ -8,7 +8,7 @@ from PyQt6.QtCore import *
 from PyQt6.QtGui import *
 import psutil
 
-from .constants import ORIG_W, ORIG_H, CENTER_X, CENTER_Y, VERSION
+from .constants import ORIG_W, ORIG_H, CENTER_X, CENTER_Y, VERSION, DEFAULT_LAYOUT
 from .utils import resource_path, get_weather_icon
 from .solar_terms import get_next_term_info
 from .threads import ServerScanner, WeatherThread, NetSpeedThread
@@ -41,7 +41,6 @@ if sys.platform == 'win32' and getattr(sys, 'frozen', False):
 class MainWindow(QWidget):
     def __init__(self):
         super().__init__()
-        # 窗口标志：无边框、置底、不显示任务栏图标（Tool）
         self.setWindowFlags(
             Qt.WindowType.FramelessWindowHint |
             Qt.WindowType.WindowStaysOnBottomHint |
@@ -49,8 +48,8 @@ class MainWindow(QWidget):
         )
         self.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
 
-        # 标记是否正在退出（用于关闭事件判断）
         self._exiting = False
+        self.settings_dialog = None
 
         # 加载图片
         self.bg = QPixmap(resource_path("bg.png"))
@@ -61,7 +60,6 @@ class MainWindow(QWidget):
         if any(p.isNull() for p in [self.bg, self.hour, self.minute, self.second, self.center_dot]):
             sys.exit(1)
 
-        # 窗口固定大小
         self.setFixedSize(400, 297)
         self.drag_pos = None
 
@@ -78,6 +76,8 @@ class MainWindow(QWidget):
         self.now = datetime.now()
         self.lunar_text = ""
         self.term_display = ""
+        self.sunrise_time = "--:--"
+        self.sunset_time = "--:--"
 
         screen = QApplication.primaryScreen()
         if screen:
@@ -115,11 +115,9 @@ class MainWindow(QWidget):
         self.scanner.ip_found.connect(lambda ip: setattr(self, 'server_ip', ip))
         self.scanner.start()
 
-        # ---------- 托盘图标 ----------
         self.tray = TrayIcon(self)
         self.tray.show()
 
-        # ---------- “设置”文字按钮 ----------
         self.settings_btn = QLabel("设置", self)
         self.settings_btn.setStyleSheet("""
             QLabel {
@@ -140,7 +138,6 @@ class MainWindow(QWidget):
                                self.height() - self.settings_btn.height() - 1)
         self.settings_btn.mousePressEvent = self.on_settings_click
 
-        # ---------- 更新检查 ----------
         self.update_checker = None
         self.has_update = False
         self.latest_version_info = {}
@@ -186,10 +183,19 @@ class MainWindow(QWidget):
         self.open_settings()
 
     def open_settings(self, initial_page="general"):
+        if self.settings_dialog is not None and self.settings_dialog.isVisible():
+            self.settings_dialog.raise_()
+            self.settings_dialog.activateWindow()
+            if hasattr(self.settings_dialog, 'switch_page'):
+                page_index = {"general": 0, "display": 1, "weather": 2, "theme": 3, "update": 4, "about": 5}.get(initial_page, 0)
+                self.settings_dialog.switch_page(page_index)
+            return
+
         try:
             dialog = SettingsDialog(self, initial_page=initial_page)
             dialog.setWindowFlags(Qt.WindowType.Window | Qt.WindowType.WindowCloseButtonHint)
             dialog.setWindowModality(Qt.WindowModality.ApplicationModal)
+
             screen = QApplication.primaryScreen()
             if screen:
                 geometry = screen.availableGeometry()
@@ -198,15 +204,15 @@ class MainWindow(QWidget):
                 if y < 0:
                     y = 0
                 dialog.move(x, y)
-            else:
-                dialog.move(
-                    self.x() + (self.width() - dialog.width()) // 2,
-                    self.y() + (self.height() - dialog.height()) // 2
-                )
-            if dialog.exec() == QDialog.DialogCode.Accepted:
-                self.start_weather_thread()
+
+            self.settings_dialog = dialog
+            dialog.finished.connect(self._on_settings_closed)
+            dialog.exec()
         except Exception as e:
             QMessageBox.critical(self, "错误", f"打开设置失败：{str(e)}")
+
+    def _on_settings_closed(self):
+        self.settings_dialog = None
 
     def show_message(self, title, text):
         QMessageBox.information(self, title, text)
@@ -233,11 +239,8 @@ class MainWindow(QWidget):
         if result.get("has_update", False):
             self.has_update = True
             self.latest_version_info = result
-            self.settings_btn.setText("设置 ●")
         else:
             self.has_update = False
-            if "●" in self.settings_btn.text():
-                self.settings_btn.setText("设置")
 
     def get_latest_version_info(self):
         return self.latest_version_info if self.has_update else None
@@ -259,10 +262,14 @@ class MainWindow(QWidget):
 
     def update_weather(self, data):
         self.weather = data
+        self.sunrise_time = data.get('sunrise', '--:--')
+        self.sunset_time = data.get('sunset', '--:--')
         self.update()
 
     def on_weather_error(self, err_msg):
         self.weather = {"city": "⚠️", "weather": "⚠️", "temp": "?", "wind": err_msg[:10] + "..."}
+        self.sunrise_time = "--:--"
+        self.sunset_time = "--:--"
         self.update()
 
     # ---------- 关闭事件 ----------
@@ -319,7 +326,7 @@ class MainWindow(QWidget):
         if LUNAR_AVAILABLE:
             try:
                 lunar = ZhDate.from_datetime(self.now)
-                self.lunar_text = f"{lunar.lunar_month}月{lunar.lunar_day}日"
+                self.lunar_text = f"农历{lunar.lunar_month}月{lunar.lunar_day}日"
             except:
                 self.lunar_text = "农历错误"
         else:
@@ -332,6 +339,7 @@ class MainWindow(QWidget):
             self.term_display = f"离{next_name}还有{days}天"
         else:
             self.term_display = ""
+
         self.update()
 
     def update_fps(self):
@@ -365,24 +373,86 @@ class MainWindow(QWidget):
         painter.setFont(font)
         painter.setPen(QPen(QColor(font_color)))
 
+        # ===== 从 QSettings 读取布局配置 =====
+        slot_values = {}
+        slot_keys = ["slot_1", "slot_2", "slot_3", "slot_4", "slot_5", "slot_6", "slot_7", "slot_8"]
+        for key in slot_keys:
+            default_val = DEFAULT_LAYOUT.get(key, "empty")
+            slot_values[key] = settings.value(key, default_val)
+
+        # ===== 准备各内容的显示文本 =====
+        ip_text = f"{self.local_ip}"
         city_text = self.weather.get('city', '--')
         weather_icon = get_weather_icon(self.weather['weather'])
-        weather_detail_text = f"{weather_icon} {self.weather['weather']} {self.weather['temp']}℃"
+        weather_text = f"{weather_icon} {self.weather['weather']} {self.weather['temp']}℃"
+        netspeed_text = f"↓{self.down_speed:.1f}Mb/s\n↑{self.up_speed:.1f}Mb/s"
+        cpu_text = f"CPU{int(self.cpu)}%"
+        gpu_text = f"GPU{int(self.gpu)}%"
+        resolution_text = f"{self.screen_res}"
+        refresh_rate_text = f"{self.fps}Hz"
+        memory_text = f"内存\n{int(self.mem)}%"
+        date_text = f"{self.now.strftime('%Y/%m/%d')}\n  星期{['一','二','三','四','五','六','日'][self.now.weekday()]}"
+        lunar_text = f"{self.lunar_text}\n{self.term_display}"
+        sunrise_line1 = f"🌅 {self.sunrise_time}"
+        sunrise_line2 = f"🌄 {self.sunset_time}"
 
-        items = [
-            (20, 30, 105, 15, f"{self.local_ip}", Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter),
-            (280, 30, 94, 15, city_text, Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter),
-            (280, 48, 94, 15, weather_detail_text, Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter),
-            (20, 86, 85, 43, f"↓{self.down_speed:.1f}Mb/s\n↑{self.up_speed:.1f}Mb/s", Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter),
-            (314, 86, 71, 43, f"CPU{int(self.cpu)}%\nGPU{int(self.gpu)}%", Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter),
-            (20, 166, 70, 50, f"刷新率: {self.fps}\n{self.screen_res}", Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter),
-            (324, 166, 60, 50, f"内存\n{int(self.mem)}%", Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter),
-            (20, 235, 88, 50, f"{self.now.strftime('%Y/%m/%d')}\n  星期{['一','二','三','四','五','六','日'][self.now.weekday()]}", Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter),
-            (273, 238, 97, 43, f"农历{self.lunar_text}\n{self.term_display}", Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter),
-        ]
+        # ===== 内容文本映射（单行） =====
+        content_text_map = {
+            "ip": ip_text,
+            "weather": weather_text,
+            "netspeed": netspeed_text,
+            "cpu": cpu_text,
+            "gpu": gpu_text,
+            "resolution": resolution_text,
+            "refresh_rate": refresh_rate_text,
+            "memory": memory_text,
+            "date": date_text,
+            "lunar": lunar_text,
+            "empty": "",
+        }
 
-        for x, y, w, h, text, align in items:
-            painter.drawText(x, y, w, h, align, text)
+        # ===== 多行内容映射 =====
+        multiline_map = {
+            "weather": [city_text, weather_text],
+            "lunar": [self.lunar_text, self.term_display],
+            "date": [self.now.strftime('%Y/%m/%d'), f"星期{['一','二','三','四','五','六','日'][self.now.weekday()]}"],
+            "netspeed": [f"↓{self.down_speed:.1f}Mb/s", f"↑{self.up_speed:.1f}Mb/s"],
+            "memory": ["内存", f"{int(self.mem)}%"],
+            "sunrise": [sunrise_line1, sunrise_line2],   # 新增日出落两行
+        }
+
+        # ===== 8个槽位固定坐标 =====
+        slot_position_map = {
+            "slot_1": (20, 30, 105, 43),   # 高度改为43，与左二一致
+            "slot_2": (20, 86, 85, 43),
+            "slot_3": (20, 166, 70, 50),
+            "slot_4": (20, 235, 88, 50),
+            "slot_5": (280, 30, 94, 43),   # 高度改为43，与右二一致
+            "slot_6": (314, 86, 71, 43),
+            "slot_7": (324, 166, 60, 50),
+            "slot_8": (273, 238, 97, 43),
+        }
+
+        # ===== 遍历所有槽位，根据配置绘制 =====
+        for slot_key, (x, y, w, h) in slot_position_map.items():
+            configured_key = slot_values.get(slot_key, "empty")
+            if configured_key == "empty":
+                continue
+
+            if configured_key in multiline_map:
+                lines = multiline_map[configured_key]
+                line_height = h // 2
+                for idx, line in enumerate(lines):
+                    if line:
+                        painter.drawText(x, y + idx * line_height, w, line_height,
+                                         Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter,
+                                         line)
+            elif configured_key in content_text_map:
+                text = content_text_map[configured_key]
+                if text:
+                    painter.drawText(x, y, w, h,
+                                     Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter,
+                                     text)
 
         # 3. 指针
         cx = CENTER_X
@@ -409,7 +479,6 @@ class MainWindow(QWidget):
         painter.drawPixmap(-pixmap.width()//2, -pixmap.height()//2, pixmap)
         painter.restore()
 
-    # ---------- 鼠标拖拽 ----------
     def mousePressEvent(self, e):
         if e.button() == Qt.MouseButton.LeftButton:
             self.drag_pos = e.globalPosition().toPoint()

@@ -1,10 +1,12 @@
 import socket
-from datetime import datetime
+from datetime import datetime, timedelta, timezone
 from PyQt6.QtCore import QThread, pyqtSignal, QSettings
 from concurrent.futures import ThreadPoolExecutor, as_completed
 import requests
 import certifi
 import psutil
+from astral import LocationInfo
+from astral.sun import sun
 from .constants import AMAP_KEY
 
 
@@ -52,13 +54,43 @@ class WeatherThread(QThread):
         self.api_url = api_url
         self.api_key = api_key
         self.refresh_minutes = max(1, refresh_minutes)
-        self._stopped = False  # 添加停止标志
+        self._stopped = False
 
     def stop(self):
-        """安全停止线程"""
         self._stopped = True
         self.quit()
-        self.wait(1000)  # 等待最多1秒
+        self.wait(1000)
+
+    def get_coordinates(self, city_name):
+        """通过高德地理编码获取经纬度"""
+        if not city_name or city_name == "--" or city_name == "未知地区":
+            return None, None
+        try:
+            url = f"{self.api_url}/v3/geocode/geo?key={self.api_key}&address={city_name}"
+            resp = requests.get(url, timeout=5, verify=certifi.where())
+            resp.raise_for_status()
+            data = resp.json()
+            if data['status'] == '1' and data['count'] != '0':
+                location = data['geocodes'][0]['location']
+                lng, lat = location.split(',')
+                return float(lat), float(lng)
+            return None, None
+        except Exception:
+            return None, None
+
+    def calculate_sunrise_sunset(self, lat, lng):
+        """计算日出日落时间"""
+        if lat is None or lng is None:
+            return "--:--", "--:--"
+        try:
+            now = datetime.now()
+            city = LocationInfo("UserCity", "China", "Asia/Shanghai", lat, lng)
+            s = sun(city.observer, date=now)
+            sunrise = s["sunrise"].astimezone(timezone(timedelta(hours=8)))
+            sunset = s["sunset"].astimezone(timezone(timedelta(hours=8)))
+            return sunrise.strftime("%H:%M"), sunset.strftime("%H:%M")
+        except Exception:
+            return "--:--", "--:--"
 
     def run(self):
         while not self._stopped:
@@ -67,37 +99,30 @@ class WeatherThread(QThread):
                 self.msleep(60000)
                 continue
 
-            # 读取用户选择的地区
             settings = QSettings("MyDesktopApp", "WeatherSettings")
             selected_city = settings.value("selected_city", "")
             selected_county = settings.value("selected_county", "")
             user_location = selected_county if selected_county else selected_city
 
             try:
-                if user_location and user_location != "":
-                    # 用户选择了地区，优先使用该地区查询天气
-                    city_name = user_location
-                    weather_url = f"{self.api_url}/v3/weather/weatherInfo?key={self.api_key}&city={city_name}&extensions=base"
-                    w_resp = requests.get(weather_url, timeout=5, verify=certifi.where())
-                    w_resp.raise_for_status()
-                    data = w_resp.json()
-                    if data['status'] == '1' and data['count'] != '0':
-                        live = data['lives'][0]
-                        self.data_updated.emit({
-                            'city': city_name,  # 使用用户选择的地区名
-                            'weather': live['weather'],
-                            'temp': live['temperature'],
-                            'wind': live['winddirection'] + live['windpower'] + '级'
-                        })
-                        # 成功，跳过 IP 定位
-                        self.msleep(self.refresh_minutes * 60 * 1000)
-                        continue
-                    else:
-                        # 用户地区查询失败，记录错误但继续执行 IP 定位
-                        self.error_signal.emit(f"无法获取 {city_name} 的天气，尝试 IP 定位")
-                        # 不 return，继续执行下面的 IP 定位
+                # 读取缓存的经纬度
+                cached_lat = settings.value("cached_lat", "")
+                cached_lng = settings.value("cached_lng", "")
+                lat, lng = None, None
 
-                # 使用 IP 定位获取天气
+                if cached_lat and cached_lng:
+                    lat, lng = float(cached_lat), float(cached_lng)
+
+                # 如果没有经纬度缓存，尝试获取
+                if lat is None or lng is None:
+                    city_name = user_location if user_location else None
+                    if city_name:
+                        lat, lng = self.get_coordinates(city_name)
+                        if lat and lng:
+                            settings.setValue("cached_lat", lat)
+                            settings.setValue("cached_lng", lng)
+
+                # 获取天气数据（使用 IP 定位）
                 ip_url = f"{self.api_url}/v3/ip?key={self.api_key}"
                 ip_resp = requests.get(ip_url, timeout=5, verify=certifi.where())
                 ip_resp.raise_for_status()
@@ -110,30 +135,39 @@ class WeatherThread(QThread):
                 w_resp.raise_for_status()
                 data = w_resp.json()
 
+                display_city = user_location if user_location else ip_city
+
                 if data['status'] == '1' and data['count'] != '0':
                     live = data['lives'][0]
-                    # 如果用户选择了地区，但上述查询失败，这里仍显示用户选择的地区名
-                    display_city = user_location if user_location else ip_city
+                    # 计算日出日落
+                    if lat and lng:
+                        sunrise_time, sunset_time = self.calculate_sunrise_sunset(lat, lng)
+                    else:
+                        sunrise_time, sunset_time = "--:--", "--:--"
+
                     self.data_updated.emit({
                         'city': display_city,
                         'weather': live['weather'],
                         'temp': live['temperature'],
-                        'wind': live['winddirection'] + live['windpower'] + '级'
+                        'wind': live['winddirection'] + live['windpower'] + '级',
+                        'sunrise': sunrise_time,
+                        'sunset': sunset_time,
                     })
                 else:
                     self.error_signal.emit(f"API错误: {data.get('info', '未知')}")
             except Exception as e:
                 self.error_signal.emit(f"请求异常: {str(e)}")
-                # 即使失败，也尝试显示用户选择的地区名（如果有）
                 if user_location:
                     self.data_updated.emit({
                         'city': user_location,
                         'weather': '⚠️',
                         'temp': '?',
-                        'wind': ''
+                        'wind': '',
+                        'sunrise': '--:--',
+                        'sunset': '--:--',
                     })
 
-            # 等待刷新间隔，但会检查 _stopped
+            # 等待刷新间隔
             for _ in range(self.refresh_minutes * 60):
                 if self._stopped:
                     break
