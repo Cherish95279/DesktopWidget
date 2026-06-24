@@ -16,7 +16,7 @@ import re
 
 def get_git_root():
     """获取 Git 仓库根目录"""
-    result = subprocess.run(["git", "rev-parse", "--show-toplevel"], capture_output=True, text=True)
+    result = subprocess.run(["git", "rev-parse", "--show-toplevel"], capture_output=True, text=True, encoding='utf-8', errors='replace')
     if result.returncode != 0:
         print("❌ 当前目录不是 Git 仓库")
         sys.exit(1)
@@ -26,11 +26,12 @@ def get_git_root():
 def run_git_command(cmd, description="执行Git命令"):
     """执行 Git 命令并返回结果"""
     print(f"→ {description}...")
-    result = subprocess.run(cmd, capture_output=True, text=True)
+    result = subprocess.run(cmd, capture_output=True, text=True, encoding='utf-8', errors='replace')
     if result.returncode != 0:
-        print(f"❌ 失败: {result.stderr.strip()}")
+        err_msg = result.stderr.strip() if result.stderr else "未知错误"
+        print(f"❌ 失败: {err_msg}")
         return False
-    if result.stdout.strip():
+    if result.stdout and result.stdout.strip():
         print(f"✅ {result.stdout.strip()}")
     else:
         print(f"✅ 完成")
@@ -39,7 +40,7 @@ def run_git_command(cmd, description="执行Git命令"):
 
 def get_changed_files():
     """获取已修改和未跟踪的文件列表"""
-    result = subprocess.run(["git", "status", "--porcelain"], capture_output=True, text=True)
+    result = subprocess.run(["git", "status", "--porcelain"], capture_output=True, text=True, encoding='utf-8', errors='replace')
     files = []
     for line in result.stdout.strip().split('\n'):
         if line:
@@ -55,7 +56,7 @@ def main():
     print(f"📁 当前目录: {os.getcwd()}")
 
     # 获取当前分支
-    branch_result = subprocess.run(["git", "branch", "--show-current"], capture_output=True, text=True)
+    branch_result = subprocess.run(["git", "branch", "--show-current"], capture_output=True, text=True, encoding='utf-8', errors='replace')
     current_branch = branch_result.stdout.strip()
     print(f"🌿 当前分支: {current_branch}")
 
