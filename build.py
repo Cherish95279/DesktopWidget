@@ -49,15 +49,11 @@ def archive_dist(version):
         print_info("没有 dist/ 文件夹需要归档")
         return
 
-    # 创建归档目录
     os.makedirs(archive_path, exist_ok=True)
-
-    # 移动 dist/
     dest = os.path.join(archive_path, "dist")
     shutil.move("dist", dest)
     print_info(f"已归档: dist/ -> {archive_path}\\dist")
 
-    # 删除 build/（如果存在）
     if os.path.exists("build"):
         shutil.rmtree("build")
         print_info("已删除: build/")
@@ -65,10 +61,8 @@ def archive_dist(version):
 
 def update_version(version):
     """更新 constants.py 和 DesktopWidget.iss 中的版本号"""
-    # 移除可能存在的 'v' 前缀，用于 iss 中的纯数字版本号
     clean_version = version.lstrip('v')
 
-    # 1. 更新 constants.py（保留 v 前缀）
     constants_path = "src/constants.py"
     with open(constants_path, 'r', encoding='utf-8') as f:
         content = f.read()
@@ -77,15 +71,11 @@ def update_version(version):
         f.write(content)
     print_info(f"已更新 {constants_path}: VERSION = {version}")
 
-    # 2. 更新 DesktopWidget.iss（不包含 v 前缀）
     iss_path = "DesktopWidget.iss"
     with open(iss_path, 'r', encoding='utf-8') as f:
         content = f.read()
-    # 更新 MyAppVersion（纯数字）
     content = re.sub(r'#define MyAppVersion "\d+\.\d+\.\d+"', f'#define MyAppVersion "{clean_version}"', content)
-    # 更新 VersionInfoTextVersion（纯数字）
     content = re.sub(r'VersionInfoTextVersion=\d+\.\d+\.\d+', f'VersionInfoTextVersion={clean_version}', content)
-    # 更新输出文件名
     content = re.sub(r'DesktopWidget-v\d+\.\d+\.\d+-win64-Cherish-Setup',
                      f'DesktopWidget-v{clean_version}-win64-Cherish-Setup', content)
     with open(iss_path, 'w', encoding='utf-8') as f:
@@ -94,7 +84,7 @@ def update_version(version):
 
 
 def run_pyinstaller():
-    """执行 PyInstaller 打包"""
+    """执行 PyInstaller 打包（已移除 astral）"""
     print_info("正在执行 PyInstaller 打包...")
     cmd = [
         "pyinstaller",
@@ -108,6 +98,7 @@ def run_pyinstaller():
         "--hidden-import=certifi",
         "--hidden-import=charset_normalizer",
         "--hidden-import=idna",
+        "--hidden-import=zhdate",
         "--add-data", "skins;skins",
         "--add-data", "icons;icons",
         "widget.py"
@@ -145,32 +136,22 @@ def main():
         sys.exit(1)
 
     version = sys.argv[1]
-    # 验证版本号格式（支持 v1.1.9 或 1.1.9）
     if not re.match(r'v?\d+\.\d+\.\d+', version):
         print_error(f"无效的版本号格式: {version}")
         print("请使用 v1.1.9 或 1.1.9 格式")
         sys.exit(1)
 
-    # 确保版本号以 'v' 开头，便于后续处理
     if not version.startswith('v'):
         version = 'v' + version
 
     print_info(f"开始打包 {version}...")
     print("=" * 50)
 
-    # 1. 更新版本号
     update_version(version)
-
-    # 2. 归档 dist/，删除 build/
     archive_dist(version)
-
-    # 3. PyInstaller 打包
     run_pyinstaller()
-
-    # 4. Inno Setup 编译
     run_inno_setup()
 
-    # 输出结果
     clean_version = version.lstrip('v')
     print("=" * 50)
     print_info(f"✅ 打包完成！")

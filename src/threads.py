@@ -5,8 +5,6 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 import requests
 import certifi
 import psutil
-from astral import LocationInfo
-from astral.sun import sun
 from .constants import AMAP_KEY
 
 
@@ -62,7 +60,7 @@ class WeatherThread(QThread):
         self.wait(1000)
 
     def get_coordinates(self, city_name):
-        """通过高德地理编码获取经纬度"""
+        """通过高德地理编码获取经纬度（仅用于天气，不再用于日出日落）"""
         if not city_name or city_name == "--" or city_name == "未知地区":
             return None, None
         try:
@@ -78,20 +76,6 @@ class WeatherThread(QThread):
         except Exception:
             return None, None
 
-    def calculate_sunrise_sunset(self, lat, lng):
-        """计算日出日落时间"""
-        if lat is None or lng is None:
-            return "--:--", "--:--"
-        try:
-            now = datetime.now()
-            city = LocationInfo("UserCity", "China", "Asia/Shanghai", lat, lng)
-            s = sun(city.observer, date=now)
-            sunrise = s["sunrise"].astimezone(timezone(timedelta(hours=8)))
-            sunset = s["sunset"].astimezone(timezone(timedelta(hours=8)))
-            return sunrise.strftime("%H:%M"), sunset.strftime("%H:%M")
-        except Exception:
-            return "--:--", "--:--"
-
     def run(self):
         while not self._stopped:
             if not self.api_url or not self.api_key:
@@ -105,23 +89,6 @@ class WeatherThread(QThread):
             user_location = selected_county if selected_county else selected_city
 
             try:
-                # 读取缓存的经纬度
-                cached_lat = settings.value("cached_lat", "")
-                cached_lng = settings.value("cached_lng", "")
-                lat, lng = None, None
-
-                if cached_lat and cached_lng:
-                    lat, lng = float(cached_lat), float(cached_lng)
-
-                # 如果没有经纬度缓存，尝试获取
-                if lat is None or lng is None:
-                    city_name = user_location if user_location else None
-                    if city_name:
-                        lat, lng = self.get_coordinates(city_name)
-                        if lat and lng:
-                            settings.setValue("cached_lat", lat)
-                            settings.setValue("cached_lng", lng)
-
                 # 获取天气数据（使用 IP 定位）
                 ip_url = f"{self.api_url}/v3/ip?key={self.api_key}"
                 ip_resp = requests.get(ip_url, timeout=5, verify=certifi.where())
@@ -139,19 +106,14 @@ class WeatherThread(QThread):
 
                 if data['status'] == '1' and data['count'] != '0':
                     live = data['lives'][0]
-                    # 计算日出日落
-                    if lat and lng:
-                        sunrise_time, sunset_time = self.calculate_sunrise_sunset(lat, lng)
-                    else:
-                        sunrise_time, sunset_time = "--:--", "--:--"
-
+                    # 日出日落已移除，固定显示 "--:--"
                     self.data_updated.emit({
                         'city': display_city,
                         'weather': live['weather'],
                         'temp': live['temperature'],
                         'wind': live['winddirection'] + live['windpower'] + '级',
-                        'sunrise': sunrise_time,
-                        'sunset': sunset_time,
+                        'sunrise': '--:--',
+                        'sunset': '--:--',
                     })
                 else:
                     self.error_signal.emit(f"API错误: {data.get('info', '未知')}")

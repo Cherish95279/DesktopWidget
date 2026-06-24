@@ -76,8 +76,6 @@ class MainWindow(QWidget):
         self.now = datetime.now()
         self.lunar_text = ""
         self.term_display = ""
-        self.sunrise_time = "--:--"
-        self.sunset_time = "--:--"
 
         screen = QApplication.primaryScreen()
         if screen:
@@ -187,7 +185,7 @@ class MainWindow(QWidget):
             self.settings_dialog.raise_()
             self.settings_dialog.activateWindow()
             if hasattr(self.settings_dialog, 'switch_page'):
-                page_index = {"general": 0, "display": 1, "weather": 2, "theme": 3, "update": 4, "about": 5}.get(initial_page, 0)
+                page_index = {"general": 0, "display": 1, "weather": 2, "theme": 3, "update": 4, "donation": 5, "about": 6}.get(initial_page, 0)
                 self.settings_dialog.switch_page(page_index)
             return
 
@@ -262,14 +260,10 @@ class MainWindow(QWidget):
 
     def update_weather(self, data):
         self.weather = data
-        self.sunrise_time = data.get('sunrise', '--:--')
-        self.sunset_time = data.get('sunset', '--:--')
         self.update()
 
     def on_weather_error(self, err_msg):
         self.weather = {"city": "⚠️", "weather": "⚠️", "temp": "?", "wind": err_msg[:10] + "..."}
-        self.sunrise_time = "--:--"
-        self.sunset_time = "--:--"
         self.update()
 
     # ---------- 关闭事件 ----------
@@ -393,10 +387,8 @@ class MainWindow(QWidget):
         memory_text = f"内存\n{int(self.mem)}%"
         date_text = f"{self.now.strftime('%Y/%m/%d')}\n  星期{['一','二','三','四','五','六','日'][self.now.weekday()]}"
         lunar_text = f"{self.lunar_text}\n{self.term_display}"
-        sunrise_line1 = f"🌅 {self.sunrise_time}"
-        sunrise_line2 = f"🌄 {self.sunset_time}"
 
-        # ===== 内容文本映射（单行） =====
+        # ===== 内容文本映射 =====
         content_text_map = {
             "ip": ip_text,
             "weather": weather_text,
@@ -418,16 +410,15 @@ class MainWindow(QWidget):
             "date": [self.now.strftime('%Y/%m/%d'), f"星期{['一','二','三','四','五','六','日'][self.now.weekday()]}"],
             "netspeed": [f"↓{self.down_speed:.1f}Mb/s", f"↑{self.up_speed:.1f}Mb/s"],
             "memory": ["内存", f"{int(self.mem)}%"],
-            "sunrise": [sunrise_line1, sunrise_line2],   # 新增日出落两行
         }
 
         # ===== 8个槽位固定坐标 =====
         slot_position_map = {
-            "slot_1": (20, 30, 105, 43),   # 高度改为43，与左二一致
+            "slot_1": (20, 30, 105, 43),
             "slot_2": (20, 86, 85, 43),
             "slot_3": (20, 166, 70, 50),
             "slot_4": (20, 235, 88, 50),
-            "slot_5": (280, 30, 94, 43),   # 高度改为43，与右二一致
+            "slot_5": (280, 30, 94, 43),
             "slot_6": (314, 86, 71, 43),
             "slot_7": (324, 166, 60, 50),
             "slot_8": (273, 238, 97, 43),

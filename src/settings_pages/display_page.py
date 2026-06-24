@@ -8,7 +8,7 @@ class DisplayPage(QWidget):
         super().__init__(parent)
         self.parent_dialog = parent
 
-        # 内容池定义
+        # 内容池定义（已移除 sunrise）
         self.content_pool = [
             ("ip", "IP"),
             ("weather", "天气"),
@@ -20,7 +20,6 @@ class DisplayPage(QWidget):
             ("memory", "内存"),
             ("date", "公历"),
             ("lunar", "农历"),
-            ("sunrise", "日出日落"),
             ("empty", "空"),
         ]
         self.all_values = [v for v, _ in self.content_pool]
@@ -53,7 +52,6 @@ class DisplayPage(QWidget):
         main_layout.setContentsMargins(15, 20, 15, 15)
         main_layout.setSpacing(8)
 
-        # 四行，每行两个槽位
         pairs = [(0, 4), (1, 5), (2, 6), (3, 7)]
         for left_idx, right_idx in pairs:
             row = QHBoxLayout()
@@ -64,13 +62,11 @@ class DisplayPage(QWidget):
             row.addStretch()
             main_layout.addLayout(row)
 
-        # 提示文字
         info_label = QLabel("修改下拉菜单立即生效，无需保存")
         info_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
         info_label.setStyleSheet("color: #888; font-size: 12px; margin: 10px 0;")
         main_layout.addWidget(info_label)
 
-        # 按钮（只保留恢复默认，位于右侧）
         btn_layout = QHBoxLayout()
         btn_layout.addStretch()
         restore_btn = QPushButton("恢复默认")
@@ -105,7 +101,6 @@ class DisplayPage(QWidget):
 
     # ---------- 核心数据同步 ----------
     def _apply_layout_to_ui(self):
-        """将 layout_data 应用到所有下拉菜单（不触发信号）"""
         for combo in self.combos:
             combo.blockSignals(True)
 
@@ -123,18 +118,12 @@ class DisplayPage(QWidget):
             combo.blockSignals(False)
 
     def _sync_ui_to_data(self):
-        """从下拉菜单读取值，更新 layout_data"""
         for combo in self.combos:
             key = combo.property("slot_key")
             val = combo.currentData()
             self.layout_data[key] = str(val) if val is not None else "empty"
 
     def _rebuild_combo_options(self):
-        """
-        重建所有下拉菜单的选项列表（互斥逻辑）
-        只负责填充选项，不设置选中索引（由 _apply_layout_to_ui 负责）
-        """
-        # 收集所有非空值（唯一）
         all_non_empty = set()
         for key in self.slot_keys:
             val = str(self.layout_data.get(key, "empty"))
@@ -147,7 +136,6 @@ class DisplayPage(QWidget):
 
             combo.blockSignals(True)
 
-            # 可用值：所有非空值中，没有被其他槽位占用的，或者是当前槽位自身的值
             available = []
             for val, text in self.content_pool:
                 if val == "empty":
@@ -162,19 +150,14 @@ class DisplayPage(QWidget):
 
             combo.blockSignals(False)
 
-    # ---------- 实时保存与刷新 ----------
     def _apply_changes(self):
-        """立即将当前布局写入 QSettings 并刷新主窗口"""
         settings = QSettings("MyDesktopApp", "WeatherSettings")
-        # 检查重复（防御）
         values = list(self.layout_data.values())
         non_empty = [v for v in values if v != "empty"]
         if len(non_empty) != len(set(non_empty)):
-            # 如果出现重复（理论上不会），不保存，但可打印日志
             return
         for key, value in self.layout_data.items():
             settings.setValue(key, str(value))
-        # 刷新主窗口
         parent = self.parent()
         if parent and hasattr(parent, 'parent'):
             main_window = parent.parent()
@@ -194,10 +177,8 @@ class DisplayPage(QWidget):
         new_value = changed_combo.currentData()
         new_value = str(new_value) if new_value is not None else "empty"
 
-        # 更新 layout_data
         self.layout_data[key] = new_value
 
-        # 检查重复：如果新值非空且已被其他位置占用，自动置为 "空"
         if new_value != "empty":
             all_non_empty = [str(v) for v in self.layout_data.values() if v != "empty"]
             if all_non_empty.count(new_value) > 1:
@@ -209,16 +190,9 @@ class DisplayPage(QWidget):
                 changed_combo.blockSignals(False)
                 self._loading = False
 
-        # 重建所有菜单选项
         self._rebuild_combo_options()
-
-        # 应用值到 UI（确保 UI 与数据一致）
         self._apply_layout_to_ui()
-
-        # 同步数据
         self._sync_ui_to_data()
-
-        # 立即保存并刷新主窗口
         self._apply_changes()
 
     # ---------- 加载 / 恢复 ----------
@@ -227,7 +201,6 @@ class DisplayPage(QWidget):
         self._loading = True
 
         try:
-            # 1. 读取保存的值
             for key in self.slot_keys:
                 default_val = str(self.default_layout.get(key, "empty"))
                 val = settings.value(key, default_val)
@@ -239,7 +212,6 @@ class DisplayPage(QWidget):
                     val = "empty"
                 self.layout_data[key] = val
 
-            # 2. 修复重复（保留第一个，其余置 "empty"）
             seen = set()
             for key in self.slot_keys:
                 val = self.layout_data.get(key, "empty")
@@ -249,14 +221,10 @@ class DisplayPage(QWidget):
                     else:
                         seen.add(val)
 
-            # 3. 填充选项并应用值
             self._rebuild_combo_options()
             self._apply_layout_to_ui()
-
-            # 4. 同步数据
             self._sync_ui_to_data()
 
-            # 5. 写回 QSettings 确保一致（保证保存的是修正后的值）
             for key, value in self.layout_data.items():
                 settings.setValue(key, str(value))
 
@@ -267,14 +235,11 @@ class DisplayPage(QWidget):
         self._loading = True
         try:
             self.layout_data = self.default_layout.copy()
-            # 确保所有值为字符串
             for key in self.layout_data:
                 self.layout_data[key] = str(self.layout_data[key])
-            # 重建选项并应用
             self._rebuild_combo_options()
             self._apply_layout_to_ui()
             self._sync_ui_to_data()
-            # 立即保存并刷新
             self._apply_changes()
         finally:
             self._loading = False
