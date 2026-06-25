@@ -1,16 +1,40 @@
 import sys
 import os
 
-# ---------- 资源路径 ----------
+# ---------- 资源路径缓存 ----------
+_path_cache = {}
+_meipass_checked = False
+_meipass_path = None
+
+
 def resource_path(rel_path):
-    try:
-        base_path = sys._MEIPASS
-    except Exception:
-        base_path = os.path.abspath(".")
-    # 如果路径已经以 skins/、icons/ 或 screenshots/ 开头，则直接拼接，否则默认加 skins/default/
+    """获取资源文件的绝对路径（带缓存）"""
+    # 检查缓存
+    if rel_path in _path_cache:
+        return _path_cache[rel_path]
+
+    # 确定基础路径（只检查一次 sys._MEIPASS）
+    global _meipass_checked, _meipass_path
+    if not _meipass_checked:
+        try:
+            _meipass_path = sys._MEIPASS
+        except Exception:
+            _meipass_path = None
+        _meipass_checked = True
+
+    base_path = _meipass_path if _meipass_path else os.path.abspath(".")
+
+    # 如果路径已经以 skins/、icons/ 或 screenshots/ 开头，直接拼接，否则默认加 skins/default/
     if not rel_path.startswith(('skins/', 'icons/', 'screenshots/')):
         rel_path = os.path.join("skins", "default", rel_path)
-    return os.path.join(base_path, rel_path)
+
+    abs_path = os.path.join(base_path, rel_path)
+
+    # 存入缓存
+    _path_cache[rel_path] = abs_path
+    return abs_path
+
+
 # ---------- 天气图标 ----------
 def get_weather_icon(weather_str):
     mapping = {

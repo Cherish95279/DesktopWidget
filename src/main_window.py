@@ -15,6 +15,7 @@ from .threads import ServerScanner, WeatherThread, NetSpeedThread
 from .settings_dialog import SettingsDialog
 from .tray_icon import TrayIcon
 from .updater import UpdateChecker
+from .widgets import NoticeBubble
 
 try:
     import GPUtil
@@ -50,6 +51,7 @@ class MainWindow(QWidget):
 
         self._exiting = False
         self.settings_dialog = None
+        self._notice_window = None
 
         # 加载图片
         self.bg = QPixmap(resource_path("bg.png"))
@@ -116,25 +118,14 @@ class MainWindow(QWidget):
         self.tray = TrayIcon(self)
         self.tray.show()
 
-        self.settings_btn = QLabel("设置", self)
-        self.settings_btn.setStyleSheet("""
-            QLabel {
-                background: transparent;
-                border-radius: 4px;
-                padding: 4px 8px;
-                color: #333;
-                font-size: 12px;
-                font-weight: normal;
-            }
-            QLabel:hover {
-                background: rgba(255,255,255,60);
-            }
-        """)
-        self.settings_btn.setCursor(Qt.CursorShape.PointingHandCursor)
-        self.settings_btn.adjustSize()
-        self.settings_btn.move(self.width() - self.settings_btn.width() - 15,
-                               self.height() - self.settings_btn.height() - 1)
-        self.settings_btn.mousePressEvent = self.on_settings_click
+        # ---------- 公告气泡 ----------
+        self.notice_bubble = NoticeBubble(self)
+        self.notice_bubble.move(
+            self.width() - self.notice_bubble.width() - 15,
+            self.height() - self.notice_bubble.height() - 1
+        )
+        self.notice_bubble.set_on_click(self._on_bubble_clicked)
+        self.notice_bubble.raise_()
 
         self.update_checker = None
         self.has_update = False
@@ -154,32 +145,45 @@ class MainWindow(QWidget):
             y = geometry.top() + 150
             self.move(x, y)
 
-    def on_settings_click(self, event):
-        self.settings_btn.setStyleSheet("""
-            QLabel {
-                background: rgba(255,255,255,150);
-                border-radius: 4px;
-                padding: 4px 8px;
-                color: #333;
-                font-size: 12px;
-                font-weight: normal;
-            }
-        """)
-        QTimer.singleShot(150, lambda: self.settings_btn.setStyleSheet("""
-            QLabel {
-                background: transparent;
-                border-radius: 4px;
-                padding: 4px 8px;
-                color: #333;
-                font-size: 12px;
-                font-weight: normal;
-            }
-            QLabel:hover {
-                background: rgba(255,255,255,60);
-            }
-        """))
-        self.open_settings()
+    def _on_bubble_clicked(self):
+        """点击聊天气泡 → 打开公告窗口"""
+        self._open_notice_window()
 
+    def _open_notice_window(self):
+        """打开公告窗口（延迟创建，避免与闪烁冲突）"""
+        from .notice import NoticeWindow, NoticeManager
+
+        if self._notice_window is not None and self._notice_window.isVisible():
+            self._notice_window.raise_()
+            self._notice_window.activateWindow()
+            return
+
+        # 延迟 200ms 创建窗口，避免与闪烁回调冲突
+        QTimer.singleShot(200, self._create_notice_window)
+
+    def _create_notice_window(self):
+        """实际创建公告窗口"""
+        from .notice import NoticeWindow, NoticeManager
+
+        self._notice_window = NoticeWindow(self)
+        self._notice_window.destroyed.connect(self._on_notice_window_destroyed)
+
+        manager = NoticeManager.get_instance()
+        current_notice = manager.get_current_notice()
+        if current_notice:
+            notice_id = current_notice.get("id")
+            if notice_id:
+                # 延迟选中，等待窗口加载完成
+                QTimer.singleShot(300, lambda: self._notice_window.select_notice_by_id(
+                    notice_id) if self._notice_window else None)
+
+        self._notice_window.show()
+
+    def _on_notice_window_destroyed(self):
+        """公告窗口销毁时清理引用"""
+        self._notice_window = None
+
+    # ==================== 修改点：设置窗口改为非模态 ====================
     def open_settings(self, initial_page="general"):
         if self.settings_dialog is not None and self.settings_dialog.isVisible():
             self.settings_dialog.raise_()
@@ -192,7 +196,8 @@ class MainWindow(QWidget):
         try:
             dialog = SettingsDialog(self, initial_page=initial_page)
             dialog.setWindowFlags(Qt.WindowType.Window | Qt.WindowType.WindowCloseButtonHint)
-            dialog.setWindowModality(Qt.WindowModality.ApplicationModal)
+            # 移除模态设置，变为非模态，使公告窗口和设置窗口互不影响
+            # dialog.setWindowModality(Qt.WindowModality.ApplicationModal)  # 已注释
 
             screen = QApplication.primaryScreen()
             if screen:
@@ -205,27 +210,14 @@ class MainWindow(QWidget):
 
             self.settings_dialog = dialog
             dialog.finished.connect(self._on_settings_closed)
-            dialog.exec()
+            dialog.show()  # 改为非阻塞显示
+            # dialog.exec()  # 原阻塞调用已注释
         except Exception as e:
             QMessageBox.critical(self, "错误", f"打开设置失败：{str(e)}")
+    # ===============================================================
 
     def _on_settings_closed(self):
         self.settings_dialog = None
-
-    def show_message(self, title, text):
-        QMessageBox.information(self, title, text)
-
-    def confirm_exit(self):
-        reply = QMessageBox.question(
-            self,
-            "确认退出",
-            "确定要退出吗？",
-            QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
-            QMessageBox.StandardButton.No
-        )
-        if reply == QMessageBox.StandardButton.Yes:
-            self._exiting = True
-            QApplication.quit()
 
     # ---------- 更新检查 ----------
     def check_for_updates_auto(self):
@@ -250,8 +242,30 @@ class MainWindow(QWidget):
         api_key = settings.value("api_key", "")
         refresh_minutes = int(settings.value("refresh_minutes", 120))
 
+        has_weather = False
+        slot_keys = ["slot_1", "slot_2", "slot_3", "slot_4", "slot_5", "slot_6", "slot_7", "slot_8"]
+        for key in slot_keys:
+            default_val = DEFAULT_LAYOUT.get(key, "empty")
+            value = settings.value(key, default_val)
+            if value == "weather":
+                has_weather = True
+                break
+
+        if not has_weather:
+            if self.weather_thread is not None:
+                self.weather_thread.stop()
+                self.weather_thread = None
+            return
+
+        if not api_url or not api_key:
+            if self.weather_thread is not None:
+                self.weather_thread.stop()
+                self.weather_thread = None
+            self.on_weather_error("未配置 API 地址或密钥")
+            return
+
         if self.weather_thread is not None:
-            self.weather_thread.stop()
+            return
 
         self.weather_thread = WeatherThread(api_url, api_key, refresh_minutes)
         self.weather_thread.data_updated.connect(self.update_weather)
@@ -354,10 +368,8 @@ class MainWindow(QWidget):
         painter.setRenderHint(QPainter.RenderHint.Antialiasing)
         painter.fillRect(self.rect(), QColor(255, 255, 255, 1))
 
-        # 1. 背景
         painter.drawPixmap(0, 0, self.bg)
 
-        # 2. 文字（从 QSettings 读取字体设置）
         settings = QSettings("MyDesktopApp", "WeatherSettings")
         font_family = settings.value("font_family", "Microsoft YaHei")
         font_size = int(settings.value("font_size", 10))
@@ -367,14 +379,12 @@ class MainWindow(QWidget):
         painter.setFont(font)
         painter.setPen(QPen(QColor(font_color)))
 
-        # ===== 从 QSettings 读取布局配置 =====
         slot_values = {}
         slot_keys = ["slot_1", "slot_2", "slot_3", "slot_4", "slot_5", "slot_6", "slot_7", "slot_8"]
         for key in slot_keys:
             default_val = DEFAULT_LAYOUT.get(key, "empty")
             slot_values[key] = settings.value(key, default_val)
 
-        # ===== 准备各内容的显示文本 =====
         ip_text = f"{self.local_ip}"
         city_text = self.weather.get('city', '--')
         weather_icon = get_weather_icon(self.weather['weather'])
@@ -388,7 +398,6 @@ class MainWindow(QWidget):
         date_text = f"{self.now.strftime('%Y/%m/%d')}\n  星期{['一','二','三','四','五','六','日'][self.now.weekday()]}"
         lunar_text = f"{self.lunar_text}\n{self.term_display}"
 
-        # ===== 内容文本映射 =====
         content_text_map = {
             "ip": ip_text,
             "weather": weather_text,
@@ -403,7 +412,6 @@ class MainWindow(QWidget):
             "empty": "",
         }
 
-        # ===== 多行内容映射 =====
         multiline_map = {
             "weather": [city_text, weather_text],
             "lunar": [self.lunar_text, self.term_display],
@@ -412,7 +420,6 @@ class MainWindow(QWidget):
             "memory": ["内存", f"{int(self.mem)}%"],
         }
 
-        # ===== 8个槽位固定坐标 =====
         slot_position_map = {
             "slot_1": (20, 30, 105, 43),
             "slot_2": (20, 86, 85, 43),
@@ -424,7 +431,6 @@ class MainWindow(QWidget):
             "slot_8": (273, 238, 97, 43),
         }
 
-        # ===== 遍历所有槽位，根据配置绘制 =====
         for slot_key, (x, y, w, h) in slot_position_map.items():
             configured_key = slot_values.get(slot_key, "empty")
             if configured_key == "empty":
@@ -445,7 +451,6 @@ class MainWindow(QWidget):
                                      Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter,
                                      text)
 
-        # 3. 指针
         cx = CENTER_X
         cy = CENTER_Y
         now = self.now
@@ -454,7 +459,6 @@ class MainWindow(QWidget):
         self.draw_hand(painter, self.minute, cx, cy, now.minute * 6 + now.second * 0.1)
         self.draw_hand(painter, self.second, cx, cy, now.second * 6)
 
-        # 4. 中心圆点
         dot_size = 18
         scaled_dot = self.center_dot.scaled(
             dot_size, dot_size,

@@ -8,7 +8,7 @@ class DisplayPage(QWidget):
         super().__init__(parent)
         self.parent_dialog = parent
 
-        # 内容池定义（已移除 sunrise）
+        # 内容池定义
         self.content_pool = [
             ("ip", "IP"),
             ("weather", "天气"),
@@ -42,6 +42,7 @@ class DisplayPage(QWidget):
         self.layout_data = self.default_layout.copy()
         self.combos = []
         self._loading = False
+        self._last_has_weather = False  # 新增：用于检测天气状态变化
 
         self.setup_ui()
         self.load_layout_settings()
@@ -50,7 +51,7 @@ class DisplayPage(QWidget):
     def setup_ui(self):
         main_layout = QVBoxLayout(self)
         main_layout.setContentsMargins(15, 20, 15, 15)
-        main_layout.setSpacing(8)
+        main_layout.setSpacing(12)
 
         pairs = [(0, 4), (1, 5), (2, 6), (3, 7)]
         for left_idx, right_idx in pairs:
@@ -62,15 +63,18 @@ class DisplayPage(QWidget):
             row.addStretch()
             main_layout.addLayout(row)
 
+        # 提示文字
         info_label = QLabel("修改下拉菜单立即生效，无需保存")
         info_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
         info_label.setStyleSheet("color: #888; font-size: 12px; margin: 10px 0;")
         main_layout.addWidget(info_label)
 
+        # 按钮
         btn_layout = QHBoxLayout()
         btn_layout.addStretch()
         restore_btn = QPushButton("恢复默认")
         restore_btn.setFixedSize(90, 28)
+        restore_btn.setStyleSheet("font-size: 12px;")
         restore_btn.clicked.connect(self.restore_default)
         btn_layout.addWidget(restore_btn)
         main_layout.addLayout(btn_layout)
@@ -85,7 +89,7 @@ class DisplayPage(QWidget):
         layout.setContentsMargins(0, 0, 0, 0)
 
         label = QLabel(slot["name"])
-        label.setStyleSheet("font-size: 11px; color: #333;")
+        label.setStyleSheet("font-size: 12px; color: #333;")
         label.setFixedWidth(30)
         layout.addWidget(label)
 
@@ -151,18 +155,35 @@ class DisplayPage(QWidget):
             combo.blockSignals(False)
 
     def _apply_changes(self):
+        """保存布局并刷新主窗口，同时检测天气状态变化"""
         settings = QSettings("MyDesktopApp", "WeatherSettings")
         values = list(self.layout_data.values())
         non_empty = [v for v in values if v != "empty"]
         if len(non_empty) != len(set(non_empty)):
             return
+
+        # ===== 检测天气状态是否发生变化 =====
+        new_has_weather = "weather" in values
+        old_has_weather = getattr(self, "_last_has_weather", False)
+
+        # 保存所有键值
         for key, value in self.layout_data.items():
             settings.setValue(key, str(value))
+
+        # 刷新主窗口
         parent = self.parent()
         if parent and hasattr(parent, 'parent'):
             main_window = parent.parent()
             if main_window and hasattr(main_window, 'update'):
                 main_window.update()
+
+            # ===== 天气状态变化时，触发天气线程管理 =====
+            if new_has_weather != old_has_weather:
+                if main_window and hasattr(main_window, 'start_weather_thread'):
+                    main_window.start_weather_thread()
+
+        # ===== 记录当前状态 =====
+        self._last_has_weather = new_has_weather
 
     # ---------- 信号处理 ----------
     def _on_combo_changed(self):
@@ -193,7 +214,7 @@ class DisplayPage(QWidget):
         self._rebuild_combo_options()
         self._apply_layout_to_ui()
         self._sync_ui_to_data()
-        self._apply_changes()
+        self._apply_changes()  # 调用包含天气检测的保存方法
 
     # ---------- 加载 / 恢复 ----------
     def load_layout_settings(self):
@@ -212,6 +233,7 @@ class DisplayPage(QWidget):
                     val = "empty"
                 self.layout_data[key] = val
 
+            # 修复重复
             seen = set()
             for key in self.slot_keys:
                 val = self.layout_data.get(key, "empty")
@@ -227,6 +249,9 @@ class DisplayPage(QWidget):
 
             for key, value in self.layout_data.items():
                 settings.setValue(key, str(value))
+
+            # 初始化天气状态缓存
+            self._last_has_weather = "weather" in self.layout_data.values()
 
         finally:
             self._loading = False

@@ -59,19 +59,31 @@ class WeatherThread(QThread):
         self.quit()
         self.wait(1000)
 
-    def get_coordinates(self, city_name):
-        """通过高德地理编码获取经纬度（仅用于天气，不再用于日出日落）"""
+    def get_adcode(self, city_name):
+        """通过城市名称获取高德城市代码（adcode）"""
         if not city_name or city_name == "--" or city_name == "未知地区":
-            return None, None
+            return None
         try:
             url = f"{self.api_url}/v3/geocode/geo?key={self.api_key}&address={city_name}"
             resp = requests.get(url, timeout=5, verify=certifi.where())
             resp.raise_for_status()
             data = resp.json()
             if data['status'] == '1' and data['count'] != '0':
-                location = data['geocodes'][0]['location']
-                lng, lat = location.split(',')
-                return float(lat), float(lng)
+                return data['geocodes'][0]['adcode']
+            return None
+        except Exception as e:
+            print(f"获取 adcode 失败: {e}")
+            return None
+
+    def get_ip_adcode(self):
+        """通过 IP 获取城市代码（adcode）"""
+        try:
+            ip_url = f"{self.api_url}/v3/ip?key={self.api_key}"
+            ip_resp = requests.get(ip_url, timeout=5, verify=certifi.where())
+            ip_resp.raise_for_status()
+            ip_data = ip_resp.json()
+            if ip_data['status'] == '1':
+                return ip_data.get('adcode', '110101'), ip_data.get('city', '未知地区')
             return None, None
         except Exception:
             return None, None
@@ -89,20 +101,36 @@ class WeatherThread(QThread):
             user_location = selected_county if selected_county else selected_city
 
             try:
-                # 获取天气数据（使用 IP 定位）
-                ip_url = f"{self.api_url}/v3/ip?key={self.api_key}"
-                ip_resp = requests.get(ip_url, timeout=5, verify=certifi.where())
-                ip_resp.raise_for_status()
-                ip_data = ip_resp.json()
-                ip_city = ip_data.get('city', '未知地区')
-                city_code = ip_data.get('adcode', '110101')
+                city_code = None
+                display_city = None
 
+                # ===== 优先使用用户选择的城市 =====
+                if user_location:
+                    # 尝试获取用户选择城市的 adcode
+                    city_code = self.get_adcode(user_location)
+                    if city_code:
+                        display_city = user_location
+                        print(f"✅ 使用用户选择的城市: {user_location} (adcode: {city_code})")
+                    else:
+                        # 如果获取 adcode 失败，回退到 IP 定位
+                        print(f"⚠️ 获取 {user_location} 的 adcode 失败，回退到 IP 定位")
+                        city_code, ip_city = self.get_ip_adcode()
+                        display_city = user_location  # 仍然显示用户选择的城市名，但天气数据来自 IP
+                        if not city_code:
+                            raise Exception("无法获取城市代码")
+                else:
+                    # 用户未选择城市，使用 IP 定位
+                    city_code, ip_city = self.get_ip_adcode()
+                    display_city = ip_city if ip_city else "未知地区"
+                    if not city_code:
+                        raise Exception("无法获取 IP 定位的城市代码")
+                    print(f"📍 使用 IP 定位: {display_city} (adcode: {city_code})")
+
+                # ===== 请求天气数据 =====
                 weather_url = f"{self.api_url}/v3/weather/weatherInfo?key={self.api_key}&city={city_code}&extensions=base"
                 w_resp = requests.get(weather_url, timeout=5, verify=certifi.where())
                 w_resp.raise_for_status()
                 data = w_resp.json()
-
-                display_city = user_location if user_location else ip_city
 
                 if data['status'] == '1' and data['count'] != '0':
                     live = data['lives'][0]
@@ -115,10 +143,24 @@ class WeatherThread(QThread):
                         'sunrise': '--:--',
                         'sunset': '--:--',
                     })
+                    print(f"✅ 天气更新成功: {display_city} {live['weather']} {live['temperature']}℃")
                 else:
-                    self.error_signal.emit(f"API错误: {data.get('info', '未知')}")
+                    error_msg = data.get('info', '未知错误')
+                    self.error_signal.emit(f"API错误: {error_msg}")
+                    # 即使出错，也发射一个包含城市名的数据，让 UI 至少显示城市名
+                    self.data_updated.emit({
+                        'city': display_city,
+                        'weather': '⚠️',
+                        'temp': '?',
+                        'wind': '',
+                        'sunrise': '--:--',
+                        'sunset': '--:--',
+                    })
+
             except Exception as e:
+                print(f"❌ 天气请求异常: {e}")
                 self.error_signal.emit(f"请求异常: {str(e)}")
+                # 错误时也尝试显示城市名（如果有）
                 if user_location:
                     self.data_updated.emit({
                         'city': user_location,

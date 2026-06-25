@@ -1,32 +1,45 @@
 import sys
 import os
-import subprocess
-
-# ===== 关键：打包后强制隐藏所有子进程窗口（解决闪黑框） =====
-# 必须在导入任何其他模块之前应用
-if sys.platform == 'win32' and getattr(sys, 'frozen', False):
-    _original_popen = subprocess.Popen
-    def _popen_no_window(*args, **kwargs):
-        if hasattr(subprocess, 'CREATE_NO_WINDOW'):
-            kwargs['creationflags'] = kwargs.get('creationflags', 0) | subprocess.CREATE_NO_WINDOW
-        return _original_popen(*args, **kwargs)
-    subprocess.Popen = _popen_no_window
-
-# ---------- 正常导入 ----------
 from PyQt6.QtWidgets import QApplication
+from PyQt6.QtCore import QTimer
+
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+
 from src.main_window import MainWindow
+from src.notice import NoticeManager
 
-if __name__ == '__main__':
-    if getattr(sys, 'frozen', False):
-        #sys.stdout = open(os.devnull, 'w')
-        #sys.stderr = open(os.devnull, 'w')
-        os.environ['PYTHONWARNINGS'] = 'ignore'
-        import logging
-        logging.getLogger().setLevel(logging.ERROR)
 
+def main():
     app = QApplication(sys.argv)
+    app.setApplicationName("DesktopWidget")
     app.setOrganizationName("MyDesktopApp")
-    app.setApplicationName("WeatherSettings")
+
     window = MainWindow()
-    window.show()
+    notice_manager = NoticeManager.get_instance()
+
+    # 定义回调函数（无延迟，信号本就在主线程）
+    def safe_start_flash(notice):
+        if window and hasattr(window, 'notice_bubble') and window.notice_bubble is not None:
+            window.notice_bubble.start_flash()
+
+    def safe_hide_bubble():
+        if window and hasattr(window, 'notice_bubble') and window.notice_bubble is not None:
+            window.notice_bubble.hide_bubble()
+
+    # 注册回调
+    notice_manager.register_callback("on_new_notice", safe_start_flash)
+    notice_manager.register_callback("on_no_notice", safe_hide_bubble)
+    print("✅ 公告回调注册成功")
+
+    # 延迟启动公告检查
+    def start_notice():
+        notice_manager.start(interval_minutes=60)
+        print("✅ 公告轮询已启动")
+
+    QTimer.singleShot(500, start_notice)
+
     sys.exit(app.exec())
+
+
+if __name__ == "__main__":
+    main()
