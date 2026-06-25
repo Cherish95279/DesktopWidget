@@ -1,8 +1,9 @@
 {
-  "id": "example-01",
-  "title": "📢 重要通知",
-  "content": "软件将于今晚 22:00 进行服务器维护。",
-  "link": null,
+  "id": "test-2026-06-25-007",
+  "enabled": true,
+  "title": "📢 测试公告",
+  "content": "这是第一行测试内容\n这是第二行测试内容",
+  "link": "https://github.com/Cherish95279/DesktopWidget",
   "timestamp": "2026-06-25 14:30",
-  "show_date": false   // ← 新增字段，false 表示不显示日期
+  "show_date": false
 }
