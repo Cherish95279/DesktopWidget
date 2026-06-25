@@ -1,9 +1,9 @@
 {
-  "id": "notice_20260625_175126",
+  "id": "notice_20260625_175608",
   "enabled": true,
-  "title": "📢 新版本发布",
-  "content": "v1.2.1 已正式发布，欢迎下载体验！",
-  "link": "https://github.com/Cherish95279/DesktopWidget/releases/tag/v1.2.1",
-  "timestamp": "2026-06-25 17:51",
+  "title": "🎊 端午安康",
+  "content": "祝大家节日快乐，阖家幸福！",
+  "link": "false",
+  "timestamp": "2026-06-25 17:56",
   "show_date": true
 }
