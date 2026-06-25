@@ -10,7 +10,7 @@ class Notice:
     title: str = ""
     content: str = ""
     link: Optional[str] = None
-    timestamp: str = ""  # ← 添加这一行
+    timestamp: str = ""
 
     @classmethod
     def from_dict(cls, data: dict) -> "Notice":
@@ -20,7 +20,7 @@ class Notice:
             title=data.get("title", ""),
             content=data.get("content", ""),
             link=data.get("link", None),
-            timestamp=data.get("timestamp", ""),  # ← 添加这一行
+            timestamp=data.get("timestamp", ""),
         )
 
     def is_valid(self) -> bool:

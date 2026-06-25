@@ -84,11 +84,13 @@ def update_version(version):
 
 
 def run_pyinstaller():
-    """执行 PyInstaller 打包（已移除 astral）"""
+    """执行 PyInstaller 打包"""
     print_info("正在执行 PyInstaller 打包...")
     cmd = [
         "pyinstaller",
-        "-D", "-w",
+        "-D",
+        "--windowed",           # 隐藏控制台
+        "--noconsole",          # 双重保险
         "-n", "DesktopWidget",
         "-i", "icons/app.ico",
         "--collect-all", "requests",

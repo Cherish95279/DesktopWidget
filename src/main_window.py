@@ -158,7 +158,6 @@ class MainWindow(QWidget):
             self._notice_window.activateWindow()
             return
 
-        # 延迟 200ms 创建窗口，避免与闪烁回调冲突
         QTimer.singleShot(200, self._create_notice_window)
 
     def _create_notice_window(self):
@@ -173,9 +172,7 @@ class MainWindow(QWidget):
         if current_notice:
             notice_id = current_notice.get("id")
             if notice_id:
-                # 延迟选中，等待窗口加载完成
-                QTimer.singleShot(300, lambda: self._notice_window.select_notice_by_id(
-                    notice_id) if self._notice_window else None)
+                QTimer.singleShot(300, lambda: self._notice_window.select_notice_by_id(notice_id) if self._notice_window else None)
 
         self._notice_window.show()
 
@@ -183,7 +180,6 @@ class MainWindow(QWidget):
         """公告窗口销毁时清理引用"""
         self._notice_window = None
 
-    # ==================== 修改点：设置窗口改为非模态 ====================
     def open_settings(self, initial_page="general"):
         if self.settings_dialog is not None and self.settings_dialog.isVisible():
             self.settings_dialog.raise_()
@@ -196,8 +192,6 @@ class MainWindow(QWidget):
         try:
             dialog = SettingsDialog(self, initial_page=initial_page)
             dialog.setWindowFlags(Qt.WindowType.Window | Qt.WindowType.WindowCloseButtonHint)
-            # 移除模态设置，变为非模态，使公告窗口和设置窗口互不影响
-            # dialog.setWindowModality(Qt.WindowModality.ApplicationModal)  # 已注释
 
             screen = QApplication.primaryScreen()
             if screen:
@@ -210,11 +204,9 @@ class MainWindow(QWidget):
 
             self.settings_dialog = dialog
             dialog.finished.connect(self._on_settings_closed)
-            dialog.show()  # 改为非阻塞显示
-            # dialog.exec()  # 原阻塞调用已注释
+            dialog.show()
         except Exception as e:
             QMessageBox.critical(self, "错误", f"打开设置失败：{str(e)}")
-    # ===============================================================
 
     def _on_settings_closed(self):
         self.settings_dialog = None
@@ -313,21 +305,29 @@ class MainWindow(QWidget):
         self.up_speed = max(0, up)
         self.update()
 
+    # ===== 修改点：打包后跳过 GPU 监控（避免 nvidia-smi 子进程弹窗） =====
     def update_perf(self):
         try:
             self.cpu = psutil.cpu_percent()
             self.mem = psutil.virtual_memory().percent
-            if GPU_AVAILABLE:
-                try:
-                    gpus = GPUtil.getGPUs()
-                    self.gpu = gpus[0].load * 100 if gpus else 0
-                except Exception:
-                    self.gpu = 0
-            else:
+
+            # 打包后跳过 GPU 监控（避免 nvidia-smi 子进程弹窗）
+            if getattr(sys, 'frozen', False):
                 self.gpu = 0
+            else:
+                if GPU_AVAILABLE:
+                    try:
+                        gpus = GPUtil.getGPUs()
+                        self.gpu = gpus[0].load * 100 if gpus else 0
+                    except Exception:
+                        self.gpu = 0
+                else:
+                    self.gpu = 0
+
             self.update()
         except Exception:
             pass
+    # ================================================================
 
     def update_clock(self):
         self.now = datetime.now()
