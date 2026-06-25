@@ -1,9 +1,9 @@
 {
-  "id": "test-2026-06-25-007",
+  "id": "notice_20260625_175126",
   "enabled": true,
-  "title": "📢 测试公告",
-  "content": "这是第一行测试内容\n这是第二行测试内容",
-  "link": "https://github.com/Cherish95279/DesktopWidget",
-  "timestamp": "2026-06-25 14:30",
-  "show_date": false
+  "title": "📢 新版本发布",
+  "content": "v1.2.1 已正式发布，欢迎下载体验！",
+  "link": "https://github.com/Cherish95279/DesktopWidget/releases/tag/v1.2.1",
+  "timestamp": "2026-06-25 17:51",
+  "show_date": true
 }
