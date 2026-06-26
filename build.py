@@ -84,23 +84,17 @@ def update_version(version):
 
 
 def run_pyinstaller():
-    """执行 PyInstaller 打包"""
+    """执行 PyInstaller 打包（与手动成功命令完全一致）"""
     print_info("正在执行 PyInstaller 打包...")
     cmd = [
         "pyinstaller",
         "-D",
-        "--windowed",           # 隐藏控制台
-        "--noconsole",          # 双重保险
+        "--windowed",
+        "--noconsole",
         "-n", "DesktopWidget",
         "-i", "icons/app.ico",
-        "--collect-all", "requests",
-        "--collect-all", "certifi",
-        "--hidden-import=requests",
-        "--hidden-import=urllib3",
-        "--hidden-import=certifi",
-        "--hidden-import=charset_normalizer",
-        "--hidden-import=idna",
-        "--hidden-import=zhdate",
+        "--collect-all", "zhdate",
+        "--hidden-import", "zhdate",
         "--add-data", "skins;skins",
         "--add-data", "icons;icons",
         "widget.py"
