@@ -1,9 +1,9 @@
 {
-  "id": "notice_20260626_141312",
+  "id": "notice_20260626_141555",
   "enabled": true,
-  "title": "新版本 即将发布",
-  "content": "这是一个后端程序测试",
+  "title": "这是一次后端测试",
+  "content": "这是一次测试",
   "link": "",
-  "timestamp": "2026-06-26 14:13",
+  "timestamp": "2026-06-26 14:15",
   "show_date": true
 }
