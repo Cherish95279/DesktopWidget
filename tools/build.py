@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 """
 一键打包脚本
-用法: python build.py v1.1.9
+用法: python tools/build.py v1.2.2
 """
 
 import os
@@ -37,33 +37,42 @@ def print_error(msg):
     print(f"{RED}[ERROR]{RESET} {msg}")
 
 
+def get_project_root():
+    """获取项目根目录（build.py 所在目录的上层）"""
+    return os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+
+
 def archive_dist(version):
     """将 dist/ 归档到项目外，带时间戳防止重名"""
-    project_root = os.path.dirname(os.path.abspath(__file__))
+    project_root = get_project_root()
     archive_root = r"D:\PythonProjects\_archived_builds"
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
     archive_name = f"DesktopWidget_{version}_{timestamp}"
     archive_path = os.path.join(archive_root, archive_name)
 
-    if not os.path.exists("dist"):
+    dist_path = os.path.join(project_root, "dist")
+    if not os.path.exists(dist_path):
         print_info("没有 dist/ 文件夹需要归档")
         return
 
     os.makedirs(archive_path, exist_ok=True)
     dest = os.path.join(archive_path, "dist")
-    shutil.move("dist", dest)
+    shutil.move(dist_path, dest)
     print_info(f"已归档: dist/ -> {archive_path}\\dist")
 
-    if os.path.exists("build"):
-        shutil.rmtree("build")
+    build_path = os.path.join(project_root, "build")
+    if os.path.exists(build_path):
+        shutil.rmtree(build_path)
         print_info("已删除: build/")
 
 
 def update_version(version):
     """更新 constants.py 和 DesktopWidget.iss 中的版本号"""
+    project_root = get_project_root()
     clean_version = version.lstrip('v')
 
-    constants_path = "src/constants.py"
+    # 1. 更新 constants.py（保留 v 前缀）
+    constants_path = os.path.join(project_root, "src", "constants.py")
     with open(constants_path, 'r', encoding='utf-8') as f:
         content = f.read()
     content = re.sub(r'VERSION = "v\d+\.\d+\.\d+"', f'VERSION = "{version}"', content)
@@ -71,7 +80,8 @@ def update_version(version):
         f.write(content)
     print_info(f"已更新 {constants_path}: VERSION = {version}")
 
-    iss_path = "DesktopWidget.iss"
+    # 2. 更新 DesktopWidget.iss（现在在根目录）
+    iss_path = os.path.join(project_root, "DesktopWidget.iss")
     with open(iss_path, 'r', encoding='utf-8') as f:
         content = f.read()
     content = re.sub(r'#define MyAppVersion "\d+\.\d+\.\d+"', f'#define MyAppVersion "{clean_version}"', content)
@@ -84,8 +94,13 @@ def update_version(version):
 
 
 def run_pyinstaller():
-    """执行 PyInstaller 打包（与手动成功命令完全一致）"""
+    """执行 PyInstaller 打包"""
+    project_root = get_project_root()
     print_info("正在执行 PyInstaller 打包...")
+
+    # 切换到项目根目录执行（确保资源路径正确）
+    os.chdir(project_root)
+
     cmd = [
         "pyinstaller",
         "-D",
@@ -95,8 +110,8 @@ def run_pyinstaller():
         "-i", "icons/app.ico",
         "--collect-all", "zhdate",
         "--hidden-import", "zhdate",
-        "--add-data", "skins;skins",
-        "--add-data", "icons;icons",
+        "--add-data", f"skins{os.pathsep}skins",
+        "--add-data", f"icons{os.pathsep}icons",
         "widget.py"
     ]
     result = subprocess.run(cmd, capture_output=True, text=True)
@@ -109,6 +124,7 @@ def run_pyinstaller():
 
 def run_inno_setup():
     """执行 Inno Setup 编译"""
+    project_root = get_project_root()
     print_info("正在执行 Inno Setup 编译...")
     iscc_path = r"D:\Program Files (x86)\Inno Setup 6\iscc.exe"
 
@@ -117,7 +133,16 @@ def run_inno_setup():
         print_warn("请确认路径是否正确，或修改脚本中的 iscc_path")
         sys.exit(1)
 
-    result = subprocess.run([iscc_path, "DesktopWidget.iss"], capture_output=True, text=True)
+    # iss 文件现在在根目录
+    iss_path = os.path.join(project_root, "DesktopWidget.iss")
+    if not os.path.exists(iss_path):
+        print_error(f"未找到 Inno Setup 脚本: {iss_path}")
+        sys.exit(1)
+
+    # 切换到项目根目录执行（确保 dist/ 路径正确）
+    os.chdir(project_root)
+
+    result = subprocess.run([iscc_path, iss_path], capture_output=True, text=True)
     if result.returncode != 0:
         print_error("Inno Setup 编译失败！")
         print(result.stderr)
@@ -128,13 +153,13 @@ def run_inno_setup():
 def main():
     if len(sys.argv) < 2:
         print_error("请指定版本号！")
-        print("用法: python build.py v1.1.9")
+        print("用法: python tools/build.py v1.2.2")
         sys.exit(1)
 
     version = sys.argv[1]
     if not re.match(r'v?\d+\.\d+\.\d+', version):
         print_error(f"无效的版本号格式: {version}")
-        print("请使用 v1.1.9 或 1.1.9 格式")
+        print("请使用 v1.2.2 或 1.2.2 格式")
         sys.exit(1)
 
     if not version.startswith('v'):
