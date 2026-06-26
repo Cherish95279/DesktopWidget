@@ -15,7 +15,6 @@ from .threads import ServerScanner, WeatherThread, NetSpeedThread
 from .settings_dialog import SettingsDialog
 from .tray_icon import TrayIcon
 from .updater import UpdateChecker
-from .widgets import NoticeBubble
 
 try:
     import GPUtil
@@ -37,6 +36,83 @@ if sys.platform == 'win32' and getattr(sys, 'frozen', False):
             kwargs['creationflags'] = kwargs.get('creationflags', 0) | subprocess.CREATE_NO_WINDOW
         return _original_popen(*args, **kwargs)
     subprocess.Popen = _popen_no_window
+
+# ---------- 公告气泡组件 ----------
+class NoticeBubble(QLabel):
+    """右下角的公告气泡组件（💬）"""
+
+    def __init__(self, parent=None):
+        super().__init__("💬", parent)
+        self.setStyleSheet("""
+            QLabel {
+                background: transparent;
+                font-size: 20px;
+                padding: 4px 6px;
+                border-radius: 4px;
+            }
+            QLabel:hover {
+                background: rgba(255,255,255,60);
+            }
+        """)
+        self.setCursor(Qt.CursorShape.PointingHandCursor)
+        self.adjustSize()
+
+        self._flash_timer = None
+        self._flash_count = 0
+        self._is_visible = False   # ← 修改：默认隐藏
+        self._on_click_callback = None
+
+        self.hide()  # ← 新增：初始状态为隐藏
+
+    def set_on_click(self, callback):
+        self._on_click_callback = callback
+
+    def mousePressEvent(self, event: QMouseEvent):
+        if event.button() == Qt.MouseButton.LeftButton and self._on_click_callback:
+            self._on_click_callback()
+
+    def start_flash(self):
+        if self._flash_timer is not None:
+            return
+
+        self._is_visible = True
+        self.show()
+        self._flash_count = 0
+
+        self._flash_timer = QTimer()
+        self._flash_timer.timeout.connect(self._flash_toggle)
+        self._flash_timer.start(500)
+
+    def _flash_toggle(self):
+        self._flash_count += 1
+
+        if self._flash_count % 2 == 1:
+            self.hide()
+        else:
+            self.show()
+
+        if self._flash_count >= 20:
+            self._stop_flash()
+
+    def _stop_flash(self):
+        if self._flash_timer is not None:
+            self._flash_timer.stop()
+            self._flash_timer = None
+        self._is_visible = True
+        self.show()
+
+    def hide_bubble(self):
+        self._stop_flash()
+        self._is_visible = False
+        self.hide()
+
+    def show_bubble(self):
+        self._is_visible = True
+        self.show()
+
+    def is_visible(self) -> bool:
+        return self._is_visible
+
 
 # ---------- 主窗口 ----------
 class MainWindow(QWidget):
@@ -305,7 +381,6 @@ class MainWindow(QWidget):
         self.up_speed = max(0, up)
         self.update()
 
-    # ===== 修改点：打包后跳过 GPU 监控（避免 nvidia-smi 子进程弹窗） =====
     def update_perf(self):
         try:
             self.cpu = psutil.cpu_percent()
@@ -327,7 +402,6 @@ class MainWindow(QWidget):
             self.update()
         except Exception:
             pass
-    # ================================================================
 
     def update_clock(self):
         self.now = datetime.now()

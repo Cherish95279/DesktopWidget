@@ -2,9 +2,9 @@
 
 **珍爱桌面小工具** —— 基于 PyQt6 的轻量级桌面组件，集指针时钟、实时天气、性能监控、网速监控于一体，支持系统托盘和自动更新。
 
-> 当前版本：v1.2.1
+> 当前版本：v1.2.2
 
-![预览图](https://raw.githubusercontent.com/Cherish95279/DesktopWidget/main/screenshots/preview1.2.1.png)
+![预览图](https://raw.githubusercontent.com/Cherish95279/DesktopWidget/main/screenshots/preview1.2.2.png)
 
 ---
 
@@ -24,7 +24,7 @@
 - 🎨 **字体自定义**：支持自定义主窗口字体、字号、文字颜色，实时生效
 - 💖 **捐赠支持**：支付宝 / 微信扫码捐赠，感谢您的支持！
 - 💬 **反馈渠道**：一键直达 GitHub Discussions，方便提交问题和建议
-- 🔑 **GitHub Token**：支持用户自行填写 Token，提升更新检查频率至 5000 次/小时
+
 
 ---
 
@@ -83,6 +83,14 @@ MIT License
 https://raw.githubusercontent.com/Cherish95279/DesktopWidget/main/screenshots/preview1.2.0.png
 
 📝 更新日志
+
+v1.2.2 (2026-06-26)
+安装界面中文化：安装器界面全面切换为中文，提升用户安装体验
+
+公告窗口优化：优化公告消息窗口的显示逻辑，提升稳定性和交互流畅度
+
+DevTool 开发者工具：新增独立后端工具，实现打包、推送、发公告一站式自动化
+
 v1.2.1 (2026-06-25)
 公告系统完整上线：支持远程推送公告，气泡+托盘联动提醒
 

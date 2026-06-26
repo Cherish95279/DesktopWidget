@@ -17,14 +17,21 @@ def main():
     window = MainWindow()
     notice_manager = NoticeManager.get_instance()
 
-    # 定义回调函数（无延迟，信号本就在主线程）
+    # 定义回调函数
     def safe_start_flash(notice):
         if window and hasattr(window, 'notice_bubble') and window.notice_bubble is not None:
             window.notice_bubble.start_flash()
 
     def safe_hide_bubble():
-        if window and hasattr(window, 'notice_bubble') and window.notice_bubble is not None:
-            window.notice_bubble.hide_bubble()
+        """安全隐藏气泡（含重试机制）"""
+        def do_hide():
+            if window and hasattr(window, 'notice_bubble') and window.notice_bubble is not None:
+                window.notice_bubble.hide_bubble()
+                print("✅ 气泡已隐藏")
+            else:
+                QTimer.singleShot(50, do_hide)
+
+        do_hide()
 
     # 注册回调
     notice_manager.register_callback("on_new_notice", safe_start_flash)
