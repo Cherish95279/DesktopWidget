@@ -1,9 +1,9 @@
 {
-  "id": "notice_20260626_153427",
+  "id": "notice_20260626_182100",
   "enabled": true,
-  "title": "📢新版本即将上线📢📢📢",
-  "content": "新版本上线\n送新版软件一款",
+  "title": "📢 v1.2.2 发布公告测试",
+  "content": "项目文件结构已整理完成",
   "link": "",
-  "timestamp": "2026-06-26 15:34",
-  "show_date": false
+  "timestamp": "2026-06-26 18:21",
+  "show_date": true
 }
