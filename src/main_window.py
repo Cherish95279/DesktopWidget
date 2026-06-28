@@ -18,12 +18,14 @@ from .updater import UpdateChecker
 
 try:
     import GPUtil
+
     GPU_AVAILABLE = True
 except:
     GPU_AVAILABLE = False
 
 try:
     from zhdate import ZhDate
+
     LUNAR_AVAILABLE = True
 except ImportError:
     LUNAR_AVAILABLE = False
@@ -31,11 +33,16 @@ except ImportError:
 # ===== 打包后强制隐藏所有子进程窗口 =====
 if sys.platform == 'win32' and getattr(sys, 'frozen', False):
     _original_popen = subprocess.Popen
+
+
     def _popen_no_window(*args, **kwargs):
         if hasattr(subprocess, 'CREATE_NO_WINDOW'):
             kwargs['creationflags'] = kwargs.get('creationflags', 0) | subprocess.CREATE_NO_WINDOW
         return _original_popen(*args, **kwargs)
+
+
     subprocess.Popen = _popen_no_window
+
 
 # ---------- 公告气泡组件 ----------
 class NoticeBubble(QLabel):
@@ -59,10 +66,9 @@ class NoticeBubble(QLabel):
 
         self._flash_timer = None
         self._flash_count = 0
-        self._is_visible = False   # ← 修改：默认隐藏
+        self._is_visible = False
         self._on_click_callback = None
-
-        self.hide()  # ← 新增：初始状态为隐藏
+        self.hide()
 
     def set_on_click(self, callback):
         self._on_click_callback = callback
@@ -154,6 +160,14 @@ class MainWindow(QWidget):
         self.now = datetime.now()
         self.lunar_text = ""
         self.term_display = ""
+
+        # ===== 加载状态（用于“加载中...”动画） =====
+        self._loading_weather = False
+        self._loading_dots = 0
+        self._loading_timer = None
+
+        # ===== API 配置状态 =====
+        self._api_configured = True
 
         screen = QApplication.primaryScreen()
         if screen:
@@ -248,7 +262,8 @@ class MainWindow(QWidget):
         if current_notice:
             notice_id = current_notice.get("id")
             if notice_id:
-                QTimer.singleShot(300, lambda: self._notice_window.select_notice_by_id(notice_id) if self._notice_window else None)
+                QTimer.singleShot(300, lambda: self._notice_window.select_notice_by_id(
+                    notice_id) if self._notice_window else None)
 
         self._notice_window.show()
 
@@ -261,7 +276,8 @@ class MainWindow(QWidget):
             self.settings_dialog.raise_()
             self.settings_dialog.activateWindow()
             if hasattr(self.settings_dialog, 'switch_page'):
-                page_index = {"general": 0, "display": 1, "weather": 2, "theme": 3, "update": 4, "donation": 5, "about": 6}.get(initial_page, 0)
+                page_index = {"general": 0, "display": 1, "weather": 2, "theme": 3, "update": 4, "donation": 5,
+                              "about": 6}.get(initial_page, 0)
                 self.settings_dialog.switch_page(page_index)
             return
 
@@ -303,13 +319,42 @@ class MainWindow(QWidget):
     def get_latest_version_info(self):
         return self.latest_version_info if self.has_update else None
 
+    # ---------- 加载动画控制 ----------
+    def start_loading_animation(self):
+        """开始加载动画"""
+        self._loading_weather = True
+        self._loading_dots = 0
+        if self._loading_timer is None:
+            self._loading_timer = QTimer()
+            self._loading_timer.timeout.connect(self._update_loading_dots)
+            self._loading_timer.start(500)
+        self.update()
+
+    def _update_loading_dots(self):
+        """更新加载动画的点数（0-3循环）"""
+        self._loading_dots = (self._loading_dots + 1) % 4
+        self.update()
+
+    def stop_loading_animation(self):
+        """停止加载动画"""
+        self._loading_weather = False
+        if self._loading_timer is not None:
+            self._loading_timer.stop()
+            self._loading_timer = None
+        self.update()
+
     # ---------- 天气线程管理 ----------
-    def start_weather_thread(self):
+    def start_weather_thread(self, force_restart=False):
+        """智能启动天气线程：根据布局配置决定是否启动"""
         settings = QSettings("MyDesktopApp", "WeatherSettings")
         api_url = settings.value("api_url", "")
         api_key = settings.value("api_key", "")
         refresh_minutes = int(settings.value("refresh_minutes", 120))
 
+        # ===== 更新 API 配置状态 =====
+        self._api_configured = bool(api_url and api_key)
+
+        # ===== 检查布局中是否配置了天气 =====
         has_weather = False
         slot_keys = ["slot_1", "slot_2", "slot_3", "slot_4", "slot_5", "slot_6", "slot_7", "slot_8"]
         for key in slot_keys:
@@ -321,32 +366,68 @@ class MainWindow(QWidget):
 
         if not has_weather:
             if self.weather_thread is not None:
+                print("🌤️ 布局中未配置天气，停止天气线程")
+                try:
+                    self.weather_thread.data_updated.disconnect()
+                    self.weather_thread.error_signal.disconnect()
+                except:
+                    pass
                 self.weather_thread.stop()
                 self.weather_thread = None
+            self.stop_loading_animation()
             return
 
-        if not api_url or not api_key:
+        # ===== 配置错误：显示提示 =====
+        if not self._api_configured:
             if self.weather_thread is not None:
+                try:
+                    self.weather_thread.data_updated.disconnect()
+                    self.weather_thread.error_signal.disconnect()
+                except:
+                    pass
                 self.weather_thread.stop()
                 self.weather_thread = None
-            self.on_weather_error("未配置 API 地址或密钥")
+            self.stop_loading_animation()
+            self.update()
             return
 
+        # ===== 如果线程已在运行且没有强制重启，直接返回（静默刷新） =====
+        if self.weather_thread is not None and not force_restart:
+            return
+
+        # ===== 停止旧线程并断开所有信号 =====
         if self.weather_thread is not None:
-            return
+            print("🔄 断开旧天气线程信号并停止...")
+            try:
+                self.weather_thread.data_updated.disconnect()
+                self.weather_thread.error_signal.disconnect()
+            except Exception as e:
+                print(f"⚠️ 断开信号时出错: {e}")
+            self.weather_thread.stop()
+            self.weather_thread = None
 
+        # ===== 决定是否显示加载动画 =====
+        if force_restart or self.weather.get("city") == "--":
+            self.start_loading_animation()
+
+        # ===== 启动新线程 =====
+        print("🌤️ 启动新天气线程...")
         self.weather_thread = WeatherThread(api_url, api_key, refresh_minutes)
         self.weather_thread.data_updated.connect(self.update_weather)
         self.weather_thread.error_signal.connect(self.on_weather_error)
         self.weather_thread.start()
+        print("🌤️ 天气线程已启动")
 
     def update_weather(self, data):
+        """收到天气数据更新"""
+        print(f"🔔 主窗口收到天气更新: {data.get('city')} {data.get('weather')} {data.get('temp')}℃")
+        self.stop_loading_animation()
         self.weather = data
         self.update()
 
     def on_weather_error(self, err_msg):
-        self.weather = {"city": "⚠️", "weather": "⚠️", "temp": "?", "wind": err_msg[:10] + "..."}
-        self.update()
+        """天气错误 - 只打印日志，保持加载中（网络错误）"""
+        print(f"❌ 天气错误: {err_msg}")
 
     # ---------- 关闭事件 ----------
     def closeEvent(self, event):
@@ -386,7 +467,6 @@ class MainWindow(QWidget):
             self.cpu = psutil.cpu_percent()
             self.mem = psutil.virtual_memory().percent
 
-            # 打包后跳过 GPU 监控（避免 nvidia-smi 子进程弹窗）
             if getattr(sys, 'frozen', False):
                 self.gpu = 0
             else:
@@ -459,8 +539,21 @@ class MainWindow(QWidget):
             default_val = DEFAULT_LAYOUT.get(key, "empty")
             slot_values[key] = settings.value(key, default_val)
 
+        # 准备数据
         ip_text = f"{self.local_ip}"
-        city_text = self.weather.get('city', '--')
+
+        # ===== 地区名：优先从 QSettings 读取用户选择的地区 =====
+        selected_city = settings.value("selected_city", "")
+        selected_county = settings.value("selected_county", "")
+        user_city = selected_county if selected_county else selected_city
+
+        if user_city:
+            display_city = user_city
+        else:
+            display_city = self.weather.get('city', '未知地区')
+            if display_city == "--":
+                display_city = "未知地区"
+
         weather_icon = get_weather_icon(self.weather['weather'])
         weather_text = f"{weather_icon} {self.weather['weather']} {self.weather['temp']}℃"
         netspeed_text = f"↓{self.down_speed:.1f}Mb/s\n↑{self.up_speed:.1f}Mb/s"
@@ -469,7 +562,7 @@ class MainWindow(QWidget):
         resolution_text = f"{self.screen_res}"
         refresh_rate_text = f"{self.fps}Hz"
         memory_text = f"内存\n{int(self.mem)}%"
-        date_text = f"{self.now.strftime('%Y/%m/%d')}\n  星期{['一','二','三','四','五','六','日'][self.now.weekday()]}"
+        date_text = f"{self.now.strftime('%Y/%m/%d')}\n  星期{['一', '二', '三', '四', '五', '六', '日'][self.now.weekday()]}"
         lunar_text = f"{self.lunar_text}\n{self.term_display}"
 
         content_text_map = {
@@ -487,9 +580,9 @@ class MainWindow(QWidget):
         }
 
         multiline_map = {
-            "weather": [city_text, weather_text],
             "lunar": [self.lunar_text, self.term_display],
-            "date": [self.now.strftime('%Y/%m/%d'), f"星期{['一','二','三','四','五','六','日'][self.now.weekday()]}"],
+            "date": [self.now.strftime('%Y/%m/%d'),
+                     f"星期{['一', '二', '三', '四', '五', '六', '日'][self.now.weekday()]}"],
             "netspeed": [f"↓{self.down_speed:.1f}Mb/s", f"↑{self.up_speed:.1f}Mb/s"],
             "memory": ["内存", f"{int(self.mem)}%"],
         }
@@ -508,6 +601,31 @@ class MainWindow(QWidget):
         for slot_key, (x, y, w, h) in slot_position_map.items():
             configured_key = slot_values.get(slot_key, "empty")
             if configured_key == "empty":
+                continue
+
+            # ===== 特殊处理：天气（分两行显示） =====
+            if configured_key == "weather":
+                # 第一行：地区名（从 QSettings 读取）
+                painter.drawText(x, y, w, h // 2,
+                                 Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter,
+                                 display_city)
+
+                # 第二行：天气详情或提示
+                if not self._api_configured:
+                    painter.drawText(x, y + h // 2, w, h // 2,
+                                     Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter,
+                                     "设置API")
+                elif self._loading_weather:
+                    dots_text = "." * self._loading_dots
+                    painter.drawText(x, y + h // 2, w, h // 2,
+                                     Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter,
+                                     f"⌛ 加载中{dots_text}")
+                else:
+                    weather_icon = get_weather_icon(self.weather['weather'])
+                    weather_text = f"{weather_icon} {self.weather['weather']} {self.weather['temp']}℃"
+                    painter.drawText(x, y + h // 2, w, h // 2,
+                                     Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter,
+                                     weather_text)
                 continue
 
             if configured_key in multiline_map:
@@ -545,7 +663,7 @@ class MainWindow(QWidget):
         painter.save()
         painter.translate(cx, cy)
         painter.rotate(angle)
-        painter.drawPixmap(-pixmap.width()//2, -pixmap.height()//2, pixmap)
+        painter.drawPixmap(-pixmap.width() // 2, -pixmap.height() // 2, pixmap)
         painter.restore()
 
     def mousePressEvent(self, e):

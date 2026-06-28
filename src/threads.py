@@ -42,7 +42,7 @@ class ServerScanner(QThread):
             return None
 
 
-# ---------- 天气线程 ----------
+# ---------- 天气线程（增加重试机制） ----------
 class WeatherThread(QThread):
     data_updated = pyqtSignal(dict)
     error_signal = pyqtSignal(str)
@@ -106,20 +106,17 @@ class WeatherThread(QThread):
 
                 # ===== 优先使用用户选择的城市 =====
                 if user_location:
-                    # 尝试获取用户选择城市的 adcode
                     city_code = self.get_adcode(user_location)
                     if city_code:
                         display_city = user_location
                         print(f"✅ 使用用户选择的城市: {user_location} (adcode: {city_code})")
                     else:
-                        # 如果获取 adcode 失败，回退到 IP 定位
                         print(f"⚠️ 获取 {user_location} 的 adcode 失败，回退到 IP 定位")
                         city_code, ip_city = self.get_ip_adcode()
-                        display_city = user_location  # 仍然显示用户选择的城市名，但天气数据来自 IP
+                        display_city = user_location
                         if not city_code:
                             raise Exception("无法获取城市代码")
                 else:
-                    # 用户未选择城市，使用 IP 定位
                     city_code, ip_city = self.get_ip_adcode()
                     display_city = ip_city if ip_city else "未知地区"
                     if not city_code:
@@ -134,7 +131,6 @@ class WeatherThread(QThread):
 
                 if data['status'] == '1' and data['count'] != '0':
                     live = data['lives'][0]
-                    # 日出日落已移除，固定显示 "--:--"
                     self.data_updated.emit({
                         'city': display_city,
                         'weather': live['weather'],
@@ -147,7 +143,6 @@ class WeatherThread(QThread):
                 else:
                     error_msg = data.get('info', '未知错误')
                     self.error_signal.emit(f"API错误: {error_msg}")
-                    # 即使出错，也发射一个包含城市名的数据，让 UI 至少显示城市名
                     self.data_updated.emit({
                         'city': display_city,
                         'weather': '⚠️',
@@ -159,18 +154,84 @@ class WeatherThread(QThread):
 
             except Exception as e:
                 print(f"❌ 天气请求异常: {e}")
-                self.error_signal.emit(f"请求异常: {str(e)}")
-                # 错误时也尝试显示城市名（如果有）
-                if user_location:
-                    self.data_updated.emit({
-                        'city': user_location,
-                        'weather': '⚠️',
-                        'temp': '?',
-                        'wind': '',
-                        'sunrise': '--:--',
-                        'sunset': '--:--',
-                    })
+                # ===== 关键修复：增加重试机制，网络恢复后自动重连 =====
+                # 先尝试短间隔重试（10秒间隔，最多6次 = 60秒）
+                retry_count = 0
+                max_retries = 6
+                while retry_count < max_retries and not self._stopped:
+                    retry_count += 1
+                    print(f"🔄 天气请求失败，{retry_count}/{max_retries} 次重试...")
+                    self.error_signal.emit(f"请求异常，正在重试 ({retry_count}/{max_retries})...")
+                    # 等待10秒
+                    for _ in range(10):
+                        if self._stopped:
+                            break
+                        self.msleep(1000)
+                    if self._stopped:
+                        break
+                    # 重试请求
+                    try:
+                        # 重新获取设置（可能在重试期间用户切换了地区）
+                        settings = QSettings("MyDesktopApp", "WeatherSettings")
+                        selected_city = settings.value("selected_city", "")
+                        selected_county = settings.value("selected_county", "")
+                        user_location = selected_county if selected_county else selected_city
 
+                        if user_location:
+                            city_code = self.get_adcode(user_location)
+                            if not city_code:
+                                city_code, ip_city = self.get_ip_adcode()
+                                display_city = user_location
+                            else:
+                                display_city = user_location
+                        else:
+                            city_code, ip_city = self.get_ip_adcode()
+                            display_city = ip_city if ip_city else "未知地区"
+
+                        if city_code:
+                            weather_url = f"{self.api_url}/v3/weather/weatherInfo?key={self.api_key}&city={city_code}&extensions=base"
+                            w_resp = requests.get(weather_url, timeout=5, verify=certifi.where())
+                            w_resp.raise_for_status()
+                            data = w_resp.json()
+                            if data['status'] == '1' and data['count'] != '0':
+                                live = data['lives'][0]
+                                self.data_updated.emit({
+                                    'city': display_city,
+                                    'weather': live['weather'],
+                                    'temp': live['temperature'],
+                                    'wind': live['winddirection'] + live['windpower'] + '级',
+                                    'sunrise': '--:--',
+                                    'sunset': '--:--',
+                                })
+                                print(f"✅ 重试成功，天气更新成功: {display_city} {live['weather']} {live['temperature']}℃")
+                                # 清除错误状态（如果之前有错误信号，现在成功可以恢复）
+                                self.error_signal.emit("")  # 发送空字符串清除错误状态
+                                break  # 跳出重试循环
+                    except Exception as retry_e:
+                        print(f"❌ 重试失败: {retry_e}")
+                        continue
+                else:
+                    # 所有重试都失败，发送最终错误
+                    self.error_signal.emit(f"请求异常（重试 {max_retries} 次后失败）: {str(e)}")
+                    # 发射一个包含城市名的数据，让 UI 至少显示城市名
+                    if user_location:
+                        self.data_updated.emit({
+                            'city': user_location,
+                            'weather': '⚠️',
+                            'temp': '?',
+                            'wind': '',
+                            'sunrise': '--:--',
+                            'sunset': '--:--',
+                        })
+                    # 进入正常等待周期
+                    # 等待刷新间隔
+                    for _ in range(self.refresh_minutes * 60):
+                        if self._stopped:
+                            break
+                        self.msleep(1000)
+                    continue  # 跳过下面的等待，因为已经等待过了
+
+            # 如果请求成功或重试成功，进入正常等待间隔
             # 等待刷新间隔
             for _ in range(self.refresh_minutes * 60):
                 if self._stopped:

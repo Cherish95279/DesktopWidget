@@ -12,6 +12,7 @@ class WeatherPage(QWidget):
         super().__init__(parent)
         self.parent_dialog = parent
         self._updating = False
+        self._signal_connected = False
         self.setup_ui()
         self.load_settings()
 
@@ -20,11 +21,10 @@ class WeatherPage(QWidget):
         layout.setContentsMargins(15, 20, 15, 15)
         layout.setSpacing(8)
 
-        # ---------- 第一排：API 地址（标签） ----------
+        # ---------- API 地址 ----------
         lbl_url = QLabel("API 地址")
         layout.addWidget(lbl_url)
 
-        # ---------- 第二排：高德下拉框 + URL 输入框 ----------
         url_layout = QHBoxLayout()
         self.url_combo = QComboBox()
         self.url_combo.addItems(["高德", "自定义"])
@@ -37,23 +37,20 @@ class WeatherPage(QWidget):
         url_layout.addWidget(self.url_edit)
         layout.addLayout(url_layout)
 
-        # ---------- 第三排：API 密钥（标签） ----------
+        # ---------- API 密钥 ----------
         lbl_key = QLabel("API 密钥")
         layout.addWidget(lbl_key)
 
-        # ---------- 第四排：密钥输入框 ----------
         self.key_edit = QLineEdit()
         self.key_edit.setPlaceholderText("请输入 API 密钥")
         self.key_edit.setEchoMode(QLineEdit.EchoMode.Password)
         self.key_edit.textChanged.connect(self.on_key_changed)
         layout.addWidget(self.key_edit)
 
-        # ---------- 第五排：状态 + 刷新频率（同一行） ----------
+        # ---------- 状态 + 刷新频率 ----------
         status_freq_layout = QHBoxLayout()
-
         self.status_label = QLabel("状态：未配置")
         status_freq_layout.addWidget(self.status_label)
-
         status_freq_layout.addStretch()
 
         freq_label1 = QLabel("每")
@@ -79,7 +76,7 @@ class WeatherPage(QWidget):
 
         layout.addLayout(status_freq_layout)
 
-        # ---------- 说明文字（移到天气显示地区上方） ----------
+        # ---------- 说明文字 ----------
         info_label = QLabel(
             '说明：API地址和密钥可在 <a href="https://lbs.amap.com/" style="color: #0366d6; text-decoration: none;">高德API</a> 免费获取，5000次/月'
         )
@@ -88,12 +85,11 @@ class WeatherPage(QWidget):
         info_label.setStyleSheet("color: #555; font-size: 12px; font-weight: normal;")
         layout.addWidget(info_label)
 
-        # ---------- 天气显示地区（标签） ----------
+        # ---------- 天气显示地区 ----------
         region_label = QLabel("天气显示地区")
         region_label.setStyleSheet("font-weight: bold; margin-top: 5px;")
         layout.addWidget(region_label)
 
-        # ---------- 三个地区下拉框 ----------
         region_layout = QHBoxLayout()
         self.province_combo = QComboBox()
         self.province_combo.setMinimumWidth(80)
@@ -210,11 +206,21 @@ class WeatherPage(QWidget):
             settings.sync()
 
             self.region_changed.emit()
+            self._refresh_main_window_weather()
+
+    def _refresh_main_window_weather(self):
+        """刷新主窗口天气（强制重启天气线程）"""
+        main_window = None
+        if self.parent_dialog and hasattr(self.parent_dialog, 'parent'):
+            main_window = self.parent_dialog.parent()
+        if not main_window:
             parent = self.parent()
             if parent and hasattr(parent, 'parent'):
                 main_window = parent.parent()
-                if main_window and hasattr(main_window, 'start_weather_thread'):
-                    main_window.start_weather_thread()
+        if main_window and hasattr(main_window, 'start_weather_thread'):
+            main_window.start_weather_thread(force_restart=True)
+            if hasattr(main_window, 'update'):
+                main_window.update()
 
     # ---------- 加载设置 ----------
     def load_regions(self):
@@ -238,6 +244,32 @@ class WeatherPage(QWidget):
             if idx_county >= 0:
                 self.county_combo.setCurrentIndex(idx_county)
 
+    def _get_main_window(self):
+        """获取主窗口实例"""
+        if self.parent_dialog and hasattr(self.parent_dialog, 'parent'):
+            return self.parent_dialog.parent()
+        parent = self.parent()
+        if parent and hasattr(parent, 'parent'):
+            return parent.parent()
+        return None
+
+    def _connect_weather_signal(self):
+        """连接主窗口的天气更新信号，实时刷新状态"""
+        main_window = self._get_main_window()
+        if main_window and hasattr(main_window, 'weather_thread'):
+            weather_thread = main_window.weather_thread
+            if weather_thread:
+                try:
+                    weather_thread.data_updated.disconnect(self._on_weather_updated)
+                except:
+                    pass
+                weather_thread.data_updated.connect(self._on_weather_updated)
+                self._signal_connected = True
+
+    def _on_weather_updated(self, data):
+        """天气数据更新时刷新状态"""
+        self.check_status()
+
     def load_settings(self):
         self._updating = True
         try:
@@ -257,6 +289,10 @@ class WeatherPage(QWidget):
 
             self.load_regions()
             self.check_status()
+
+            # ===== 连接天气更新信号，实时刷新状态 =====
+            self._connect_weather_signal()
+
         finally:
             self._updating = False
 
