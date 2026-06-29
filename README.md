@@ -6,6 +6,7 @@
 
 ![预览图](https://raw.githubusercontent.com/Cherish95279/DesktopWidget/main/screenshots/preview1.2.5.png)
 
+![主题预览图](https://raw.githubusercontent.com/Cherish95279/DesktopWidget/main/screenshots/zhuti2.png)
 ---
 
 ## ✨ 主要功能
