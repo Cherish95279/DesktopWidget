@@ -118,6 +118,7 @@ class SettingsDialog(QDialog):
     def _create_theme_page(self):
         if self.theme_page is None:
             self.theme_page = ThemePage(self)
+            self.theme_page.theme_changed.connect(self.on_theme_changed)
             self.stacked.addWidget(self.theme_page)
         return self.theme_page
 
@@ -148,6 +149,14 @@ class SettingsDialog(QDialog):
     def on_font_changed(self):
         parent = self.parent()
         if parent and hasattr(parent, 'update'):
+            parent.update()
+
+    def on_theme_changed(self):
+        """主题变化时刷新主窗口"""
+        parent = self.parent()
+        if parent and hasattr(parent, 'update_theme_cache'):
+            parent.update_theme_cache()
+        elif parent and hasattr(parent, 'update'):
             parent.update()
 
     def save_settings(self):

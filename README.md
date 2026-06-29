@@ -2,9 +2,9 @@
 
 **珍爱桌面小工具** —— 基于 PyQt6 的轻量级桌面组件，集指针时钟、实时天气、性能监控、网速监控于一体，支持系统托盘和自动更新。
 
-> 当前版本：v1.2.3
+> 当前版本：v1.2.5
 
-![预览图](https://raw.githubusercontent.com/Cherish95279/DesktopWidget/main/screenshots/preview1.2.3.png)
+![预览图](https://raw.githubusercontent.com/Cherish95279/DesktopWidget/main/screenshots/preview1.2.5.png)
 
 ---
 
@@ -16,6 +16,7 @@
 - 🌐 **网速监控**：实时显示上行 / 下行速度
 - 📅 **农历 + 节气**：显示农历日期，自动计算下一个节气及倒计时
 - ⚙️ **自定义布局**：8 个信息槽位自由排列，下拉菜单实时生效，无需保存
+- 🎨 **主题系统**：内置“默认主题”和“竹林”双主题，支持背景颜色、着色强度、不透明度独立调节，一键恢复默认
 - 📢 **公告系统**：支持远程推送公告，有新公告时气泡+托盘闪烁提醒，内置历史公告管理
 - 🖥️ **系统托盘**：支持最小化到托盘，左键单击显示/隐藏窗口，双击恢复窗口
 - 🔄 **自动更新**：启动时自动检测新版本，支持一键下载安装
@@ -44,10 +45,25 @@ git clone https://github.com/Cherish95279/DesktopWidget.git
 cd DesktopWidget
 
 # 安装依赖
-pip install PyQt6 psutil requests zhdate GPUtil
+pip install PyQt6 psutil requests zhdate GPUtil Pillow
 
 # 运行
 python widget.py
+
+🎨 主题系统
+v1.2.5 起，DesktopWidget 正式支持主题切换功能，你可以根据自己的喜好定制桌面小工具的外观：
+
+主题切换：内置“默认主题”和“竹林”两套主题，一键切换，实时生效
+
+背景颜色：提供“经典暗色”、“浅色主题”、“浅蓝灰”三种预设颜色，支持自定义取色
+
+着色强度：独立控制背景颜色叠加层的透明度（0~255），值越小越透（原图清晰），值越大颜色越浓
+
+不透明度：调节窗口整体透明度（20%~100%），让桌面小工具与你的桌面环境更好地融合
+
+恢复默认：一键重置所有主题相关设置，快速回到初始状态
+
+
 
 🛠️ 技术栈
 技术	用途
@@ -79,9 +95,31 @@ MIT License
 农历转换基于 zhdate
 
 📸 预览图
-https://raw.githubusercontent.com/Cherish95279/DesktopWidget/main/screenshots/preview1.2.0.png
+https://raw.githubusercontent.com/Cherish95279/DesktopWidget/main/screenshots/preview1.2.5.png
 
 📝 更新日志
+
+v1.3.0 (2026-06-29)
+🎨 主题系统全面上线
+
+新增“默认主题”和“竹林”双主题切换，设置页面集成主题下拉框
+
+新增“背景颜色”功能：三种预设色块 + 自定义取色，实时生效
+
+新增“着色强度”调节：独立控制背景颜色叠加层透明度（0~255）
+
+优化“不透明度”调节：滑块范围 20%~100%，映射窗口透明度 75%~100%
+
+新增“恢复默认”按钮：一键重置所有主题设置
+
+主题切换即时生效，无需保存
+
+🔄 性能优化
+
+修复打开设置时反复触发天气线程重启的问题
+
+优化设置页面加载逻辑，减少不必要的网络请求
+
 v1.2.3 (2026-06-28)
 修复了一些已知问题
 
@@ -131,5 +169,5 @@ v1.1.9
 
 修复已知问题
 
-text
+
 

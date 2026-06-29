@@ -1,7 +1,7 @@
 import sys
 from PyQt6.QtWidgets import QSystemTrayIcon, QMenu, QApplication
 from PyQt6.QtGui import QIcon, QAction, QPainter, QColor, QPixmap
-from PyQt6.QtCore import QSize, QTimer, Qt  # ← 添加 Qt
+from PyQt6.QtCore import QSize, QTimer, QSettings, Qt  # 添加 Qt 导入
 from .utils import resource_path
 from .notice import NoticeManager, NoticeWindow
 
@@ -25,6 +25,9 @@ class TrayIcon(QSystemTrayIcon):
         self._green_dot_visible = False
         self._notice_opened = False
 
+        # 窗口模式相关
+        self._window_mode = "float"  # bottom / float / top
+
         self.activated.connect(self.on_activated)
 
         self.menu = QMenu()
@@ -34,6 +37,9 @@ class TrayIcon(QSystemTrayIcon):
         # 注册公告回调
         self._register_notice_callbacks()
 
+        # 恢复窗口模式状态
+        self._load_window_mode()
+
     def _register_notice_callbacks(self):
         manager = NoticeManager.get_instance()
         manager.register_callback("on_new_notice", self._on_notice_received)
@@ -41,17 +47,14 @@ class TrayIcon(QSystemTrayIcon):
         print("📢 托盘回调注册成功")
 
     def _on_notice_received(self, notice):
-        """有新公告"""
         print("🔔 托盘：收到新公告，开始闪烁")
         self._has_notice = True
         self._notice_opened = False
         self._green_dot_visible = True
         self._update_tooltip()
-        # 延迟启动闪烁
         QTimer.singleShot(10, self._start_flash)
 
     def _on_notice_cleared(self):
-        """无公告或已读"""
         print("🔕 托盘：公告已读或清除")
         self._has_notice = False
         self._notice_opened = True
@@ -91,7 +94,6 @@ class TrayIcon(QSystemTrayIcon):
             print("🔕 托盘图标停止闪烁")
 
     def _draw_green_dot(self):
-        """绘制绿色小点（安全版本）"""
         try:
             pixmap = self._default_icon.pixmap(QSize(24, 24))
             if pixmap.isNull():
@@ -120,15 +122,99 @@ class TrayIcon(QSystemTrayIcon):
         else:
             self.setToolTip("珍爱桌面小工具")
 
+    # ===== 窗口模式管理 =====
+    def _load_window_mode(self):
+        """从 QSettings 加载窗口模式"""
+        settings = QSettings("MyDesktopApp", "WeatherSettings")
+        mode = settings.value("window_mode", "float")
+        if mode not in ["bottom", "float", "top"]:
+            mode = "float"
+        self._window_mode = mode
+        self._apply_window_mode(mode, save=False)
+
+    def _save_window_mode(self, mode):
+        """保存窗口模式到 QSettings"""
+        settings = QSettings("MyDesktopApp", "WeatherSettings")
+        settings.setValue("window_mode", mode)
+        settings.sync()
+
+    def _apply_window_mode(self, mode, save=True):
+        """应用窗口模式到主窗口"""
+        window = self.parent_window
+        if not window:
+            return
+
+        # 获取当前窗口标志
+        flags = window.windowFlags()
+
+        # 清除所有置顶/置底标志
+        flags = flags & ~Qt.WindowType.WindowStaysOnTopHint
+        flags = flags & ~Qt.WindowType.WindowStaysOnBottomHint
+
+        if mode == "bottom":
+            flags = flags | Qt.WindowType.WindowStaysOnBottomHint
+        elif mode == "top":
+            flags = flags | Qt.WindowType.WindowStaysOnTopHint
+        # "float" 模式不添加任何特殊标志
+
+        window.setWindowFlags(flags)
+        window.show()  # 重新显示使标志生效
+
+        # 更新菜单项选中状态
+        if hasattr(self, '_bottom_action'):
+            self._bottom_action.setChecked(mode == "bottom")
+        if hasattr(self, '_float_action'):
+            self._float_action.setChecked(mode == "float")
+        if hasattr(self, '_top_action'):
+            self._top_action.setChecked(mode == "top")
+
+        self._window_mode = mode
+
+        if save:
+            self._save_window_mode(mode)
+
+        mode_names = {"bottom": "置底", "float": "悬浮模式", "top": "总是置顶"}
+        print(f"📌 窗口模式: {mode_names.get(mode, mode)}")
+
+    def _on_mode_triggered(self, mode):
+        """窗口模式切换（由菜单触发）"""
+        if mode == self._window_mode:
+            return
+        self._apply_window_mode(mode)
+
+    # ===== 菜单 =====
     def setup_menu(self):
         self.menu.clear()
 
+        # 显示主窗口
         show_action = QAction("🖥️ 显示主窗口", self)
         show_action.triggered.connect(self.show_window)
         self.menu.addAction(show_action)
 
         self.menu.addSeparator()
 
+        # 窗口模式（三个互斥选项）
+        self._bottom_action = QAction("⬇️ 置底", self)
+        self._bottom_action.setCheckable(True)
+        self._bottom_action.triggered.connect(lambda: self._on_mode_triggered("bottom"))
+
+        self._float_action = QAction("↕️ 悬浮模式", self)
+        self._float_action.setCheckable(True)
+        self._float_action.setChecked(True)  # 默认选中
+        self._float_action.triggered.connect(lambda: self._on_mode_triggered("float"))
+
+        self._top_action = QAction("📌 总是置顶", self)
+        self._top_action.setCheckable(True)
+        self._top_action.triggered.connect(lambda: self._on_mode_triggered("top"))
+
+        # 添加到菜单（顺序固定）
+        self.menu.addAction(self._bottom_action)
+        self.menu.addAction(self._float_action)
+        self.menu.addAction(self._top_action)
+
+        self.menu.addSeparator()
+
+        # 设置、主题、检查更新
         settings_action = QAction("⚙️ 设置", self)
         settings_action.triggered.connect(self.parent_window.open_settings)
         self.menu.addAction(settings_action)

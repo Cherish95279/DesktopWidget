@@ -263,22 +263,61 @@ class GeneralPage(QWidget):
         city = settings.value("selected_city", "")
         county = settings.value("selected_county", "")
 
+        # ===== 阻塞信号，避免触发任何回调 =====
+        self.province_combo.blockSignals(True)
+        self.city_combo.blockSignals(True)
+        self.county_combo.blockSignals(True)
+
+        # ---- 1. 恢复省份 ----
         if province:
             idx = self.province_combo.findText(province)
             if idx >= 0:
                 self.province_combo.setCurrentIndex(idx)
-                self.on_province_changed(province)
+        else:
+            # 如果没有保存省份，设为默认“请选择省份”
+            self.province_combo.setCurrentIndex(0)
 
+        # ---- 2. 填充城市列表（根据当前省份） ----
+        current_province = self.province_combo.currentText()
+        self.city_combo.clear()
+        self.city_combo.addItem("请选择城市")
+        if current_province and current_province != "请选择省份" and current_province in REGIONS:
+            cities = list(REGIONS[current_province].get("cities", {}).keys())
+            self.city_combo.addItems(cities)
+
+        # ---- 3. 恢复城市 ----
         if city:
             idx_city = self.city_combo.findText(city)
             if idx_city >= 0:
                 self.city_combo.setCurrentIndex(idx_city)
-                self.on_city_changed(city)
+        else:
+            self.city_combo.setCurrentIndex(0)
 
+        # ---- 4. 填充区县列表（根据当前城市） ----
+        current_city = self.city_combo.currentText()
+        self.county_combo.clear()
+        self.county_combo.addItem("请选择区县")
+        if current_province and current_province != "请选择省份" and current_city and current_city != "请选择城市":
+            if current_province in REGIONS:
+                cities_data = REGIONS[current_province].get("cities", {})
+                if current_city in cities_data:
+                    counties = cities_data[current_city].get("counties", [])
+                    self.county_combo.addItems(counties)
+
+        # ---- 5. 恢复区县 ----
         if county:
             idx_county = self.county_combo.findText(county)
             if idx_county >= 0:
                 self.county_combo.setCurrentIndex(idx_county)
+        else:
+            self.county_combo.setCurrentIndex(0)
+
+        # ===== 恢复信号 =====
+        self.province_combo.blockSignals(False)
+        self.city_combo.blockSignals(False)
+        self.county_combo.blockSignals(False)
+
+        # 注意：这里不触发任何 weather refresh，因为只是加载设置，用户没有主动更改
 
     def save_settings(self):
         pass
