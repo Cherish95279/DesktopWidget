@@ -13,8 +13,7 @@ import subprocess
 import urllib.request
 import urllib.error
 import base64
-import mimetypes
-import io
+import requests  # 需要安装 requests 库
 
 
 def print_flush(msg):
@@ -93,7 +92,7 @@ def upload_github_asset(repo, release_id, file_path, token):
 
 
 def upload_gitee_asset(repo, release_id, file_path, token):
-    """上传文件到 Gitee Release（使用 multipart/form-data）"""
+    """上传文件到 Gitee Release（使用 requests 库）"""
     file_name = os.path.basename(file_path)
     file_size = os.path.getsize(file_path)
     print_flush(f"  📤 上传 {file_name} ({file_size / 1024 / 1024:.1f} MB) 到 Gitee...")
@@ -103,58 +102,25 @@ def upload_gitee_asset(repo, release_id, file_path, token):
         return False
 
     url = f"https://gitee.com/api/v5/repos/{repo}/releases/{release_id}/assets"
-
-    # 构建 multipart/form-data 请求体
-    boundary = "----WebKitFormBoundary" + "".join([chr(65 + i % 26) for i in range(10)])
-
-    # 准备各部分
-    parts = []
-    # access_token
-    parts.append(f'--{boundary}')
-    parts.append('Content-Disposition: form-data; name="access_token"')
-    parts.append('')
-    parts.append(token)
-
-    # 文件内容
-    parts.append(f'--{boundary}')
-    content_type = mimetypes.guess_type(file_name)[0] or 'application/octet-stream'
-    parts.append(f'Content-Disposition: form-data; name="file"; filename="{file_name}"')
-    parts.append(f'Content-Type: {content_type}')
-    parts.append('')
-
-    # 文件数据单独处理
-    with open(file_path, 'rb') as f:
-        file_data = f.read()
-
-    # 组装
-    body_parts = []
-    for part in parts:
-        body_parts.append(part.encode('utf-8'))
-
-    # 插入文件数据
-    body_parts.append(file_data)
-    body_parts.append(f'\r\n--{boundary}--\r\n'.encode('utf-8'))
-
-    final_body = b'\r\n'.join(body_parts)
-
-    headers = {
-        'Content-Type': f'multipart/form-data; boundary={boundary}',
-        'Content-Length': str(len(final_body))
+    params = {
+        "access_token": token
     }
-
+    files = {
+        "file": (file_name, open(file_path, 'rb'), 'application/octet-stream')
+    }
     try:
-        req = urllib.request.Request(url, data=final_body, headers=headers, method='POST')
-        with urllib.request.urlopen(req) as resp:
-            result = json.loads(resp.read().decode('utf-8'))
+        resp = requests.post(url, params=params, files=files)
+        if resp.status_code in (200, 201):
+            result = resp.json()
             print_flush(f"  ✅ 上传成功: {result.get('browser_download_url', '')}")
             return True
-    except urllib.error.HTTPError as e:
-        error_body = e.read().decode('utf-8') if e.fp else str(e)
-        if "已存在" in error_body or "already exists" in error_body:
-            print_flush(f"  ℹ️ 文件已存在，跳过上传")
-            return True
-        print_flush(f"  ❌ 上传失败: {error_body}")
-        return False
+        else:
+            error_text = resp.text
+            if "已存在" in error_text or "already exists" in error_text:
+                print_flush(f"  ℹ️ 文件已存在，跳过上传")
+                return True
+            print_flush(f"  ❌ 上传失败: HTTP {resp.status_code} - {error_text}")
+            return False
     except Exception as e:
         print_flush(f"  ❌ 上传异常: {e}")
         return False
@@ -182,18 +148,23 @@ def get_github_release_id(repo, tag, token):
 
 def get_gitee_release_id(repo, tag, token):
     """获取 Gitee Release ID（通过 API）"""
-    url = f"https://gitee.com/api/v5/repos/{repo}/releases/tags/{tag}?access_token={token}"
+    url = f"https://gitee.com/api/v5/repos/{repo}/releases/tags/{tag}"
+    params = {
+        "access_token": token
+    }
     try:
-        req = urllib.request.Request(url, method='GET')
-        with urllib.request.urlopen(req) as resp:
-            data = json.loads(resp.read().decode('utf-8'))
+        resp = requests.get(url, params=params)
+        if resp.status_code == 200:
+            data = resp.json()
             return data.get('id')
-    except urllib.error.HTTPError as e:
-        if e.code == 404:
+        elif resp.status_code == 404:
             print_flush(f"  ℹ️ 未找到已有的 Gitee Release: {tag}")
             return None
-        error_body = e.read().decode('utf-8') if e.fp else str(e)
-        print_flush(f"  ❌ 获取 Gitee Release ID 失败: {error_body}")
+        else:
+            print_flush(f"  ❌ 获取 Gitee Release ID 失败: HTTP {resp.status_code} - {resp.text}")
+            return None
+    except Exception as e:
+        print_flush(f"  ❌ 获取 Gitee Release ID 异常: {e}")
         return None
 
 
