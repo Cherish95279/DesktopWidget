@@ -96,6 +96,10 @@ def upload_gitee_asset(repo, release_id, file_path, token):
     file_size = os.path.getsize(file_path)
     print_flush(f"  📤 上传 {file_name} ({file_size / 1024 / 1024:.1f} MB) 到 Gitee...")
 
+    if not release_id:
+        print_flush(f"  ❌ release_id 为空，无法上传")
+        return False
+
     url = f"https://gitee.com/api/v5/repos/{repo}/releases/{release_id}/assets"
     headers = {
         "Content-Type": "application/json"
@@ -146,7 +150,7 @@ def get_github_release_id(repo, tag, token):
 
 
 def get_gitee_release_id(repo, tag, token):
-    """获取 Gitee Release ID（通过标签）"""
+    """获取 Gitee Release ID（通过 API）"""
     url = f"https://gitee.com/api/v5/repos/{repo}/releases/tags/{tag}"
     headers = {
         "Content-Type": "application/json"
@@ -154,14 +158,18 @@ def get_gitee_release_id(repo, tag, token):
     data = {
         "access_token": token
     }
+    req = urllib.request.Request(
+        url + "?access_token=" + token,
+        headers=headers,
+        method='GET'
+    )
     try:
-        req = urllib.request.Request(url, data=json.dumps(data).encode('utf-8'), headers=headers, method='GET')
         with urllib.request.urlopen(req) as resp:
-            result = json.loads(resp.read().decode('utf-8'))
-            return result.get('id') or result.get('release_id')
+            data = json.loads(resp.read().decode('utf-8'))
+            return data.get('id')
     except urllib.error.HTTPError as e:
         if e.code == 404:
-            print_flush(f"  ℹ️ 未找到已有的 Release: {tag}")
+            print_flush(f"  ℹ️ 未找到已有的 Gitee Release: {tag}")
             return None
         print_flush(f"  ❌ 获取 Gitee Release ID 失败: {e}")
         return None
@@ -216,11 +224,10 @@ def create_gitee_release(repo, tag, title, body, token):
         with urllib.request.urlopen(req) as resp:
             result = json.loads(resp.read().decode('utf-8'))
             print_flush(f"  ✅ Release 创建成功: {result.get('html_url', '')}")
-            release_id = result.get('id') or result.get('release_id')
-            return release_id
+            return result.get('id')
     except urllib.error.HTTPError as e:
         error_body = e.read().decode('utf-8') if e.fp else str(e)
-        if "already" in error_body or "已存在" in error_body:
+        if "已经存在" in error_body or "already" in error_body:
             print_flush(f"  ℹ️ Release 已存在，尝试获取已有 Release ID...")
             return get_gitee_release_id(repo, tag, token)
         print_flush(f"  ❌ Release 创建失败: {error_body}")
@@ -326,18 +333,14 @@ def main():
     else:
         print_flush("✅ 完成")
 
-    # 创建 Release
+    # 创建 Release（如果已存在，则获取已有 ID）
     print_flush(f"\n→ 创建 Release...")
 
     release_id = None
     if remote == "github":
         release_id = create_github_release(repo, tag_name, release_title, notes, token)
-        if release_id is None:
-            release_id = get_github_release_id(repo, tag_name, token)
     else:
         release_id = create_gitee_release(repo, tag_name, release_title, notes, token)
-        if release_id is None:
-            release_id = get_gitee_release_id(repo, tag_name, token)
 
     if not release_id:
         print_flush("⚠️ 无法获取 Release ID，跳过 exe 上传")
@@ -366,7 +369,8 @@ def main():
     print_flush(f"   - 远程仓库: {remote_name} ({remote})")
     print_flush(f"   - 分支: {branch}")
     if exe_path:
-        print_flush(f"   - exe 文件: {os.path.basename(exe_path)} {'✅ 已上传' if release_id else '⚠️ 未上传（Release ID 缺失）'}")
+        upload_status = "✅ 已上传" if release_id else "⚠️ 未上传（Release ID 缺失）"
+        print_flush(f"   - exe 文件: {os.path.basename(exe_path)} {upload_status}")
 
 
 if __name__ == "__main__":
