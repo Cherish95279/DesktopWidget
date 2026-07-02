@@ -105,7 +105,6 @@ def upload_gitee_asset(repo, release_id, file_path, token):
         "Content-Type": "application/json"
     }
 
-    # Gitee 需要 base64 编码文件内容
     with open(file_path, 'rb') as f:
         file_data = base64.b64encode(f.read()).decode('utf-8')
 
@@ -130,8 +129,8 @@ def upload_gitee_asset(repo, release_id, file_path, token):
         return False
 
 
-def delete_github_release(repo, tag, token):
-    """删除 GitHub Release（通过 API）"""
+def get_github_release_id(repo, tag, token):
+    """获取 GitHub Release ID（通过 API）"""
     url = f"https://api.github.com/repos/{repo}/releases/tags/{tag}"
     headers = {
         "Authorization": f"token {token}",
@@ -141,24 +140,17 @@ def delete_github_release(repo, tag, token):
         req = urllib.request.Request(url, headers=headers, method='GET')
         with urllib.request.urlopen(req) as resp:
             data = json.loads(resp.read().decode('utf-8'))
-            release_id = data.get('id')
-            if not release_id:
-                return False
-            delete_url = f"https://api.github.com/repos/{repo}/releases/{release_id}"
-            del_req = urllib.request.Request(delete_url, headers=headers, method='DELETE')
-            with urllib.request.urlopen(del_req) as _:
-                print_flush(f"  ✅ 已删除旧的 GitHub Release: {tag}")
-                return True
+            return data.get('id')
     except urllib.error.HTTPError as e:
         if e.code == 404:
-            print_flush(f"  ℹ️ 未找到已有的 GitHub Release: {tag}")
-            return True
-        print_flush(f"  ❌ 删除 GitHub Release 失败: {e}")
-        return False
+            print_flush(f"  ℹ️ 未找到已有的 Release: {tag}")
+            return None
+        print_flush(f"  ❌ 获取 Release ID 失败: {e}")
+        return None
 
 
-def delete_gitee_release(repo, tag, token):
-    """删除 Gitee Release（通过 API）"""
+def get_gitee_release_id(repo, tag, token):
+    """获取 Gitee Release ID（通过 API）"""
     url = f"https://gitee.com/api/v5/repos/{repo}/releases/tags/{tag}"
     headers = {
         "Content-Type": "application/json"
@@ -167,26 +159,16 @@ def delete_gitee_release(repo, tag, token):
         "access_token": token
     }
     try:
-        req = urllib.request.Request(url, data=json.dumps(data).encode('utf-8'), headers=headers, method='DELETE')
-        with urllib.request.urlopen(req) as _:
-            print_flush(f"  ✅ 已删除旧的 Gitee Release: {tag}")
-            return True
+        req = urllib.request.Request(url, data=json.dumps(data).encode('utf-8'), headers=headers, method='GET')
+        with urllib.request.urlopen(req) as resp:
+            data = json.loads(resp.read().decode('utf-8'))
+            return data.get('id')
     except urllib.error.HTTPError as e:
         if e.code == 404:
-            print_flush(f"  ℹ️ 未找到已有的 Gitee Release: {tag}")
-            return True
-        print_flush(f"  ❌ 删除 Gitee Release 失败: {e}")
-        return False
-
-
-def delete_tag(remote, tag_name):
-    """删除本地和远程 Tag"""
-    print_flush(f"  → 删除本地 Tag: {tag_name}")
-    run_cmd(["git", "tag", "-d", tag_name])
-
-    print_flush(f"  → 删除远程 Tag: {remote}/{tag_name}")
-    code, _, _ = run_cmd(["git", "push", remote, f":refs/tags/{tag_name}"])
-    return code == 0
+            print_flush(f"  ℹ️ 未找到已有的 Release: {tag}")
+            return None
+        print_flush(f"  ❌ 获取 Release ID 失败: {e}")
+        return None
 
 
 def create_github_release(repo, tag, title, body, token):
@@ -242,24 +224,9 @@ def create_gitee_release(repo, tag, title, body, token):
         return None
 
 
-def get_github_release_id(repo, tag, token):
-    """获取 GitHub Release ID（通过 API）"""
-    url = f"https://api.github.com/repos/{repo}/releases/tags/{tag}"
-    headers = {
-        "Authorization": f"token {token}",
-        "Accept": "application/vnd.github.v3+json"
-    }
-    try:
-        req = urllib.request.Request(url, headers=headers, method='GET')
-        with urllib.request.urlopen(req) as resp:
-            data = json.loads(resp.read().decode('utf-8'))
-            return data.get('id')
-    except urllib.error.HTTPError as e:
-        if e.code == 404:
-            print_flush(f"  ℹ️ 未找到已有的 Release: {tag}")
-            return None
-        print_flush(f"  ❌ 获取 Release ID 失败: {e}")
-        return None
+def delete_github_release(repo, tag, token):
+    # 可选，未使用
+    pass
 
 
 def main():
@@ -297,13 +264,7 @@ def main():
     print_flush(f"ℹ️ 当前目录: {root}")
     print_flush(f"ℹ️ 目标远程仓库: {remote_name} ({remote})")
 
-    code, branch, _ = run_cmd(["git", "rev-parse", "--abbrev-ref", "HEAD"])
-    if code != 0:
-        print_flush("❌ 无法获取当前分支")
-        sys.exit(1)
-    print_flush(f"ℹ️ 当前分支: {branch.strip()}")
-
-    # 查找 exe 文件（在推送前先检查）
+    # 查找 exe
     exe_path = find_exe_file(root, version)
     if exe_path:
         print_flush(f"ℹ️ 找到 exe 文件: {os.path.basename(exe_path)}")
@@ -359,19 +320,32 @@ def main():
     else:
         print_flush("✅ 完成")
 
-    # 创建 Release
-    print_flush(f"\n→ 创建 Release...")
+    # ---- 获取 Release ID ----
+    print_flush(f"\n→ 获取/创建 Release...")
+    release_id = None
 
+    # 先尝试获取已有的 Release ID
     if remote == "github":
-        release_id = create_github_release(repo, tag_name, release_title, notes, token)
+        release_id = get_github_release_id(repo, tag_name, token)
     else:
-        release_id = create_gitee_release(repo, tag_name, release_title, notes, token)
+        release_id = get_gitee_release_id(repo, tag_name, token)
 
-    if not release_id:
-        print_flush("⚠️ Release 创建失败，但代码和标签已推送")
-        sys.exit(1)
+    if release_id:
+        print_flush(f"  ℹ️ 使用已存在的 Release ID: {release_id}")
+    else:
+        # 尝试创建新的 Release
+        if remote == "github":
+            release_id = create_github_release(repo, tag_name, release_title, notes, token)
+        else:
+            release_id = create_gitee_release(repo, tag_name, release_title, notes, token)
 
-    # 上传 exe 文件
+        if not release_id:
+            print_flush("⚠️ Release 创建失败，且无法获取已有的 Release ID")
+            sys.exit(1)
+        else:
+            print_flush(f"  ✅ Release 创建成功，ID: {release_id}")
+
+    # ---- 上传 exe 文件 ----
     if exe_path and os.path.exists(exe_path):
         print_flush("\n→ 上传 exe 文件...")
         if remote == "github":
@@ -382,7 +356,7 @@ def main():
         if success:
             print_flush("✅ exe 上传完成！")
         else:
-            print_flush("⚠️ exe 上传失败，但 Release 已创建")
+            print_flush("⚠️ exe 上传失败，但 Release 已存在/创建")
     else:
         print_flush("\nℹ️ 没有 exe 文件需要上传")
 
