@@ -11,7 +11,6 @@ import json
 import subprocess
 import urllib.request
 import urllib.error
-import base64
 
 
 def print_flush(msg):
@@ -26,9 +25,13 @@ def run_cmd(cmd):
     env["GIT_ASKPASS"] = "echo"
     result = subprocess.run(cmd, capture_output=True, text=True, env=env)
     if result.stdout:
-        print_flush(result.stdout.strip())
+        for line in result.stdout.strip().split('\n'):
+            if line:
+                print_flush(f"  {line}")
     if result.stderr:
-        print_flush(result.stderr.strip())
+        for line in result.stderr.strip().split('\n'):
+            if line:
+                print_flush(f"  [错误] {line}")
     return result.returncode, result.stdout, result.stderr
 
 
@@ -60,7 +63,6 @@ def create_github_release(repo, tag, title, body, token):
 
 def create_gitee_release(repo, tag, title, body, token):
     """创建 Gitee Release"""
-    # Gitee 仓库格式：owner/repo
     url = f"https://gitee.com/api/v5/repos/{repo}/releases"
     headers = {
         "Content-Type": "application/json"
@@ -98,7 +100,6 @@ def main():
     remote = "github"
     token = None
 
-    # 解析 --remote 和 --token
     for i, arg in enumerate(sys.argv):
         if arg == "--remote" and i + 1 < len(sys.argv):
             remote = sys.argv[i + 1]
@@ -109,9 +110,17 @@ def main():
         print_flush("❌ 未提供 Token！请使用 --token 参数")
         sys.exit(1)
 
+    # ===== 关键：远程仓库名称映射 =====
+    if remote == "github":
+        remote_name = "origin"   # GitHub 的远程名称是 origin
+        repo = "Cherish95279/DesktopWidget"
+    else:
+        remote_name = "gitee"    # Gitee 的远程名称是 gitee
+        repo = "Cherish95279/DesktopWidget"
+
     root = os.getcwd()
     print_flush(f"ℹ️ 当前目录: {root}")
-    print_flush(f"ℹ️ 目标远程仓库: {remote}")
+    print_flush(f"ℹ️ 目标远程仓库: {remote_name} ({remote})")
 
     code, branch, _ = run_cmd(["git", "rev-parse", "--abbrev-ref", "HEAD"])
     if code != 0:
@@ -132,16 +141,20 @@ def main():
     print_flush("✅ 完成")
 
     print_flush(f"\n→ 提交: {notes}...")
-    code, _, _ = run_cmd(["git", "commit", "-m", notes])
+    code, stdout, _ = run_cmd(["git", "commit", "-m", notes])
     if code != 0:
-        print_flush("❌ git commit 失败")
-        sys.exit(1)
-    print_flush("✅ 完成")
+        if "nothing to commit" in stdout or "nothing to commit" in str(stdout):
+            print_flush("ℹ️ 没有新的变更需要提交，跳过提交步骤")
+        else:
+            print_flush("❌ git commit 失败")
+            sys.exit(1)
+    else:
+        print_flush("✅ 完成")
 
-    print_flush(f"\n→ 推送到 {remote}...")
-    code, _, _ = run_cmd(["git", "push", remote, branch.strip()])
+    print_flush(f"\n→ 推送到 {remote_name}...")
+    code, _, _ = run_cmd(["git", "push", remote_name, branch.strip()])
     if code != 0:
-        print_flush(f"❌ git push {remote} 失败")
+        print_flush(f"❌ git push {remote_name} 失败")
         sys.exit(1)
     print_flush("✅ 完成")
 
@@ -152,16 +165,15 @@ def main():
         print_flush("❌ git tag 失败")
         sys.exit(1)
 
-    print_flush(f"\n→ 推送标签到 {remote}...")
-    code, _, _ = run_cmd(["git", "push", remote, tag_name])
+    print_flush(f"\n→ 推送标签到 {remote_name}...")
+    code, _, _ = run_cmd(["git", "push", remote_name, tag_name])
     if code != 0:
-        print_flush(f"❌ git push {remote} tag 失败")
+        print_flush(f"❌ git push {remote_name} tag 失败")
         sys.exit(1)
     print_flush("✅ 完成")
 
     # 创建 Release
     print_flush(f"\n→ 创建 Release...")
-    repo = "Cherish95279/DesktopWidget" if remote == "github" else "Cherish95279/DesktopWidget"
 
     if remote == "github":
         success = create_github_release(repo, tag_name, release_title, notes, token)
@@ -178,7 +190,7 @@ def main():
     print_flush(f"   - 发布说明: {notes}")
     print_flush(f"   - 版本: {version}")
     print_flush(f"   - Release 标题: {release_title}")
-    print_flush(f"   - 远程仓库: {remote}")
+    print_flush(f"   - 远程仓库: {remote_name} ({remote})")
     print_flush(f"   - 分支: {branch.strip()}")
 
 
