@@ -145,6 +145,28 @@ def get_github_release_id(repo, tag, token):
         return None
 
 
+def get_gitee_release_id(repo, tag, token):
+    """获取 Gitee Release ID（通过标签）"""
+    url = f"https://gitee.com/api/v5/repos/{repo}/releases/tags/{tag}"
+    headers = {
+        "Content-Type": "application/json"
+    }
+    data = {
+        "access_token": token
+    }
+    try:
+        req = urllib.request.Request(url, data=json.dumps(data).encode('utf-8'), headers=headers, method='GET')
+        with urllib.request.urlopen(req) as resp:
+            result = json.loads(resp.read().decode('utf-8'))
+            return result.get('id') or result.get('release_id')
+    except urllib.error.HTTPError as e:
+        if e.code == 404:
+            print_flush(f"  ℹ️ 未找到已有的 Release: {tag}")
+            return None
+        print_flush(f"  ❌ 获取 Gitee Release ID 失败: {e}")
+        return None
+
+
 def create_github_release(repo, tag, title, body, token):
     """创建 GitHub Release"""
     url = f"https://api.github.com/repos/{repo}/releases"
@@ -169,7 +191,6 @@ def create_github_release(repo, tag, title, body, token):
         error_body = e.read().decode('utf-8') if e.fp else str(e)
         if "already_exists" in error_body:
             print_flush(f"  ℹ️ Release 已存在，尝试获取已有 Release ID...")
-            # 尝试获取已有 Release ID
             return get_github_release_id(repo, tag, token)
         print_flush(f"  ❌ Release 创建失败: {error_body}")
         return None
@@ -195,13 +216,13 @@ def create_gitee_release(repo, tag, title, body, token):
         with urllib.request.urlopen(req) as resp:
             result = json.loads(resp.read().decode('utf-8'))
             print_flush(f"  ✅ Release 创建成功: {result.get('html_url', '')}")
-            return result.get('id')
+            release_id = result.get('id') or result.get('release_id')
+            return release_id
     except urllib.error.HTTPError as e:
         error_body = e.read().decode('utf-8') if e.fp else str(e)
         if "already" in error_body or "已存在" in error_body:
             print_flush(f"  ℹ️ Release 已存在，尝试获取已有 Release ID...")
-            # Gitee 获取 Release ID 的方式略有不同，我们直接返回 None 并尝试通过 tag 获取
-            return None
+            return get_gitee_release_id(repo, tag, token)
         print_flush(f"  ❌ Release 创建失败: {error_body}")
         return None
 
@@ -241,7 +262,7 @@ def main():
     print_flush(f"ℹ️ 当前目录: {root}")
     print_flush(f"ℹ️ 目标远程仓库: {remote_name} ({remote})")
 
-    # 获取分支名，修复 bug
+    # 获取分支名
     code, branch, _ = run_cmd(["git", "rev-parse", "--abbrev-ref", "HEAD"])
     if code != 0:
         print_flush("❌ 无法获取当前分支")
@@ -305,22 +326,18 @@ def main():
     else:
         print_flush("✅ 完成")
 
-    # 创建 Release（如果已存在，则获取已有 ID）
+    # 创建 Release
     print_flush(f"\n→ 创建 Release...")
 
     release_id = None
     if remote == "github":
         release_id = create_github_release(repo, tag_name, release_title, notes, token)
         if release_id is None:
-            # 尝试获取已有 Release ID
             release_id = get_github_release_id(repo, tag_name, token)
     else:
         release_id = create_gitee_release(repo, tag_name, release_title, notes, token)
         if release_id is None:
-            # 对于 Gitee，我们没有直接获取 ID 的 API，但可以尝试从已有 Release 中获取
-            # 简单起见，如果创建失败，我们跳过上传，但会提示
-            print_flush("⚠️ 无法获取 Gitee Release ID，跳过上传 exe")
-            release_id = None
+            release_id = get_gitee_release_id(repo, tag_name, token)
 
     if not release_id:
         print_flush("⚠️ 无法获取 Release ID，跳过 exe 上传")
