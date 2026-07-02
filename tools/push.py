@@ -57,6 +57,10 @@ def create_github_release(repo, tag, title, body, token):
             return True
     except urllib.error.HTTPError as e:
         error_body = e.read().decode('utf-8') if e.fp else str(e)
+        # 如果 Release 已存在，视为成功
+        if "already_exists" in error_body or "already exists" in error_body:
+            print_flush(f"ℹ️ Release 已存在，跳过创建")
+            return True
         print_flush(f"❌ GitHub Release 创建失败: {error_body}")
         return False
 
@@ -83,6 +87,10 @@ def create_gitee_release(repo, tag, title, body, token):
             return True
     except urllib.error.HTTPError as e:
         error_body = e.read().decode('utf-8') if e.fp else str(e)
+        # 如果 Release 已存在，视为成功
+        if "already_exists" in error_body or "already exists" in error_body:
+            print_flush(f"ℹ️ Release 已存在，跳过创建")
+            return True
         print_flush(f"❌ Gitee Release 创建失败: {error_body}")
         return False
 
@@ -110,12 +118,12 @@ def main():
         print_flush("❌ 未提供 Token！请使用 --token 参数")
         sys.exit(1)
 
-    # ===== 关键：远程仓库名称映射 =====
+    # 远程仓库名称映射
     if remote == "github":
-        remote_name = "origin"   # GitHub 的远程名称是 origin
+        remote_name = "origin"
         repo = "Cherish95279/DesktopWidget"
     else:
-        remote_name = "gitee"    # Gitee 的远程名称是 gitee
+        remote_name = "gitee"
         repo = "Cherish95279/DesktopWidget"
 
     root = os.getcwd()
@@ -160,17 +168,22 @@ def main():
 
     tag_name = version
     print_flush(f"\n→ 打标签: {tag_name}...")
-    code, _, _ = run_cmd(["git", "tag", tag_name])
+    code, stdout, stderr = run_cmd(["git", "tag", tag_name])
     if code != 0:
-        print_flush("❌ git tag 失败")
-        sys.exit(1)
+        if "already exists" in stderr or "already exists" in stdout:
+            print_flush(f"ℹ️ 标签 {tag_name} 已存在，跳过")
+        else:
+            print_flush("❌ git tag 失败")
+            sys.exit(1)
+    else:
+        print_flush("✅ 完成")
 
     print_flush(f"\n→ 推送标签到 {remote_name}...")
     code, _, _ = run_cmd(["git", "push", remote_name, tag_name])
     if code != 0:
-        print_flush(f"❌ git push {remote_name} tag 失败")
-        sys.exit(1)
-    print_flush("✅ 完成")
+        print_flush(f"⚠️ git push {remote_name} tag 失败（可能标签已存在或网络问题），继续...")
+    else:
+        print_flush("✅ 完成")
 
     # 创建 Release
     print_flush(f"\n→ 创建 Release...")
