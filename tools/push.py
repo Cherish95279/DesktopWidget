@@ -12,7 +12,6 @@ import glob
 import subprocess
 import urllib.request
 import urllib.error
-import base64
 import requests
 
 
@@ -92,7 +91,7 @@ def upload_github_asset(repo, release_id, file_path, token):
 
 
 def upload_gitee_asset(repo, release_id, file_path, token):
-    """上传文件到 Gitee Release（使用 requests 库）"""
+    """上传文件到 Gitee Release（使用 data + files 方式）"""
     file_name = os.path.basename(file_path)
     file_size = os.path.getsize(file_path)
     print_flush(f"  📤 上传 {file_name} ({file_size / 1024 / 1024:.1f} MB) 到 Gitee...")
@@ -102,14 +101,14 @@ def upload_gitee_asset(repo, release_id, file_path, token):
         return False
 
     url = f"https://gitee.com/api/v5/repos/{repo}/releases/{release_id}/assets"
-    params = {
+    data = {
         "access_token": token
     }
     files = {
         "file": (file_name, open(file_path, 'rb'), 'application/octet-stream')
     }
     try:
-        resp = requests.post(url, params=params, files=files)
+        resp = requests.post(url, data=data, files=files)
         if resp.status_code in (200, 201):
             result = resp.json()
             print_flush(f"  ✅ 上传成功: {result.get('browser_download_url', '')}")
@@ -151,7 +150,7 @@ def get_gitee_release_id(repo, tag, token):
     url = f"https://gitee.com/api/v5/repos/{repo}/releases"
     params = {
         "access_token": token,
-        "per_page": 100  # 获取足够多的 releases
+        "per_page": 100
     }
     try:
         resp = requests.get(url, params=params)
