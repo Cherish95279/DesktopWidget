@@ -13,6 +13,8 @@ import subprocess
 import urllib.request
 import urllib.error
 import base64
+import mimetypes
+import io
 
 
 def print_flush(msg):
@@ -91,7 +93,7 @@ def upload_github_asset(repo, release_id, file_path, token):
 
 
 def upload_gitee_asset(repo, release_id, file_path, token):
-    """上传文件到 Gitee Release"""
+    """上传文件到 Gitee Release（使用 multipart/form-data）"""
     file_name = os.path.basename(file_path)
     file_size = os.path.getsize(file_path)
     print_flush(f"  📤 上传 {file_name} ({file_size / 1024 / 1024:.1f} MB) 到 Gitee...")
@@ -101,21 +103,47 @@ def upload_gitee_asset(repo, release_id, file_path, token):
         return False
 
     url = f"https://gitee.com/api/v5/repos/{repo}/releases/{release_id}/assets"
-    headers = {
-        "Content-Type": "application/json"
-    }
 
+    # 构建 multipart/form-data 请求体
+    boundary = "----WebKitFormBoundary" + "".join([chr(65 + i % 26) for i in range(10)])
+
+    # 准备各部分
+    parts = []
+    # access_token
+    parts.append(f'--{boundary}')
+    parts.append('Content-Disposition: form-data; name="access_token"')
+    parts.append('')
+    parts.append(token)
+
+    # 文件内容
+    parts.append(f'--{boundary}')
+    content_type = mimetypes.guess_type(file_name)[0] or 'application/octet-stream'
+    parts.append(f'Content-Disposition: form-data; name="file"; filename="{file_name}"')
+    parts.append(f'Content-Type: {content_type}')
+    parts.append('')
+
+    # 文件数据单独处理
     with open(file_path, 'rb') as f:
-        file_data = base64.b64encode(f.read()).decode('utf-8')
+        file_data = f.read()
 
-    data = {
-        "access_token": token,
-        "name": file_name,
-        "content": file_data
+    # 组装
+    body_parts = []
+    for part in parts:
+        body_parts.append(part.encode('utf-8'))
+
+    # 插入文件数据
+    body_parts.append(file_data)
+    body_parts.append(f'\r\n--{boundary}--\r\n'.encode('utf-8'))
+
+    final_body = b'\r\n'.join(body_parts)
+
+    headers = {
+        'Content-Type': f'multipart/form-data; boundary={boundary}',
+        'Content-Length': str(len(final_body))
     }
 
-    req = urllib.request.Request(url, data=json.dumps(data).encode('utf-8'), headers=headers, method='POST')
     try:
+        req = urllib.request.Request(url, data=final_body, headers=headers, method='POST')
         with urllib.request.urlopen(req) as resp:
             result = json.loads(resp.read().decode('utf-8'))
             print_flush(f"  ✅ 上传成功: {result.get('browser_download_url', '')}")
@@ -126,6 +154,9 @@ def upload_gitee_asset(repo, release_id, file_path, token):
             print_flush(f"  ℹ️ 文件已存在，跳过上传")
             return True
         print_flush(f"  ❌ 上传失败: {error_body}")
+        return False
+    except Exception as e:
+        print_flush(f"  ❌ 上传异常: {e}")
         return False
 
 
@@ -151,17 +182,11 @@ def get_github_release_id(repo, tag, token):
 
 def get_gitee_release_id(repo, tag, token):
     """获取 Gitee Release ID（通过 API）"""
-    # Gitee API: GET /repos/{owner}/{repo}/releases/tags/{tag}
     url = f"https://gitee.com/api/v5/repos/{repo}/releases/tags/{tag}?access_token={token}"
-    headers = {
-        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"
-    }
     try:
-        req = urllib.request.Request(url, headers=headers, method='GET')
+        req = urllib.request.Request(url, method='GET')
         with urllib.request.urlopen(req) as resp:
             data = json.loads(resp.read().decode('utf-8'))
-            # 调试：打印返回数据
-            print_flush(f"  [调试] Gitee API 返回: {json.dumps(data, ensure_ascii=False)[:200]}...")
             return data.get('id')
     except urllib.error.HTTPError as e:
         if e.code == 404:
