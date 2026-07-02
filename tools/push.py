@@ -13,7 +13,7 @@ import subprocess
 import urllib.request
 import urllib.error
 import base64
-import requests  # 需要安装 requests 库
+import requests
 
 
 def print_flush(msg):
@@ -119,7 +119,7 @@ def upload_gitee_asset(repo, release_id, file_path, token):
             if "已存在" in error_text or "already exists" in error_text:
                 print_flush(f"  ℹ️ 文件已存在，跳过上传")
                 return True
-            print_flush(f"  ❌ 上传失败: HTTP {resp.status_code} - {error_text}")
+            print_flush(f"  ❌ 上传失败: HTTP {resp.status_code} - {error_text[:200]}")
             return False
     except Exception as e:
         print_flush(f"  ❌ 上传异常: {e}")
@@ -147,22 +147,23 @@ def get_github_release_id(repo, tag, token):
 
 
 def get_gitee_release_id(repo, tag, token):
-    """获取 Gitee Release ID（通过 API）"""
-    url = f"https://gitee.com/api/v5/repos/{repo}/releases/tags/{tag}"
+    """获取 Gitee Release ID（遍历所有 releases 匹配 tag）"""
+    url = f"https://gitee.com/api/v5/repos/{repo}/releases"
     params = {
-        "access_token": token
+        "access_token": token,
+        "per_page": 100  # 获取足够多的 releases
     }
     try:
         resp = requests.get(url, params=params)
-        if resp.status_code == 200:
-            data = resp.json()
-            return data.get('id')
-        elif resp.status_code == 404:
-            print_flush(f"  ℹ️ 未找到已有的 Gitee Release: {tag}")
+        if resp.status_code != 200:
+            print_flush(f"  ❌ 获取 Release 列表失败: HTTP {resp.status_code} - {resp.text}")
             return None
-        else:
-            print_flush(f"  ❌ 获取 Gitee Release ID 失败: HTTP {resp.status_code} - {resp.text}")
-            return None
+        releases = resp.json()
+        for release in releases:
+            if release.get('tag_name') == tag:
+                return release.get('id')
+        print_flush(f"  ℹ️ 未找到 tag '{tag}' 对应的 Release")
+        return None
     except Exception as e:
         print_flush(f"  ❌ 获取 Gitee Release ID 异常: {e}")
         return None
@@ -334,6 +335,8 @@ def main():
         release_id = create_github_release(repo, tag_name, release_title, notes, token)
     else:
         release_id = create_gitee_release(repo, tag_name, release_title, notes, token)
+
+    print_flush(f"  [调试] release_id = {release_id}")
 
     if not release_id:
         print_flush("⚠️ 无法获取 Release ID，跳过 exe 上传")
