@@ -86,34 +86,34 @@ def upload_gitee_asset(repo, release_id, file_path, token):
         print_flush(f"  ❌ release_id 为空，无法上传")
         return False
 
-    # 使用 curl 命令上传（更稳定）
-    url = f"https://gitee.com/api/v5/repos/{repo}/releases/{release_id}/assets?access_token={token}"
-    cmd = [
-        "curl", "-X", "POST",
-        "-H", "Content-Type: multipart/form-data",
-        "-F", f"file=@{file_path}",
-        url
-    ]
-    try:
-        result = subprocess.run(cmd, capture_output=True, text=True, timeout=120)
-        if result.returncode == 0:
-            try:
-                resp_json = json.loads(result.stdout)
-                if 'browser_download_url' in resp_json:
-                    print_flush(f"  ✅ 上传成功: {resp_json['browser_download_url']}")
-                    return True
-                else:
-                    print_flush(f"  ❌ 上传响应异常: {result.stdout[:200]}")
-                    return False
-            except json.JSONDecodeError:
-                print_flush(f"  ❌ 上传失败，响应: {result.stdout[:200]}")
-                return False
-        else:
-            print_flush(f"  ❌ curl 命令失败: {result.stderr[:200]}")
+    # 先尝试用 requests 上传
+    url = f"https://gitee.com/api/v5/repos/{repo}/releases/{release_id}/assets"
+    params = {"access_token": token}
+    with open(file_path, 'rb') as f:
+        files = {'file': (file_name, f, 'application/octet-stream')}
+        try:
+            resp = requests.post(url, params=params, files=files, timeout=120)
+        except Exception as e:
+            print_flush(f"  ❌ 请求异常: {e}")
             return False
-    except subprocess.TimeoutExpired:
-        print_flush("  ❌ 上传超时")
-        return False
+
+    if resp.status_code in (200, 201):
+        try:
+            result = resp.json()
+            print_flush(f"  ✅ 上传成功: {result.get('browser_download_url', '')}")
+            return True
+        except:
+            print_flush(f"  ✅ 上传成功（但无法解析响应）")
+            return True
+
+    # 如果失败，给出手动上传指引
+    print_flush(f"  ❌ 自动上传失败 (HTTP {resp.status_code})")
+    print_flush(f"  💡 请手动上传 exe 文件：")
+    print_flush(f"     1. 打开以下链接：")
+    print_flush(f"        https://gitee.com/{repo}/releases/edit/{release_id}")
+    print_flush(f"     2. 在页面下方「附件」区域拖拽上传：")
+    print_flush(f"        {file_path}")
+    return False
 
 
 def get_github_release_id(repo, tag, token):
@@ -306,7 +306,7 @@ def main():
             if success:
                 print_flush("✅ exe 上传完成！")
             else:
-                print_flush("⚠️ exe 上传失败，但 Release 已创建")
+                print_flush("⚠️ exe 上传失败，请按上述指引手动上传")
         else:
             print_flush("\nℹ️ 没有 exe 文件需要上传")
 
@@ -319,7 +319,7 @@ def main():
     print_flush(f"   - 远程仓库: {remote_name} ({remote})")
     print_flush(f"   - 分支: {branch}")
     if exe_path:
-        upload_status = "✅ 已上传" if release_id else "⚠️ 未上传（Release ID 缺失）"
+        upload_status = "✅ 已上传" if success and remote == "github" else "⚠️ 需手动上传" if remote == "gitee" else "✅ 已上传"
         print_flush(f"   - exe 文件: {os.path.basename(exe_path)} {upload_status}")
 
 
