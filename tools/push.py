@@ -38,43 +38,31 @@ def run_cmd(cmd):
 
 
 def find_exe_file(project_root, version):
-    """查找 dist 目录下的 exe 文件"""
     dist_dir = os.path.join(project_root, "dist")
     if not os.path.exists(dist_dir):
         print_flush(f"⚠️ dist 目录不存在: {dist_dir}")
         return None
-
     pattern = f"DesktopWidget-v{version.lstrip('v')}-win64-Cherish-Setup.exe"
     exe_path = os.path.join(dist_dir, pattern)
-
     if os.path.exists(exe_path):
         return exe_path
-
     exe_files = glob.glob(os.path.join(dist_dir, "DesktopWidget-v*.exe"))
     if exe_files:
         exe_files.sort(key=os.path.getmtime, reverse=True)
         print_flush(f"ℹ️ 使用最新的 exe 文件: {os.path.basename(exe_files[0])}")
         return exe_files[0]
-
     print_flush(f"⚠️ 未找到 exe 文件")
     return None
 
 
 def upload_github_asset(repo, release_id, file_path, token):
-    """上传文件到 GitHub Release"""
     file_name = os.path.basename(file_path)
     file_size = os.path.getsize(file_path)
     print_flush(f"  📤 上传 {file_name} ({file_size / 1024 / 1024:.1f} MB) 到 GitHub...")
-
     url = f"https://uploads.github.com/repos/{repo}/releases/{release_id}/assets?name={file_name}"
-    headers = {
-        "Authorization": f"token {token}",
-        "Content-Type": "application/octet-stream"
-    }
-
+    headers = {"Authorization": f"token {token}", "Content-Type": "application/octet-stream"}
     with open(file_path, 'rb') as f:
         file_data = f.read()
-
     req = urllib.request.Request(url, data=file_data, headers=headers, method='POST')
     try:
         with urllib.request.urlopen(req) as resp:
@@ -91,47 +79,46 @@ def upload_github_asset(repo, release_id, file_path, token):
 
 
 def upload_gitee_asset(repo, release_id, file_path, token):
-    """上传文件到 Gitee Release（使用 data + files 方式）"""
     file_name = os.path.basename(file_path)
     file_size = os.path.getsize(file_path)
     print_flush(f"  📤 上传 {file_name} ({file_size / 1024 / 1024:.1f} MB) 到 Gitee...")
-
     if not release_id:
         print_flush(f"  ❌ release_id 为空，无法上传")
         return False
 
-    url = f"https://gitee.com/api/v5/repos/{repo}/releases/{release_id}/assets"
-    data = {
-        "access_token": token
-    }
-    files = {
-        "file": (file_name, open(file_path, 'rb'), 'application/octet-stream')
-    }
+    # 使用 curl 命令上传（更稳定）
+    url = f"https://gitee.com/api/v5/repos/{repo}/releases/{release_id}/assets?access_token={token}"
+    cmd = [
+        "curl", "-X", "POST",
+        "-H", "Content-Type: multipart/form-data",
+        "-F", f"file=@{file_path}",
+        url
+    ]
     try:
-        resp = requests.post(url, data=data, files=files)
-        if resp.status_code in (200, 201):
-            result = resp.json()
-            print_flush(f"  ✅ 上传成功: {result.get('browser_download_url', '')}")
-            return True
+        result = subprocess.run(cmd, capture_output=True, text=True, timeout=120)
+        if result.returncode == 0:
+            try:
+                resp_json = json.loads(result.stdout)
+                if 'browser_download_url' in resp_json:
+                    print_flush(f"  ✅ 上传成功: {resp_json['browser_download_url']}")
+                    return True
+                else:
+                    print_flush(f"  ❌ 上传响应异常: {result.stdout[:200]}")
+                    return False
+            except json.JSONDecodeError:
+                print_flush(f"  ❌ 上传失败，响应: {result.stdout[:200]}")
+                return False
         else:
-            error_text = resp.text
-            if "已存在" in error_text or "already exists" in error_text:
-                print_flush(f"  ℹ️ 文件已存在，跳过上传")
-                return True
-            print_flush(f"  ❌ 上传失败: HTTP {resp.status_code} - {error_text[:200]}")
+            print_flush(f"  ❌ curl 命令失败: {result.stderr[:200]}")
             return False
-    except Exception as e:
-        print_flush(f"  ❌ 上传异常: {e}")
+    except subprocess.TimeoutExpired:
+        print_flush("  ❌ 上传超时")
         return False
 
 
 def get_github_release_id(repo, tag, token):
-    """获取 GitHub Release ID（通过 API）"""
     url = f"https://api.github.com/repos/{repo}/releases/tags/{tag}"
-    headers = {
-        "Authorization": f"token {token}",
-        "Accept": "application/vnd.github.v3+json"
-    }
+    headers = {"Authorization": f"token {token}", "Accept": "application/vnd.github.v3+json"}
     try:
         req = urllib.request.Request(url, headers=headers, method='GET')
         with urllib.request.urlopen(req) as resp:
@@ -146,16 +133,12 @@ def get_github_release_id(repo, tag, token):
 
 
 def get_gitee_release_id(repo, tag, token):
-    """获取 Gitee Release ID（遍历所有 releases 匹配 tag）"""
     url = f"https://gitee.com/api/v5/repos/{repo}/releases"
-    params = {
-        "access_token": token,
-        "per_page": 100
-    }
+    params = {"access_token": token, "per_page": 100}
     try:
         resp = requests.get(url, params=params)
         if resp.status_code != 200:
-            print_flush(f"  ❌ 获取 Release 列表失败: HTTP {resp.status_code} - {resp.text}")
+            print_flush(f"  ❌ 获取 Release 列表失败: HTTP {resp.status_code} - {resp.text[:200]}")
             return None
         releases = resp.json()
         for release in releases:
@@ -169,19 +152,9 @@ def get_gitee_release_id(repo, tag, token):
 
 
 def create_github_release(repo, tag, title, body, token):
-    """创建 GitHub Release"""
     url = f"https://api.github.com/repos/{repo}/releases"
-    headers = {
-        "Authorization": f"token {token}",
-        "Accept": "application/vnd.github.v3+json"
-    }
-    data = {
-        "tag_name": tag,
-        "name": title,
-        "body": body,
-        "draft": False,
-        "prerelease": False
-    }
+    headers = {"Authorization": f"token {token}", "Accept": "application/vnd.github.v3+json"}
+    data = {"tag_name": tag, "name": title, "body": body, "draft": False, "prerelease": False}
     req = urllib.request.Request(url, data=json.dumps(data).encode('utf-8'), headers=headers, method='POST')
     try:
         with urllib.request.urlopen(req) as resp:
@@ -198,20 +171,9 @@ def create_github_release(repo, tag, title, body, token):
 
 
 def create_gitee_release(repo, tag, title, body, token):
-    """创建 Gitee Release"""
     url = f"https://gitee.com/api/v5/repos/{repo}/releases"
-    headers = {
-        "Content-Type": "application/json"
-    }
-    data = {
-        "access_token": token,
-        "tag_name": tag,
-        "name": title,
-        "body": body,
-        "target_commitish": "main",
-        "draft": False,
-        "prerelease": False
-    }
+    headers = {"Content-Type": "application/json"}
+    data = {"access_token": token, "tag_name": tag, "name": title, "body": body, "target_commitish": "main", "draft": False, "prerelease": False}
     req = urllib.request.Request(url, data=json.dumps(data).encode('utf-8'), headers=headers, method='POST')
     try:
         with urllib.request.urlopen(req) as resp:
@@ -250,7 +212,6 @@ def main():
         print_flush("❌ 未提供 Token！请使用 --token 参数")
         sys.exit(1)
 
-    # 远程仓库名称映射
     if remote == "github":
         remote_name = "origin"
         repo = "Cherish95279/DesktopWidget"
@@ -262,7 +223,6 @@ def main():
     print_flush(f"ℹ️ 当前目录: {root}")
     print_flush(f"ℹ️ 目标远程仓库: {remote_name} ({remote})")
 
-    # 获取分支名
     code, branch, _ = run_cmd(["git", "rev-parse", "--abbrev-ref", "HEAD"])
     if code != 0:
         print_flush("❌ 无法获取当前分支")
@@ -270,7 +230,6 @@ def main():
     branch = branch.strip()
     print_flush(f"ℹ️ 当前分支: {branch}")
 
-    # 查找 exe 文件
     exe_path = find_exe_file(root, version)
     if exe_path:
         print_flush(f"ℹ️ 找到 exe 文件: {os.path.basename(exe_path)}")
@@ -326,9 +285,7 @@ def main():
     else:
         print_flush("✅ 完成")
 
-    # 创建 Release（如果已存在，则获取已有 ID）
     print_flush(f"\n→ 创建 Release...")
-
     release_id = None
     if remote == "github":
         release_id = create_github_release(repo, tag_name, release_title, notes, token)
@@ -340,14 +297,12 @@ def main():
     if not release_id:
         print_flush("⚠️ 无法获取 Release ID，跳过 exe 上传")
     else:
-        # 上传 exe 文件
         if exe_path and os.path.exists(exe_path):
             print_flush("\n→ 上传 exe 文件...")
             if remote == "github":
                 success = upload_github_asset(repo, release_id, exe_path, token)
             else:
                 success = upload_gitee_asset(repo, release_id, exe_path, token)
-
             if success:
                 print_flush("✅ exe 上传完成！")
             else:
