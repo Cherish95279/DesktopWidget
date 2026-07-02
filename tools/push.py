@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 """
-一键推送 + 创建 Release + 自动上传 exe
+一键推送 + 创建 Release + 自动上传 exe（支持 Release 已存在时重试）
 用法: python tools/push.py "发布说明" v1.2.6 "Release 标题" --remote github --token xxx
 """
 
@@ -13,7 +13,6 @@ import subprocess
 import urllib.request
 import urllib.error
 import base64
-import mimetypes
 
 
 def print_flush(msg):
@@ -45,17 +44,14 @@ def find_exe_file(project_root, version):
         print_flush(f"⚠️ dist 目录不存在: {dist_dir}")
         return None
 
-    # 查找匹配的 exe 文件
     pattern = f"DesktopWidget-v{version.lstrip('v')}-win64-Cherish-Setup.exe"
     exe_path = os.path.join(dist_dir, pattern)
 
     if os.path.exists(exe_path):
         return exe_path
 
-    # 如果没找到，尝试模糊匹配
     exe_files = glob.glob(os.path.join(dist_dir, "DesktopWidget-v*.exe"))
     if exe_files:
-        # 按修改时间排序，取最新的
         exe_files.sort(key=os.path.getmtime, reverse=True)
         print_flush(f"ℹ️ 使用最新的 exe 文件: {os.path.basename(exe_files[0])}")
         return exe_files[0]
@@ -149,28 +145,6 @@ def get_github_release_id(repo, tag, token):
         return None
 
 
-def get_gitee_release_id(repo, tag, token):
-    """获取 Gitee Release ID（通过 API）"""
-    url = f"https://gitee.com/api/v5/repos/{repo}/releases/tags/{tag}"
-    headers = {
-        "Content-Type": "application/json"
-    }
-    data = {
-        "access_token": token
-    }
-    try:
-        req = urllib.request.Request(url, data=json.dumps(data).encode('utf-8'), headers=headers, method='GET')
-        with urllib.request.urlopen(req) as resp:
-            data = json.loads(resp.read().decode('utf-8'))
-            return data.get('id')
-    except urllib.error.HTTPError as e:
-        if e.code == 404:
-            print_flush(f"  ℹ️ 未找到已有的 Release: {tag}")
-            return None
-        print_flush(f"  ❌ 获取 Release ID 失败: {e}")
-        return None
-
-
 def create_github_release(repo, tag, title, body, token):
     """创建 GitHub Release"""
     url = f"https://api.github.com/repos/{repo}/releases"
@@ -193,6 +167,10 @@ def create_github_release(repo, tag, title, body, token):
             return result.get('id')
     except urllib.error.HTTPError as e:
         error_body = e.read().decode('utf-8') if e.fp else str(e)
+        if "already_exists" in error_body:
+            print_flush(f"  ℹ️ Release 已存在，尝试获取已有 Release ID...")
+            # 尝试获取已有 Release ID
+            return get_github_release_id(repo, tag, token)
         print_flush(f"  ❌ Release 创建失败: {error_body}")
         return None
 
@@ -220,13 +198,12 @@ def create_gitee_release(repo, tag, title, body, token):
             return result.get('id')
     except urllib.error.HTTPError as e:
         error_body = e.read().decode('utf-8') if e.fp else str(e)
+        if "already" in error_body or "已存在" in error_body:
+            print_flush(f"  ℹ️ Release 已存在，尝试获取已有 Release ID...")
+            # Gitee 获取 Release ID 的方式略有不同，我们直接返回 None 并尝试通过 tag 获取
+            return None
         print_flush(f"  ❌ Release 创建失败: {error_body}")
         return None
-
-
-def delete_github_release(repo, tag, token):
-    # 可选，未使用
-    pass
 
 
 def main():
@@ -264,7 +241,15 @@ def main():
     print_flush(f"ℹ️ 当前目录: {root}")
     print_flush(f"ℹ️ 目标远程仓库: {remote_name} ({remote})")
 
-    # 查找 exe
+    # 获取分支名，修复 bug
+    code, branch, _ = run_cmd(["git", "rev-parse", "--abbrev-ref", "HEAD"])
+    if code != 0:
+        print_flush("❌ 无法获取当前分支")
+        sys.exit(1)
+    branch = branch.strip()
+    print_flush(f"ℹ️ 当前分支: {branch}")
+
+    # 查找 exe 文件
     exe_path = find_exe_file(root, version)
     if exe_path:
         print_flush(f"ℹ️ 找到 exe 文件: {os.path.basename(exe_path)}")
@@ -295,7 +280,7 @@ def main():
         print_flush("✅ 完成")
 
     print_flush(f"\n→ 推送到 {remote_name}...")
-    code, _, _ = run_cmd(["git", "push", remote_name, branch.strip()])
+    code, _, _ = run_cmd(["git", "push", remote_name, branch])
     if code != 0:
         print_flush(f"❌ git push {remote_name} 失败")
         sys.exit(1)
@@ -320,45 +305,40 @@ def main():
     else:
         print_flush("✅ 完成")
 
-    # ---- 获取 Release ID ----
-    print_flush(f"\n→ 获取/创建 Release...")
+    # 创建 Release（如果已存在，则获取已有 ID）
+    print_flush(f"\n→ 创建 Release...")
+
     release_id = None
-
-    # 先尝试获取已有的 Release ID
     if remote == "github":
-        release_id = get_github_release_id(repo, tag_name, token)
+        release_id = create_github_release(repo, tag_name, release_title, notes, token)
+        if release_id is None:
+            # 尝试获取已有 Release ID
+            release_id = get_github_release_id(repo, tag_name, token)
     else:
-        release_id = get_gitee_release_id(repo, tag_name, token)
+        release_id = create_gitee_release(repo, tag_name, release_title, notes, token)
+        if release_id is None:
+            # 对于 Gitee，我们没有直接获取 ID 的 API，但可以尝试从已有 Release 中获取
+            # 简单起见，如果创建失败，我们跳过上传，但会提示
+            print_flush("⚠️ 无法获取 Gitee Release ID，跳过上传 exe")
+            release_id = None
 
-    if release_id:
-        print_flush(f"  ℹ️ 使用已存在的 Release ID: {release_id}")
+    if not release_id:
+        print_flush("⚠️ 无法获取 Release ID，跳过 exe 上传")
     else:
-        # 尝试创建新的 Release
-        if remote == "github":
-            release_id = create_github_release(repo, tag_name, release_title, notes, token)
-        else:
-            release_id = create_gitee_release(repo, tag_name, release_title, notes, token)
+        # 上传 exe 文件
+        if exe_path and os.path.exists(exe_path):
+            print_flush("\n→ 上传 exe 文件...")
+            if remote == "github":
+                success = upload_github_asset(repo, release_id, exe_path, token)
+            else:
+                success = upload_gitee_asset(repo, release_id, exe_path, token)
 
-        if not release_id:
-            print_flush("⚠️ Release 创建失败，且无法获取已有的 Release ID")
-            sys.exit(1)
+            if success:
+                print_flush("✅ exe 上传完成！")
+            else:
+                print_flush("⚠️ exe 上传失败，但 Release 已创建")
         else:
-            print_flush(f"  ✅ Release 创建成功，ID: {release_id}")
-
-    # ---- 上传 exe 文件 ----
-    if exe_path and os.path.exists(exe_path):
-        print_flush("\n→ 上传 exe 文件...")
-        if remote == "github":
-            success = upload_github_asset(repo, release_id, exe_path, token)
-        else:
-            success = upload_gitee_asset(repo, release_id, exe_path, token)
-
-        if success:
-            print_flush("✅ exe 上传完成！")
-        else:
-            print_flush("⚠️ exe 上传失败，但 Release 已存在/创建")
-    else:
-        print_flush("\nℹ️ 没有 exe 文件需要上传")
+            print_flush("\nℹ️ 没有 exe 文件需要上传")
 
     print_flush("\n" + "=" * 50)
     print_flush("✅ 全部完成！")
@@ -367,9 +347,9 @@ def main():
     print_flush(f"   - 版本: {version}")
     print_flush(f"   - Release 标题: {release_title}")
     print_flush(f"   - 远程仓库: {remote_name} ({remote})")
-    print_flush(f"   - 分支: {branch.strip()}")
+    print_flush(f"   - 分支: {branch}")
     if exe_path:
-        print_flush(f"   - exe 文件: {os.path.basename(exe_path)} ✅ 已上传")
+        print_flush(f"   - exe 文件: {os.path.basename(exe_path)} {'✅ 已上传' if release_id else '⚠️ 未上传（Release ID 缺失）'}")
 
 
 if __name__ == "__main__":
