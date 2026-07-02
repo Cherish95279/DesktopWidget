@@ -151,27 +151,24 @@ def get_github_release_id(repo, tag, token):
 
 def get_gitee_release_id(repo, tag, token):
     """获取 Gitee Release ID（通过 API）"""
-    url = f"https://gitee.com/api/v5/repos/{repo}/releases/tags/{tag}"
+    # Gitee API: GET /repos/{owner}/{repo}/releases/tags/{tag}
+    url = f"https://gitee.com/api/v5/repos/{repo}/releases/tags/{tag}?access_token={token}"
     headers = {
-        "Content-Type": "application/json"
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"
     }
-    data = {
-        "access_token": token
-    }
-    req = urllib.request.Request(
-        url + "?access_token=" + token,
-        headers=headers,
-        method='GET'
-    )
     try:
+        req = urllib.request.Request(url, headers=headers, method='GET')
         with urllib.request.urlopen(req) as resp:
             data = json.loads(resp.read().decode('utf-8'))
+            # 调试：打印返回数据
+            print_flush(f"  [调试] Gitee API 返回: {json.dumps(data, ensure_ascii=False)[:200]}...")
             return data.get('id')
     except urllib.error.HTTPError as e:
         if e.code == 404:
             print_flush(f"  ℹ️ 未找到已有的 Gitee Release: {tag}")
             return None
-        print_flush(f"  ❌ 获取 Gitee Release ID 失败: {e}")
+        error_body = e.read().decode('utf-8') if e.fp else str(e)
+        print_flush(f"  ❌ 获取 Gitee Release ID 失败: {error_body}")
         return None
 
 
