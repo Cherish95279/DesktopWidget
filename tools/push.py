@@ -57,7 +57,6 @@ def create_github_release(repo, tag, title, body, token):
             return True
     except urllib.error.HTTPError as e:
         error_body = e.read().decode('utf-8') if e.fp else str(e)
-        # 如果 Release 已存在，视为成功
         if "already_exists" in error_body or "already exists" in error_body:
             print_flush(f"ℹ️ Release 已存在，跳过创建")
             return True
@@ -76,6 +75,7 @@ def create_gitee_release(repo, tag, title, body, token):
         "tag_name": tag,
         "name": title,
         "body": body,
+        "target_commitish": "main",
         "draft": False,
         "prerelease": False
     }
@@ -87,7 +87,6 @@ def create_gitee_release(repo, tag, title, body, token):
             return True
     except urllib.error.HTTPError as e:
         error_body = e.read().decode('utf-8') if e.fp else str(e)
-        # 如果 Release 已存在，视为成功
         if "already_exists" in error_body or "already exists" in error_body:
             print_flush(f"ℹ️ Release 已存在，跳过创建")
             return True
