@@ -71,12 +71,16 @@ class MainWindow(
         self.settings_dialog = None
         self._notice_window = None
 
+        # ===== 新增：显式初始化更新检查状态（确保存在） =====
+        self.update_check_status = "idle"
+
+        # 主题管理器
         self.theme_manager = get_theme_manager()
 
-        # 加载图片（通过主题管理器）
+        # ===== 加载图片（通过主题管理器） =====
         self._load_images()
 
-        # 缓存
+        # ===== 缓存处理后的背景图 =====
         self._cached_bg = None
         self._cached_theme_color = None
         self._cached_theme_opacity = None
@@ -99,16 +103,22 @@ class MainWindow(
         self.lunar_text = ""
         self.term_display = ""
 
+        # 加载状态
         self._loading_weather = False
         self._loading_dots = 0
         self._loading_timer = None
+
+        # API 配置状态
         self._api_configured = True
 
+        # 绘制相关（由 PaintMixin 初始化）
         self._init_paint()
 
+        # 天气线程
         self.weather_thread = None
         self.start_weather_thread()
 
+        # 定时器
         self.clock_timer = QTimer()
         self.clock_timer.timeout.connect(self.update_clock)
         self.clock_timer.start(50)
@@ -128,6 +138,7 @@ class MainWindow(
         self.tray = TrayIcon(self)
         self.tray.show()
 
+        # 公告气泡
         self.notice_bubble = NoticeBubble(self)
         self.notice_bubble.move(
             self.width() - self.notice_bubble.width() - 15,
@@ -136,11 +147,13 @@ class MainWindow(
         self.notice_bubble.set_on_click(self._on_bubble_clicked)
         self.notice_bubble.raise_()
 
+        # 自动更新
         self.update_checker = None
         self.has_update = False
         self.latest_version_info = {}
         QTimer.singleShot(3000, self.check_for_updates_auto)
 
+        # 应用主题缓存
         self.update_theme_cache()
 
         self.update_perf()
@@ -148,24 +161,27 @@ class MainWindow(
         self.move_to_top_right()
         self.show()
 
-    # ===== 加载图片（带调试打印） =====
+    # ===== 新增：获取天气状态（供 ping_client 调用） =====
+    def get_weather_status(self) -> str:
+        """返回本次启动以来的天气请求状态"""
+        if self.weather_thread is not None:
+            return getattr(self.weather_thread, "last_status", "idle")
+        return "idle"
+
+    # ===== 新增：获取更新检查状态（供 ping_client 调用） =====
+    def get_update_status(self) -> str:
+        """返回本次启动的更新检查状态"""
+        return getattr(self, "update_check_status", "idle")
+
+    # ===== 加载图片（通过主题管理器） =====
     def _load_images(self):
         """通过主题管理器加载当前主题的所有图片"""
-        print(f"🔄 _load_images() 被调用，当前主题: {self.theme_manager.get_current_theme()}")
-
         bg_path = self.theme_manager.get_theme_path("bg.png")
         face_path = self.theme_manager.get_theme_path("face.png")
         hour_path = self.theme_manager.get_theme_path("Hour_Hand.png")
         minute_path = self.theme_manager.get_theme_path("Minute_Hand.png")
         second_path = self.theme_manager.get_theme_path("Second_Hand.png")
         dot_path = self.theme_manager.get_theme_path("center_dot.png")
-
-        print(f"  bg_path: {bg_path}")
-        print(f"  face_path: {face_path}")
-        print(f"  hour_path: {hour_path}")
-        print(f"  minute_path: {minute_path}")
-        print(f"  second_path: {second_path}")
-        print(f"  dot_path: {dot_path}")
 
         self.bg = QPixmap(bg_path) if bg_path and os.path.exists(bg_path) else QPixmap()
         self.face = QPixmap(face_path) if face_path and os.path.exists(face_path) else QPixmap()
@@ -174,35 +190,59 @@ class MainWindow(
         self.second = QPixmap(second_path) if second_path and os.path.exists(second_path) else QPixmap()
         self.center_dot = QPixmap(dot_path) if dot_path and os.path.exists(dot_path) else QPixmap()
 
+        # 如果 face 为空，用 bg 替代
         if self.face.isNull():
             self.face = self.bg
 
+        # 检查关键图片是否存在
         if any(p.isNull() for p in [self.bg, self.hour, self.minute, self.second, self.center_dot]):
             print("⚠️ 部分图片加载失败，请检查主题文件")
 
-        print(f"✅ 图片加载完成，bg: {not self.bg.isNull()}, face: {not self.face.isNull()}")
-
-    # ===== 重新加载图片（主题切换时调用） =====
+    # ===== 重新加载图片（切换主题时调用） =====
     def reload_images(self):
         """重新加载当前主题的所有图片（主题切换时调用）"""
-        print("🔄 reload_images() 被调用")
         self._load_images()
+        # 强制重建背景缓存
         self._cached_bg = None
         self.update_theme_cache()
         self.update()
-        print("✅ reload_images() 完成")
 
-    # ---------- 以下方法保持不变（省略冗长内容） ----------
-    # 为了节省篇幅，这里省略 move_to_top_right、_on_bubble_clicked、
-    # open_settings、check_for_updates_auto、start_loading_animation、
-    # start_weather_thread、update_weather、closeEvent、get_local_ip、
-    # on_speed_update、update_perf、update_clock、update_fps、
-    # paintEvent、draw_hand、mousePressEvent、mouseMoveEvent、mouseReleaseEvent
-    # 这些方法从你的现有 `main_window.py` 中完整保留即可。
-    # 如果你不确定，我可以提供完整版，但当前文件已经很长，所以我只展示修改部分。
+    # ---------- 主题缓存 ----------
+    def update_theme_cache(self, force=False):
+        settings = QSettings("MyDesktopApp", "WeatherSettings")
+        theme_opacity = int(settings.value("theme_opacity", 100))
+        theme_color = settings.value("theme_color", "#a8c7dc")
+        theme_tint_alpha = int(settings.value("theme_tint_alpha", 80))
 
-    # ===== 以下方法从原 main_window.py 中复制保留 =====
+        if not force and (self._cached_bg is not None and
+                          self._cached_theme_color == theme_color and
+                          self._cached_theme_opacity == theme_opacity and
+                          self._cached_tint_alpha == theme_tint_alpha):
+            return
 
+        self._cached_theme_color = theme_color
+        self._cached_theme_opacity = theme_opacity
+        self._cached_tint_alpha = theme_tint_alpha
+
+        if not self.bg.isNull():
+            bg_pixmap = self.bg.copy()
+            if not bg_pixmap.isNull():
+                color = QColor(theme_color)
+                color.setAlpha(theme_tint_alpha)
+                temp_painter = QPainter(bg_pixmap)
+                temp_painter.setCompositionMode(QPainter.CompositionMode.CompositionMode_SourceAtop)
+                temp_painter.fillRect(bg_pixmap.rect(), color)
+                temp_painter.end()
+                self._cached_bg = bg_pixmap
+            else:
+                self._cached_bg = self.bg
+        else:
+            self._cached_bg = QPixmap(400, 297)
+            self._cached_bg.fill(QColor(theme_color))
+
+        self.update()
+
+    # ---------- 以下方法保持原样（从原 main_window.py 保留） ----------
     def move_to_top_right(self):
         screen = QApplication.primaryScreen()
         if screen:
@@ -271,11 +311,17 @@ class MainWindow(
         self.update_checker.start()
 
     def on_update_check_finished(self, result):
+        if "error" in result:
+            self.update_check_status = "failed"
+            self.has_update = False
+            return
         if result.get("has_update", False):
             self.has_update = True
             self.latest_version_info = result
+            self.update_check_status = "success"
         else:
             self.has_update = False
+            self.update_check_status = "no_update"
 
     def get_latest_version_info(self):
         return self.latest_version_info if self.has_update else None
@@ -299,43 +345,6 @@ class MainWindow(
             self._loading_timer.stop()
             self._loading_timer = None
         self.update()
-
-    def update_theme_cache(self, force=False):
-        settings = QSettings("MyDesktopApp", "WeatherSettings")
-        theme_opacity = int(settings.value("theme_opacity", 100))
-        theme_color = settings.value("theme_color", "#a8c7dc")
-        theme_tint_alpha = int(settings.value("theme_tint_alpha", 80))
-
-        if not force and (self._cached_bg is not None and
-                          self._cached_theme_color == theme_color and
-                          self._cached_theme_opacity == theme_opacity and
-                          self._cached_tint_alpha == theme_tint_alpha):
-            return
-
-        self._cached_theme_color = theme_color
-        self._cached_theme_opacity = theme_opacity
-        self._cached_tint_alpha = theme_tint_alpha
-
-        if not self.bg.isNull():
-            bg_pixmap = self.bg.copy()
-            if not bg_pixmap.isNull():
-                color = QColor(theme_color)
-                color.setAlpha(theme_tint_alpha)
-                temp_painter = QPainter(bg_pixmap)
-                temp_painter.setCompositionMode(QPainter.CompositionMode.CompositionMode_SourceAtop)
-                temp_painter.fillRect(bg_pixmap.rect(), color)
-                temp_painter.end()
-                self._cached_bg = bg_pixmap
-            else:
-                self._cached_bg = self.bg
-        else:
-            self._cached_bg = QPixmap(400, 297)
-            self._cached_bg.fill(QColor(theme_color))
-
-        self.update()
-
-    def apply_theme(self):
-        self.update_theme_cache()
 
     def start_weather_thread(self, force_restart=False):
         settings = QSettings("MyDesktopApp", "WeatherSettings")
@@ -521,7 +530,7 @@ class MainWindow(
         )
         painter.drawPixmap(cx - dot_size // 2, cy - dot_size // 2, scaled_dot)
 
-        # 绘制文字信息（保持不变，此处省略）
+        # 绘制文字信息
         settings = QSettings("MyDesktopApp", "WeatherSettings")
         font_family = settings.value("font_family", "Microsoft YaHei")
         font_size = int(settings.value("font_size", 10))

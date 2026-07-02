@@ -42,7 +42,7 @@ class ServerScanner(QThread):
             return None
 
 
-# ---------- 天气线程（增加重试机制） ----------
+# ---------- 天气线程（增加 last_status 记录） ----------
 class WeatherThread(QThread):
     data_updated = pyqtSignal(dict)
     error_signal = pyqtSignal(str)
@@ -53,6 +53,8 @@ class WeatherThread(QThread):
         self.api_key = api_key
         self.refresh_minutes = max(1, refresh_minutes)
         self._stopped = False
+        # ===== 新增：记录本次启动以来的天气请求状态 =====
+        self.last_status = "idle"  # idle / success / failed
 
     def stop(self):
         self._stopped = True
@@ -92,6 +94,7 @@ class WeatherThread(QThread):
         while not self._stopped:
             if not self.api_url or not self.api_key:
                 self.error_signal.emit("未配置 API 地址或密钥")
+                self.last_status = "failed"
                 self.msleep(60000)
                 continue
 
@@ -104,7 +107,6 @@ class WeatherThread(QThread):
                 city_code = None
                 display_city = None
 
-                # ===== 优先使用用户选择的城市 =====
                 if user_location:
                     city_code = self.get_adcode(user_location)
                     if city_code:
@@ -123,7 +125,6 @@ class WeatherThread(QThread):
                         raise Exception("无法获取 IP 定位的城市代码")
                     print(f"📍 使用 IP 定位: {display_city} (adcode: {city_code})")
 
-                # ===== 请求天气数据 =====
                 weather_url = f"{self.api_url}/v3/weather/weatherInfo?key={self.api_key}&city={city_code}&extensions=base"
                 w_resp = requests.get(weather_url, timeout=5, verify=certifi.where())
                 w_resp.raise_for_status()
@@ -139,10 +140,13 @@ class WeatherThread(QThread):
                         'sunrise': '--:--',
                         'sunset': '--:--',
                     })
+                    # ===== 成功 =====
+                    self.last_status = "success"
                     print(f"✅ 天气更新成功: {display_city} {live['weather']} {live['temperature']}℃")
                 else:
                     error_msg = data.get('info', '未知错误')
                     self.error_signal.emit(f"API错误: {error_msg}")
+                    self.last_status = "failed"
                     self.data_updated.emit({
                         'city': display_city,
                         'weather': '⚠️',
@@ -154,24 +158,21 @@ class WeatherThread(QThread):
 
             except Exception as e:
                 print(f"❌ 天气请求异常: {e}")
-                # ===== 关键修复：增加重试机制，网络恢复后自动重连 =====
-                # 先尝试短间隔重试（10秒间隔，最多6次 = 60秒）
+                self.last_status = "failed"
+                # 重试机制（略，保持原逻辑）
                 retry_count = 0
                 max_retries = 6
                 while retry_count < max_retries and not self._stopped:
                     retry_count += 1
                     print(f"🔄 天气请求失败，{retry_count}/{max_retries} 次重试...")
                     self.error_signal.emit(f"请求异常，正在重试 ({retry_count}/{max_retries})...")
-                    # 等待10秒
                     for _ in range(10):
                         if self._stopped:
                             break
                         self.msleep(1000)
                     if self._stopped:
                         break
-                    # 重试请求
                     try:
-                        # 重新获取设置（可能在重试期间用户切换了地区）
                         settings = QSettings("MyDesktopApp", "WeatherSettings")
                         selected_city = settings.value("selected_city", "")
                         selected_county = settings.value("selected_county", "")
@@ -203,17 +204,17 @@ class WeatherThread(QThread):
                                     'sunrise': '--:--',
                                     'sunset': '--:--',
                                 })
+                                self.last_status = "success"
                                 print(f"✅ 重试成功，天气更新成功: {display_city} {live['weather']} {live['temperature']}℃")
-                                # 清除错误状态（如果之前有错误信号，现在成功可以恢复）
-                                self.error_signal.emit("")  # 发送空字符串清除错误状态
-                                break  # 跳出重试循环
+                                self.error_signal.emit("")
+                                break
                     except Exception as retry_e:
                         print(f"❌ 重试失败: {retry_e}")
+                        self.last_status = "failed"
                         continue
                 else:
-                    # 所有重试都失败，发送最终错误
                     self.error_signal.emit(f"请求异常（重试 {max_retries} 次后失败）: {str(e)}")
-                    # 发射一个包含城市名的数据，让 UI 至少显示城市名
+                    self.last_status = "failed"
                     if user_location:
                         self.data_updated.emit({
                             'city': user_location,
@@ -223,16 +224,13 @@ class WeatherThread(QThread):
                             'sunrise': '--:--',
                             'sunset': '--:--',
                         })
-                    # 进入正常等待周期
-                    # 等待刷新间隔
                     for _ in range(self.refresh_minutes * 60):
                         if self._stopped:
                             break
                         self.msleep(1000)
-                    continue  # 跳过下面的等待，因为已经等待过了
+                    continue
 
-            # 如果请求成功或重试成功，进入正常等待间隔
-            # 等待刷新间隔
+            # 正常等待
             for _ in range(self.refresh_minutes * 60):
                 if self._stopped:
                     break

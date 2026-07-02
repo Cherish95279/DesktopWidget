@@ -1,12 +1,22 @@
 import sys
 import os
 from PyQt6.QtWidgets import QApplication
-from PyQt6.QtCore import QTimer
+from PyQt6.QtCore import QSettings, QTimer
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 from src.main_window import MainWindow
 from src.notice import NoticeManager
+from src.ping_client import report_launch_full, report_launch_async
+
+
+def do_report(window):
+    """
+    获取主窗口的状态并执行完整上报
+    """
+    weather_status = window.get_weather_status() if window else "idle"
+    update_status = window.get_update_status() if window else "idle"
+    report_launch_full(weather_status, update_status)
 
 
 def main():
@@ -16,6 +26,10 @@ def main():
 
     window = MainWindow()
     notice_manager = NoticeManager.get_instance()
+
+    # ===== 启动后延迟上报统计（等待窗口完全初始化） =====
+    # 使用 lambda 捕获 window 实例，延迟 2 秒执行
+    QTimer.singleShot(2000, lambda: do_report(window))
 
     # 定义回调函数
     def safe_start_flash(notice):
