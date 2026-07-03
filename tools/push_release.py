@@ -1,7 +1,8 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 """
-一键发布脚本（推送代码 + 创建 Release + 上传 exe）
+一键发布脚本（仅打标签 + 创建 Release + 上传 exe）
+前提：代码已通过“推送”功能推送到远程仓库
 用法: python tools/push_release.py "发布说明" v1.2.6 "Release 标题" --remote github --token xxx
 """
 
@@ -198,36 +199,8 @@ def main():
     else:
         print_flush(f"⚠️ 未找到 exe 文件")
 
-    print_flush("\n" + "=" * 50)
-    print_flush("📋 变更文件:")
-    print_flush("=" * 50)
-    run_cmd(["git", "status", "--short"])
-
-    print_flush("\n→ 添加所有文件...")
-    code, _, _ = run_cmd(["git", "add", "."])
-    if code != 0:
-        print_flush("❌ git add 失败")
-        sys.exit(1)
-    print_flush("✅ 完成")
-
-    print_flush(f"\n→ 提交: {notes}...")
-    code, stdout, _ = run_cmd(["git", "commit", "-m", notes])
-    if code != 0:
-        if "nothing to commit" in stdout or "nothing to commit" in str(stdout):
-            print_flush("ℹ️ 没有新的变更需要提交，跳过提交步骤")
-        else:
-            print_flush("❌ git commit 失败")
-            sys.exit(1)
-    else:
-        print_flush("✅ 完成")
-
-    print_flush(f"\n→ 推送到 {remote_name}...")
-    code, _, _ = run_cmd(["git", "push", remote_name, branch])
-    if code != 0:
-        print_flush(f"❌ git push {remote_name} 失败")
-        sys.exit(1)
-    print_flush("✅ 完成")
-
+    # 不再执行 git add / commit / push
+    # 直接打标签并推送
     tag_name = version
     print_flush(f"\n→ 打标签: {tag_name}...")
     code, stdout, stderr = run_cmd(["git", "tag", tag_name])
@@ -247,6 +220,7 @@ def main():
     else:
         print_flush("✅ 完成")
 
+    # 创建 Release
     print_flush(f"\n→ 创建 Release...")
     release_id = None
     if remote == "github":

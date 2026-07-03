@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 """
-一键推送脚本（仅推送代码，不打标签）
+一键推送脚本（仅推送代码到 GitHub，不打标签）
 用法: python tools/push.py "提交信息"
 """
 
@@ -73,7 +73,8 @@ def main():
     else:
         print_flush("✅ 完成")
 
-    print_flush(f"\n→ 推送到 origin...")
+    # 只推送到 GitHub（origin）
+    print_flush(f"\n→ 推送到 origin (GitHub)...")
     code, _, _ = run_cmd(["git", "push", "origin", branch])
     if code != 0:
         print_flush("❌ git push 失败")
