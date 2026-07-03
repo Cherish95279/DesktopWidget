@@ -1,8 +1,8 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 """
-一键推送脚本（仅推送代码 + 打标签）
-用法: python tools/push.py "提交信息" [tag]
+一键推送脚本（仅推送代码，不打标签）
+用法: python tools/push.py "提交信息"
 """
 
 import os
@@ -35,11 +35,10 @@ def run_cmd(cmd):
 def main():
     if len(sys.argv) < 2:
         print_flush("❌ 请指定提交信息！")
-        print_flush("用法: python tools/push.py \"提交信息\" [tag]")
+        print_flush("用法: python tools/push.py \"提交信息\"")
         sys.exit(1)
 
     msg = sys.argv[1]
-    with_tag = len(sys.argv) > 2 and sys.argv[2] == "tag"
 
     root = os.getcwd()
     print_flush(f"ℹ️ 当前目录: {root}")
@@ -48,7 +47,8 @@ def main():
     if code != 0:
         print_flush("❌ 无法获取当前分支")
         sys.exit(1)
-    print_flush(f"ℹ️ 当前分支: {branch.strip()}")
+    branch = branch.strip()
+    print_flush(f"ℹ️ 当前分支: {branch}")
 
     print_flush("\n" + "=" * 50)
     print_flush("📋 变更文件:")
@@ -74,42 +74,17 @@ def main():
         print_flush("✅ 完成")
 
     print_flush(f"\n→ 推送到 origin...")
-    code, _, _ = run_cmd(["git", "push", "origin", branch.strip()])
+    code, _, _ = run_cmd(["git", "push", "origin", branch])
     if code != 0:
         print_flush("❌ git push 失败")
         sys.exit(1)
     print_flush("✅ 完成")
 
-    if with_tag:
-        print_flush("\n→ 打标签...")
-        constants_path = os.path.join(root, "src", "constants.py")
-        version = "unknown"
-        if os.path.exists(constants_path):
-            with open(constants_path, 'r', encoding='utf-8') as f:
-                for line in f:
-                    if line.startswith('VERSION = '):
-                        version = line.split('"')[1]
-                        break
-        tag_name = version
-        print_flush(f"  标签名: {tag_name}")
-
-        code, _, _ = run_cmd(["git", "tag", tag_name])
-        if code != 0:
-            print_flush("❌ git tag 失败")
-            sys.exit(1)
-
-        print_flush("\n→ 推送标签...")
-        code, _, _ = run_cmd(["git", "push", "origin", tag_name])
-        if code != 0:
-            print_flush("❌ git push tag 失败")
-            sys.exit(1)
-        print_flush("✅ 完成")
-
     print_flush("\n" + "=" * 50)
     print_flush("✅ 全部完成！")
     print_flush("=" * 50)
     print_flush(f"   - 提交: {msg}")
-    print_flush(f"   - 分支: {branch.strip()}")
+    print_flush(f"   - 分支: {branch}")
 
 
 if __name__ == "__main__":
