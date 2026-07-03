@@ -1,9 +1,9 @@
 {
-  "id": "notice_20260702_220332",
+  "id": "notice_20260703_104245",
   "enabled": true,
-  "title": "测试",
-  "content": "这是又一个测试",
+  "title": "v1.2.6增加国内更新源",
+  "content": "v1.2.6增加国内更新源，下载更流畅",
   "link": "",
-  "timestamp": "2026-07-02 22:03",
+  "timestamp": "2026-07-03 10:42",
   "show_date": true
 }
