@@ -2,9 +2,9 @@
 
 **珍爱桌面小工具** —— 基于 PyQt6 的轻量级桌面组件，集指针时钟、实时天气、性能监控、网速监控于一体，支持系统托盘和自动更新。
 
-> 当前版本：v1.2.5
+> 当前版本：v1.2.6
 
-![预览图](https://raw.githubusercontent.com/Cherish95279/DesktopWidget/main/screenshots/preview1.2.5.png)
+![预览图]https://raw.githubusercontent.com/Cherish95279/DesktopWidget/main/screenshots/preview1.2.6.png
 
 ![主题预览图](https://raw.githubusercontent.com/Cherish95279/DesktopWidget/main/screenshots/zhuti2.png)
 ---
@@ -33,10 +33,10 @@
 
 ### 方式一：下载安装包（推荐）
 
-1. 访问 [Releases](https://github.com/Cherish95279/DesktopWidget/releases) 页面
-2. 下载最新版本的 `DesktopWidget-v*.exe`
-3. 双击运行安装，首次安装后桌面会生成快捷方式
-4. 后续双击桌面图标即可启动
+平台	下载地址
+GitHub	Releases
+Gitee（国内用户推荐）	Releases
+下载 DesktopWidget-v*.exe 双击安装即可。
 
 ### 方式二：从源码运行
 
@@ -100,7 +100,22 @@ https://raw.githubusercontent.com/Cherish95279/DesktopWidget/main/screenshots/pr
 
 📝 更新日志
 
-v1.3.0 (2026-06-29)
+v1.2.6 (2026-07-03)
+🎨 新增“竹林”主题：全新主题风格，在设置 → 主题中自由切换
+
+🇨🇳 新增 Gitee 更新渠道：国内用户可在设置 → 检查更新中切换至 Gitee 源，加速更新下载
+
+📢 新增公告主动查看入口：在设置 → 常规页面增加“📢 查看公告”按钮，方便随时查阅历史公告
+
+🎨 主题设置页面布局优化：主题切换与背景颜色并排，恢复默认按钮统一风格
+
+🐛 修复打开设置时天气线程重启问题：避免不必要的网络请求
+
+🎨 UI 统一优化：各设置页面的“恢复默认”按钮尺寸和位置保持一致
+
+🛠️ DevTool 工具升级：项目后端工具新增“分发”功能，支持一键推送代码 + 创建 Release + 自动上传 exe（GitHub 自动，Gitee 手动）
+
+v1.2.5 (2026-06-29)
 🎨 主题系统全面上线
 
 新增“默认主题”和“竹林”双主题切换，设置页面集成主题下拉框

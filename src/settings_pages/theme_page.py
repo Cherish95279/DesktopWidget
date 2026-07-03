@@ -1,6 +1,7 @@
 from PyQt6.QtWidgets import *
 from PyQt6.QtCore import *
 from PyQt6.QtGui import QColor
+from PyQt6.QtWidgets import QColorDialog
 from ..constants import DEFAULT_THEME, THEME_PRESETS
 from ..theme_manager import get_theme_manager
 
@@ -22,29 +23,37 @@ class ThemePage(QWidget):
     def setup_ui(self):
         main_layout = QVBoxLayout(self)
         main_layout.setContentsMargins(15, 20, 15, 15)
-        main_layout.setSpacing(8)
+        main_layout.setSpacing(10)
 
-        # ===== 前两行使用 QGridLayout 实现精确对齐 =====
-        grid = QGridLayout()
-        grid.setHorizontalSpacing(20)
-        grid.setVerticalSpacing(6)
-        grid.setContentsMargins(0, 0, 0, 0)
+        # ===== 第一行：标签并排 =====
+        label_row = QHBoxLayout()
+        label_row.setSpacing(0)
+        label_row.setContentsMargins(0, 0, 0, 0)
 
-        # 第一行：标签
         self.theme_label = QLabel("主题切换")
         self.theme_label.setStyleSheet("font-weight: bold; font-size: 13px;")
-        grid.addWidget(self.theme_label, 0, 0, Qt.AlignmentFlag.AlignLeft)
+        label_row.addWidget(self.theme_label)
+
+        label_row.addStretch()
 
         self.color_label = QLabel("背景颜色")
         self.color_label.setStyleSheet("font-weight: bold; font-size: 13px;")
-        grid.addWidget(self.color_label, 0, 1, Qt.AlignmentFlag.AlignLeft)
+        label_row.addWidget(self.color_label)
 
-        # 第二行：控件
+        main_layout.addLayout(label_row)
+
+        # ===== 第二行：控件并排 =====
+        control_row = QHBoxLayout()
+        control_row.setSpacing(10)
+        control_row.setContentsMargins(0, 0, 0, 0)
+
         self.theme_combo = QComboBox()
         self.theme_combo.setFixedWidth(140)
         self.theme_combo.setFixedHeight(28)
         self.theme_combo.currentTextChanged.connect(self._on_theme_changed)
-        grid.addWidget(self.theme_combo, 1, 0, Qt.AlignmentFlag.AlignLeft)
+        control_row.addWidget(self.theme_combo)
+
+        control_row.addStretch()
 
         color_widget = QWidget()
         color_layout = QHBoxLayout(color_widget)
@@ -91,12 +100,9 @@ class ThemePage(QWidget):
         self.custom_btn.clicked.connect(self._on_custom_color)
         color_layout.addWidget(self.custom_btn)
 
-        grid.addWidget(color_widget, 1, 1, Qt.AlignmentFlag.AlignLeft)
+        control_row.addWidget(color_widget)
 
-        main_layout.addLayout(grid)
-
-        # ===== 间距：下拉框和不透明度之间拉开两行 =====
-        main_layout.addSpacing(24)  # 改为两行高度
+        main_layout.addLayout(control_row)
 
         # ===== 第三行：不透明度标签 =====
         opacity_label = QLabel("不透明度")
@@ -122,9 +128,6 @@ class ThemePage(QWidget):
 
         main_layout.addLayout(opacity_row)
 
-        # ===== 间距：不透明度滑块和着色强度之间拉开两行 =====
-        main_layout.addSpacing(24)
-
         # ===== 第五行：着色强度 =====
         tint_row = QHBoxLayout()
         tint_row.setSpacing(10)
@@ -145,9 +148,7 @@ class ThemePage(QWidget):
         tint_row.addStretch()
         main_layout.addLayout(tint_row)
 
-        # ===== 底部弹性空间 + 恢复默认按钮 =====
-        main_layout.addStretch()
-
+        # ===== 底部：恢复默认按钮（与 display_page 保持一致） =====
         btn_row = QHBoxLayout()
         btn_row.addStretch()
 
@@ -171,13 +172,13 @@ class ThemePage(QWidget):
         btn_row.addWidget(self.restore_btn)
 
         main_layout.addLayout(btn_row)
+        main_layout.addStretch()
 
     # ---------- 信号处理 ----------
     def _on_theme_changed(self, theme_name):
         if self._updating:
             return
         if theme_name:
-            print(f"🎨 用户选择主题: {theme_name}")
             self.theme_manager.switch_theme(theme_name)
             self.theme_changed.emit()
             self._update_main_window()
@@ -228,32 +229,21 @@ class ThemePage(QWidget):
         self.theme_changed.emit()
         self._update_main_window()
 
-    def _get_main_window(self):
-        parent = self.parent()
-        while parent:
-            if parent.__class__.__name__ == "MainWindow":
-                return parent
-            parent = parent.parent()
-        return None
-
     def _update_main_window(self):
-        main_window = self._get_main_window()
-        if main_window:
-            if hasattr(main_window, 'reload_images'):
-                main_window.reload_images()
-            elif hasattr(main_window, 'update_theme_cache'):
+        parent = self.parent()
+        if parent and hasattr(parent, 'parent'):
+            main_window = parent.parent()
+            if main_window and hasattr(main_window, 'update_theme_cache'):
                 main_window.update_theme_cache()
-            elif hasattr(main_window, 'update'):
+            elif main_window and hasattr(main_window, 'update'):
                 main_window.update()
 
     def _force_update_main_window(self):
-        main_window = self._get_main_window()
-        if main_window:
-            if hasattr(main_window, 'reload_images'):
-                main_window.reload_images()
-            elif hasattr(main_window, 'update_theme_cache'):
+        parent = self.parent()
+        if parent and hasattr(parent, 'parent'):
+            main_window = parent.parent()
+            if main_window and hasattr(main_window, 'update_theme_cache'):
                 main_window.update_theme_cache(force=True)
-            elif hasattr(main_window, 'update'):
                 main_window.update()
 
     # ---------- 恢复默认 ----------
@@ -267,6 +257,7 @@ class ThemePage(QWidget):
 
             self.opacity_slider.setValue(DEFAULT_THEME["opacity"])
             self.opacity_label.setText(f"{DEFAULT_THEME['opacity']}%")
+
             self.tint_spin.setValue(80)
 
             default_color = DEFAULT_THEME["color"]

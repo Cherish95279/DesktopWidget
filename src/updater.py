@@ -1,6 +1,6 @@
 """
 自动更新模块
-负责检查GitHub Releases、下载新版本、执行更新
+负责检查GitHub/Gitee Releases、下载新版本、执行更新
 """
 import sys
 import os
@@ -53,21 +53,59 @@ def compare_versions(v1, v2):
 class UpdateChecker(QThread):
     check_finished = pyqtSignal(dict)
 
+    def __init__(self, url=None, use_token=True):
+        super().__init__()
+        self.url = url
+        self.use_token = use_token
+
     def run(self):
         try:
-            headers = _get_github_headers()
-            resp = requests.get(
-                f"https://api.github.com/repos/{GITHUB_REPO}/releases/latest",
-                headers=headers,
-                timeout=10
-            )
-            # 如果返回 401，说明 Token 无效，清除保存的 Token 并重试
-            if resp.status_code == 401:
+            # 如果没有指定 URL，使用默认的 GitHub API
+            if self.url is None:
+                self.url = f"https://api.github.com/repos/{GITHUB_REPO}/releases/latest"
+
+            # 判断是否是 Gitee API
+            is_gitee = "gitee.com" in self.url
+
+            if is_gitee:
+                # Gitee 公开 API，不需要 Token
+                resp = requests.get(self.url, timeout=10)
+                resp.raise_for_status()
+                data = resp.json()
+
+                latest_version = data.get("tag_name", "").strip()
+                assets = data.get("assets", [])
+                download_url = None
+                for asset in assets:
+                    name = asset.get("name", "")
+                    if name.startswith("DesktopWidget-") and name.endswith("-win64-Cherish-Setup.exe"):
+                        download_url = asset.get("browser_download_url")
+                        break
+                release_notes = data.get("body", "")
+                has_update = False
+                if latest_version and download_url:
+                    if compare_versions(VERSION, latest_version):
+                        has_update = True
+
+                self.check_finished.emit({
+                    "has_update": has_update,
+                    "latest_version": latest_version,
+                    "download_url": download_url,
+                    "release_notes": release_notes,
+                })
+                return
+
+            # ===== GitHub API（原有逻辑，支持 Token） =====
+            headers = _get_github_headers() if self.use_token else {"Accept": "application/vnd.github.v3+json"}
+            resp = requests.get(self.url, headers=headers, timeout=10)
+
+            # 如果返回 401，说明 Token 无效
+            if resp.status_code == 401 and self.use_token:
                 settings = QSettings("MyDesktopApp", "WeatherSettings")
                 settings.remove("github_token")
                 # 使用未认证请求重试
                 resp = requests.get(
-                    f"https://api.github.com/repos/{GITHUB_REPO}/releases/latest",
+                    self.url,
                     headers={"Accept": "application/vnd.github.v3+json"},
                     timeout=10
                 )
@@ -94,12 +132,14 @@ class UpdateChecker(QThread):
             if latest_version and download_url:
                 if compare_versions(VERSION, latest_version):
                     has_update = True
+
             self.check_finished.emit({
                 "has_update": has_update,
                 "latest_version": latest_version,
                 "download_url": download_url,
                 "release_notes": release_notes,
             })
+
         except Exception as e:
             self.check_finished.emit({
                 "has_update": False,
@@ -138,9 +178,6 @@ class Downloader(QThread):
 class Updater:
     @staticmethod
     def perform_update(new_setup_path: str) -> bool:
-        """
-        执行更新：直接启动安装程序（让用户看到安装界面）
-        """
         try:
             subprocess.Popen(
                 [new_setup_path],

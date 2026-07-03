@@ -4,6 +4,7 @@ from PyQt6.QtGui import QFontDatabase, QColor
 from PyQt6.QtWidgets import QColorDialog
 from ..autostart import set_autostart, get_autostart_status
 from ..region_data import REGIONS
+from ..notice import NoticeWindow
 
 
 class GeneralPage(QWidget):
@@ -14,6 +15,8 @@ class GeneralPage(QWidget):
         self._current_color = "#1c344d"
         self.autostart_checked = False
         self.parent_dialog = parent
+        self._notice_window = None
+        self._loading = False
 
         self.setup_ui()
         self.load_regions_data()
@@ -24,21 +27,42 @@ class GeneralPage(QWidget):
         layout.setContentsMargins(15, 20, 15, 15)
         layout.setSpacing(10)
 
-        # ---------- 开机自启动 ----------
-        self.autostart_widget = QWidget(self)
-        autostart_layout = QHBoxLayout(self.autostart_widget)
-        autostart_layout.setContentsMargins(0, 0, 0, 0)
-        autostart_layout.setSpacing(6)
+        # ---------- 开机自启动 + 查看公告（同一行） ----------
+        autostart_row = QHBoxLayout()
+        autostart_row.setContentsMargins(0, 0, 0, 0)
+        autostart_row.setSpacing(6)
 
         self.autostart_icon = QLabel("✅", self)
         self.autostart_icon.setStyleSheet("font-size: 16px;")
-        autostart_layout.addWidget(self.autostart_icon)
+        autostart_row.addWidget(self.autostart_icon)
 
         self.autostart_label = QLabel("开机自启动", self)
         self.autostart_label.setStyleSheet("font-size: 12px; color: #333;")
-        autostart_layout.addWidget(self.autostart_label)
+        autostart_row.addWidget(self.autostart_label)
 
-        autostart_layout.addStretch()
+        autostart_row.addStretch()
+
+        self.notice_btn = QPushButton("📢 查看公告")
+        self.notice_btn.setFixedSize(90, 28)
+        self.notice_btn.setStyleSheet("""
+            QPushButton {
+                font-size: 12px;
+                border: 1px solid #ccc;
+                border-radius: 4px;
+                background: #f5f5f5;
+                color: #333;
+            }
+            QPushButton:hover {
+                background: #e6f4ff;
+                border: 1px solid #1677ff;
+                color: #1677ff;
+            }
+        """)
+        self.notice_btn.clicked.connect(self._open_notice_window)
+        autostart_row.addWidget(self.notice_btn)
+
+        self.autostart_widget = QWidget(self)
+        self.autostart_widget.setLayout(autostart_row)
         self.autostart_widget.setCursor(Qt.CursorShape.PointingHandCursor)
         self.autostart_widget.mousePressEvent = self.on_autostart_widget_clicked
 
@@ -93,9 +117,37 @@ class GeneralPage(QWidget):
 
         layout.addStretch()
 
-        # 信号连接（字体实时生效）
         self.font_combo.currentTextChanged.connect(self.apply_font_settings)
         self.size_combo.currentTextChanged.connect(self.apply_font_settings)
+
+    # ---------- 打开公告窗口 ----------
+    def _open_notice_window(self):
+        if self._notice_window is not None and self._notice_window.isVisible():
+            self._notice_window.raise_()
+            self._notice_window.activateWindow()
+            return
+
+        parent = self.parent()
+        if parent and hasattr(parent, 'parent'):
+            main_window = parent.parent()
+            if main_window:
+                self._notice_window = NoticeWindow(main_window)
+                self._notice_window.destroyed.connect(self._on_notice_window_destroyed)
+                from ..notice import NoticeManager
+                manager = NoticeManager.get_instance()
+                current = manager.get_current_notice()
+                if current:
+                    notice_id = current.get("id")
+                    if notice_id:
+                        QTimer.singleShot(300, lambda: self._notice_window.select_notice_by_id(notice_id) if self._notice_window else None)
+                self._notice_window.show()
+                return
+
+        self._notice_window = NoticeWindow(self)
+        self._notice_window.show()
+
+    def _on_notice_window_destroyed(self):
+        self._notice_window = None
 
     # ---------- 开机自启动 ----------
     def update_autostart_display(self):
@@ -177,7 +229,7 @@ class GeneralPage(QWidget):
         self.city_combo.currentTextChanged.connect(self.on_city_changed)
         self.county_combo.currentTextChanged.connect(self.on_county_changed)
 
-    def on_province_changed(self, province):
+    def _on_province_changed_internal(self, province):
         self.city_combo.clear()
         self.city_combo.addItem("请选择城市")
         if province and province in REGIONS:
@@ -185,23 +237,8 @@ class GeneralPage(QWidget):
             self.city_combo.addItems(cities)
         self.county_combo.clear()
         self.county_combo.addItem("请选择区县")
-        self.load_city_if_saved()
 
-    def load_city_if_saved(self):
-        settings = QSettings("MyDesktopApp", "WeatherSettings")
-        saved_city = settings.value("selected_city", "")
-        saved_county = settings.value("selected_county", "")
-        if saved_city:
-            idx = self.city_combo.findText(saved_city)
-            if idx >= 0:
-                self.city_combo.setCurrentIndex(idx)
-                self.on_city_changed(saved_city)
-                if saved_county:
-                    idx_c = self.county_combo.findText(saved_county)
-                    if idx_c >= 0:
-                        self.county_combo.setCurrentIndex(idx_c)
-
-    def on_city_changed(self, city):
+    def _on_city_changed_internal(self, city):
         self.county_combo.clear()
         self.county_combo.addItem("请选择区县")
         province = self.province_combo.currentText()
@@ -209,35 +246,61 @@ class GeneralPage(QWidget):
             counties = REGIONS[province].get("cities", {}).get(city, {}).get("counties", [])
             self.county_combo.addItems(counties)
 
+    def on_province_changed(self, province):
+        if self._loading:
+            return
+        self._on_province_changed_internal(province)
+
+    def on_city_changed(self, city):
+        if self._loading:
+            return
+        self._on_city_changed_internal(city)
         if city and city != "请选择城市":
             self.auto_save_and_refresh_weather()
 
     def on_county_changed(self, county):
+        if self._loading:
+            return
         if county and county != "请选择区县":
             self.auto_save_and_refresh_weather()
 
     def auto_save_and_refresh_weather(self):
+        if self._loading:
+            return
+
         province = self.province_combo.currentText()
         city = self.city_combo.currentText()
         county = self.county_combo.currentText()
 
-        if province != "请选择省份" and city != "请选择城市":
-            settings = QSettings("MyDesktopApp", "WeatherSettings")
-            settings.setValue("selected_province", province)
-            settings.setValue("selected_city", city)
-            if county != "请选择区县":
-                settings.setValue("selected_county", county)
-            else:
-                settings.remove("selected_county")
+        if province == "请选择省份" or city == "请选择城市":
+            return
 
-            settings.remove("cached_lat")
-            settings.remove("cached_lng")
-            settings.sync()
+        # ===== 读取 QSettings 中已保存的地区 =====
+        settings = QSettings("MyDesktopApp", "WeatherSettings")
+        old_province = settings.value("selected_province", "")
+        old_city = settings.value("selected_city", "")
+        old_county = settings.value("selected_county", "")
 
-            self._refresh_main_window_weather()
+        # ===== 如果地区没有变化，直接返回，不触发刷新 =====
+        if old_province == province and old_city == city and old_county == county:
+            return
+
+        # ===== 保存新地区 =====
+        settings.setValue("selected_province", province)
+        settings.setValue("selected_city", city)
+        if county != "请选择区县":
+            settings.setValue("selected_county", county)
+        else:
+            settings.remove("selected_county")
+
+        settings.remove("cached_lat")
+        settings.remove("cached_lng")
+        settings.sync()
+
+        # ===== 刷新天气（地区确实变化了） =====
+        self._refresh_main_window_weather()
 
     def _refresh_main_window_weather(self):
-        """刷新主窗口天气（强制重启天气线程）"""
         main_window = None
         if self.parent_dialog and hasattr(self.parent_dialog, 'parent'):
             main_window = self.parent_dialog.parent()
@@ -254,70 +317,39 @@ class GeneralPage(QWidget):
     def load_settings(self):
         settings = QSettings("MyDesktopApp", "WeatherSettings")
 
-        self.autostart_checked = get_autostart_status()
-        self.update_autostart_display()
+        self._loading = True
 
-        self.load_font_settings()
+        try:
+            self.autostart_checked = get_autostart_status()
+            self.update_autostart_display()
 
-        province = settings.value("selected_province", "")
-        city = settings.value("selected_city", "")
-        county = settings.value("selected_county", "")
+            self.load_font_settings()
 
-        # ===== 阻塞信号，避免触发任何回调 =====
-        self.province_combo.blockSignals(True)
-        self.city_combo.blockSignals(True)
-        self.county_combo.blockSignals(True)
+            province = settings.value("selected_province", "")
+            city = settings.value("selected_city", "")
+            county = settings.value("selected_county", "")
 
-        # ---- 1. 恢复省份 ----
-        if province:
-            idx = self.province_combo.findText(province)
-            if idx >= 0:
-                self.province_combo.setCurrentIndex(idx)
-        else:
-            # 如果没有保存省份，设为默认“请选择省份”
-            self.province_combo.setCurrentIndex(0)
+            if province:
+                idx = self.province_combo.findText(province)
+                if idx >= 0:
+                    self.province_combo.setCurrentIndex(idx)
+                    self._on_province_changed_internal(province)
 
-        # ---- 2. 填充城市列表（根据当前省份） ----
-        current_province = self.province_combo.currentText()
-        self.city_combo.clear()
-        self.city_combo.addItem("请选择城市")
-        if current_province and current_province != "请选择省份" and current_province in REGIONS:
-            cities = list(REGIONS[current_province].get("cities", {}).keys())
-            self.city_combo.addItems(cities)
+            if city:
+                idx_city = self.city_combo.findText(city)
+                if idx_city >= 0:
+                    self.city_combo.setCurrentIndex(idx_city)
+                    self._on_city_changed_internal(city)
 
-        # ---- 3. 恢复城市 ----
-        if city:
-            idx_city = self.city_combo.findText(city)
-            if idx_city >= 0:
-                self.city_combo.setCurrentIndex(idx_city)
-        else:
-            self.city_combo.setCurrentIndex(0)
+            if county:
+                idx_county = self.county_combo.findText(county)
+                if idx_county >= 0:
+                    self.county_combo.setCurrentIndex(idx_county)
+        finally:
+            self._loading = False
 
-        # ---- 4. 填充区县列表（根据当前城市） ----
-        current_city = self.city_combo.currentText()
-        self.county_combo.clear()
-        self.county_combo.addItem("请选择区县")
-        if current_province and current_province != "请选择省份" and current_city and current_city != "请选择城市":
-            if current_province in REGIONS:
-                cities_data = REGIONS[current_province].get("cities", {})
-                if current_city in cities_data:
-                    counties = cities_data[current_city].get("counties", [])
-                    self.county_combo.addItems(counties)
-
-        # ---- 5. 恢复区县 ----
-        if county:
-            idx_county = self.county_combo.findText(county)
-            if idx_county >= 0:
-                self.county_combo.setCurrentIndex(idx_county)
-        else:
-            self.county_combo.setCurrentIndex(0)
-
-        # ===== 恢复信号 =====
-        self.province_combo.blockSignals(False)
-        self.city_combo.blockSignals(False)
-        self.county_combo.blockSignals(False)
-
-        # 注意：这里不触发任何 weather refresh，因为只是加载设置，用户没有主动更改
+        # ===== 关键修复：删除主动调用 _refresh_main_window_weather =====
+        # 主窗口启动时已经启动过天气线程，无需在这里再次触发
 
     def save_settings(self):
         pass
