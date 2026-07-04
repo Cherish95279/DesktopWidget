@@ -5,6 +5,62 @@ import certifi
 from ..region_data import REGIONS
 
 
+# ===== 统一下拉框样式 =====
+COMBO_STYLE = """
+    QComboBox {
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        background: #f5f5f5;
+        color: #333;
+        font-size: 12px;
+        padding: 0 4px;
+        height: 28px;
+    }
+    QComboBox:hover {
+        background: #e6f4ff;
+        border: 1px solid #1677ff;
+        color: #1677ff;
+    }
+"""
+
+# ===== 统一输入框样式 =====
+LINEEDIT_STYLE = """
+    QLineEdit {
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        background: white;
+        color: #333;
+        font-size: 12px;
+        padding: 2px 6px;
+        height: 28px;
+    }
+    QLineEdit:focus {
+        border: 1px solid #1677ff;
+        background: #fafaff;
+    }
+"""
+
+# ===== 统一数字输入框样式 =====
+SPINBOX_STYLE = """
+    QSpinBox {
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        background: white;
+        color: #333;
+        font-size: 12px;
+        padding: 2px 6px;
+        height: 28px;
+    }
+    QSpinBox:focus {
+        border: 1px solid #1677ff;
+        background: #fafaff;
+    }
+    QSpinBox::up-button, QSpinBox::down-button {
+        width: 16px;
+    }
+"""
+
+
 class WeatherPage(QWidget):
     region_changed = pyqtSignal()
 
@@ -13,6 +69,7 @@ class WeatherPage(QWidget):
         self.parent_dialog = parent
         self._updating = False
         self._signal_connected = False
+        self._loading = False  # 加载标志，防止重复刷新
         self.setup_ui()
         self.load_settings()
 
@@ -27,12 +84,16 @@ class WeatherPage(QWidget):
 
         url_layout = QHBoxLayout()
         self.url_combo = QComboBox()
+        self.url_combo.setFixedHeight(28)
+        self.url_combo.setStyleSheet(COMBO_STYLE)
         self.url_combo.addItems(["高德", "自定义"])
         self.url_combo.currentTextChanged.connect(self.on_provider_changed)
         url_layout.addWidget(self.url_combo)
 
         self.url_edit = QLineEdit()
         self.url_edit.setPlaceholderText("请输入 API 地址")
+        self.url_edit.setStyleSheet(LINEEDIT_STYLE)
+        self.url_edit.setFixedHeight(28)
         self.url_edit.textChanged.connect(self.on_url_changed)
         url_layout.addWidget(self.url_edit)
         layout.addLayout(url_layout)
@@ -44,6 +105,8 @@ class WeatherPage(QWidget):
         self.key_edit = QLineEdit()
         self.key_edit.setPlaceholderText("请输入 API 密钥")
         self.key_edit.setEchoMode(QLineEdit.EchoMode.Password)
+        self.key_edit.setStyleSheet(LINEEDIT_STYLE)
+        self.key_edit.setFixedHeight(28)
         self.key_edit.textChanged.connect(self.on_key_changed)
         layout.addWidget(self.key_edit)
 
@@ -60,14 +123,9 @@ class WeatherPage(QWidget):
         self.freq_spin.setRange(1, 1440)
         self.freq_spin.setSuffix(" 分钟")
         self.freq_spin.setButtonSymbols(QAbstractSpinBox.ButtonSymbols.NoButtons)
-        self.freq_spin.setStyleSheet("""
-            QSpinBox {
-                border: 1px solid #ccc;
-                border-radius: 4px;
-                padding: 2px 4px;
-                background: white;
-            }
-        """)
+        self.freq_spin.setStyleSheet(SPINBOX_STYLE)
+        self.freq_spin.setFixedHeight(28)
+        self.freq_spin.setFixedWidth(90)
         self.freq_spin.valueChanged.connect(self.on_freq_changed)
         status_freq_layout.addWidget(self.freq_spin)
 
@@ -93,13 +151,22 @@ class WeatherPage(QWidget):
         region_layout = QHBoxLayout()
         self.province_combo = QComboBox()
         self.province_combo.setMinimumWidth(80)
+        self.province_combo.setFixedHeight(28)
+        self.province_combo.setStyleSheet(COMBO_STYLE)
+        region_layout.addWidget(self.province_combo)
+
         self.city_combo = QComboBox()
         self.city_combo.setMinimumWidth(80)
+        self.city_combo.setFixedHeight(28)
+        self.city_combo.setStyleSheet(COMBO_STYLE)
+        region_layout.addWidget(self.city_combo)
+
         self.county_combo = QComboBox()
         self.county_combo.setMinimumWidth(80)
-        region_layout.addWidget(self.province_combo)
-        region_layout.addWidget(self.city_combo)
+        self.county_combo.setFixedHeight(28)
+        self.county_combo.setStyleSheet(COMBO_STYLE)
         region_layout.addWidget(self.county_combo)
+
         region_layout.addStretch()
         layout.addLayout(region_layout)
 
@@ -120,6 +187,8 @@ class WeatherPage(QWidget):
         self.province_combo.addItems(provinces)
 
     def on_province_changed(self, province):
+        if self._loading:
+            return
         self.city_combo.clear()
         self.city_combo.addItem("请选择城市")
         if province and province in REGIONS:
@@ -130,6 +199,8 @@ class WeatherPage(QWidget):
         self.load_city_if_saved()
 
     def load_city_if_saved(self):
+        if self._loading:
+            return
         settings = QSettings("MyDesktopApp", "WeatherSettings")
         saved_city = settings.value("selected_city", "")
         saved_county = settings.value("selected_county", "")
@@ -144,6 +215,8 @@ class WeatherPage(QWidget):
                         self.county_combo.setCurrentIndex(idx_c)
 
     def on_city_changed(self, city):
+        if self._loading:
+            return
         self.county_combo.clear()
         self.county_combo.addItem("请选择区县")
         province = self.province_combo.currentText()
@@ -154,11 +227,15 @@ class WeatherPage(QWidget):
             self.save_region_and_refresh()
 
     def on_county_changed(self, county):
+        if self._loading:
+            return
         if county and county != "请选择区县":
             self.save_region_and_refresh()
 
     # ---------- API 相关 ----------
     def on_provider_changed(self, text):
+        if self._loading:
+            return
         if text == "高德":
             self.url_edit.setText("https://restapi.amap.com")
             self.url_edit.setReadOnly(True)
@@ -168,19 +245,21 @@ class WeatherPage(QWidget):
         self.save_api_settings()
 
     def on_url_changed(self, text):
-        if not self._updating:
+        if not self._updating and not self._loading:
             self.save_api_settings()
 
     def on_key_changed(self, text):
-        if not self._updating:
+        if not self._updating and not self._loading:
             self.save_api_settings()
 
     def on_freq_changed(self, value):
-        if not self._updating:
+        if not self._updating and not self._loading:
             self.save_api_settings()
 
     # ---------- 保存方法 ----------
     def save_api_settings(self):
+        if self._loading:
+            return
         settings = QSettings("MyDesktopApp", "WeatherSettings")
         settings.setValue("api_url", self.url_edit.text().strip())
         settings.setValue("api_key", self.key_edit.text().strip())
@@ -188,6 +267,8 @@ class WeatherPage(QWidget):
         self.check_status()
 
     def save_region_and_refresh(self):
+        if self._loading:
+            return
         province = self.province_combo.currentText()
         city = self.city_combo.currentText()
         county = self.county_combo.currentText()
@@ -209,7 +290,8 @@ class WeatherPage(QWidget):
             self._refresh_main_window_weather()
 
     def _refresh_main_window_weather(self):
-        """刷新主窗口天气（强制重启天气线程）"""
+        if self._loading:
+            return
         main_window = None
         if self.parent_dialog and hasattr(self.parent_dialog, 'parent'):
             main_window = self.parent_dialog.parent()
@@ -224,68 +306,54 @@ class WeatherPage(QWidget):
 
     # ---------- 加载设置 ----------
     def load_regions(self):
+        """内部加载地区，不触发天气刷新"""
         settings = QSettings("MyDesktopApp", "WeatherSettings")
         province = settings.value("selected_province", "")
         city = settings.value("selected_city", "")
         county = settings.value("selected_county", "")
 
-        # ===== 阻塞信号，避免触发任何回调 =====
-        self.province_combo.blockSignals(True)
-        self.city_combo.blockSignals(True)
-        self.county_combo.blockSignals(True)
-
-        # ---- 1. 恢复省份 ----
         if province:
             idx = self.province_combo.findText(province)
             if idx >= 0:
                 self.province_combo.setCurrentIndex(idx)
-        else:
-            self.province_combo.setCurrentIndex(0)
-
-        # ---- 2. 填充城市列表 ----
-        current_province = self.province_combo.currentText()
-        self.city_combo.clear()
-        self.city_combo.addItem("请选择城市")
-        if current_province and current_province != "请选择省份" and current_province in REGIONS:
-            cities = list(REGIONS[current_province].get("cities", {}).keys())
-            self.city_combo.addItems(cities)
-
-        # ---- 3. 恢复城市 ----
+                # 手动填充城市列表
+                self._on_province_changed_internal(province)
         if city:
             idx_city = self.city_combo.findText(city)
             if idx_city >= 0:
                 self.city_combo.setCurrentIndex(idx_city)
-        else:
-            self.city_combo.setCurrentIndex(0)
-
-        # ---- 4. 填充区县列表 ----
-        current_city = self.city_combo.currentText()
-        self.county_combo.clear()
-        self.county_combo.addItem("请选择区县")
-        if current_province and current_province != "请选择省份" and current_city and current_city != "请选择城市":
-            if current_province in REGIONS:
-                cities_data = REGIONS[current_province].get("cities", {})
-                if current_city in cities_data:
-                    counties = cities_data[current_city].get("counties", [])
-                    self.county_combo.addItems(counties)
-
-        # ---- 5. 恢复区县 ----
+                self._on_city_changed_internal(city)
         if county:
             idx_county = self.county_combo.findText(county)
             if idx_county >= 0:
                 self.county_combo.setCurrentIndex(idx_county)
-        else:
-            self.county_combo.setCurrentIndex(0)
 
-        # ===== 恢复信号 =====
-        self.province_combo.blockSignals(False)
+    def _on_province_changed_internal(self, province):
+        """内部填充城市列表，不触发保存"""
+        self.city_combo.blockSignals(True)
+        self.city_combo.clear()
+        self.city_combo.addItem("请选择城市")
+        if province and province in REGIONS:
+            cities = list(REGIONS[province].get("cities", {}).keys())
+            self.city_combo.addItems(cities)
         self.city_combo.blockSignals(False)
+        self.county_combo.blockSignals(True)
+        self.county_combo.clear()
+        self.county_combo.addItem("请选择区县")
         self.county_combo.blockSignals(False)
 
-        # 注意：这里不触发任何 weather refresh
+    def _on_city_changed_internal(self, city):
+        """内部填充区县列表，不触发保存"""
+        self.county_combo.blockSignals(True)
+        self.county_combo.clear()
+        self.county_combo.addItem("请选择区县")
+        province = self.province_combo.currentText()
+        if province and city and province in REGIONS:
+            counties = REGIONS[province].get("cities", {}).get(city, {}).get("counties", [])
+            self.county_combo.addItems(counties)
+        self.county_combo.blockSignals(False)
 
     def _get_main_window(self):
-        """获取主窗口实例"""
         if self.parent_dialog and hasattr(self.parent_dialog, 'parent'):
             return self.parent_dialog.parent()
         parent = self.parent()
@@ -294,7 +362,6 @@ class WeatherPage(QWidget):
         return None
 
     def _connect_weather_signal(self):
-        """连接主窗口的天气更新信号，实时刷新状态"""
         main_window = self._get_main_window()
         if main_window and hasattr(main_window, 'weather_thread'):
             weather_thread = main_window.weather_thread
@@ -307,11 +374,11 @@ class WeatherPage(QWidget):
                 self._signal_connected = True
 
     def _on_weather_updated(self, data):
-        """天气数据更新时刷新状态"""
         self.check_status()
 
     def load_settings(self):
         self._updating = True
+        self._loading = True
         try:
             settings = QSettings("MyDesktopApp", "WeatherSettings")
             url = settings.value("api_url", "")
@@ -327,16 +394,19 @@ class WeatherPage(QWidget):
             else:
                 self.url_combo.setCurrentText("自定义")
 
+            # 加载地区（内部不触发保存）
             self.load_regions()
-            self.check_status()
 
-            # 连接天气更新信号，实时刷新状态
+            self.check_status()
             self._connect_weather_signal()
 
         finally:
+            self._loading = False
             self._updating = False
 
     def check_status(self):
+        if self._loading:
+            return
         url = self.url_edit.text().strip()
         key = self.key_edit.text().strip()
         if not url or not key:

@@ -3,6 +3,25 @@ from PyQt6.QtCore import *
 from ..constants import DEFAULT_LAYOUT
 
 
+# ===== 统一下拉框样式（与 general_page 保持一致） =====
+COMBO_STYLE = """
+    QComboBox {
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        background: #f5f5f5;
+        color: #333;
+        font-size: 12px;
+        padding: 0 4px;
+        height: 28px;
+    }
+    QComboBox:hover {
+        background: #e6f4ff;
+        border: 1px solid #1677ff;
+        color: #1677ff;
+    }
+"""
+
+
 class DisplayPage(QWidget):
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -69,7 +88,7 @@ class DisplayPage(QWidget):
         info_label.setStyleSheet("color: #888; font-size: 12px; margin: 10px 0;")
         main_layout.addWidget(info_label)
 
-        # ===== 按钮行（恢复默认）- 与主题页面保持一致 =====
+        # 按钮行（恢复默认）
         btn_layout = QHBoxLayout()
         btn_layout.addStretch()
         restore_btn = QPushButton("恢复默认")
@@ -106,9 +125,11 @@ class DisplayPage(QWidget):
         label.setFixedWidth(30)
         layout.addWidget(label)
 
+        # ===== 下拉框（统一风格） =====
         combo = QComboBox()
         combo.setMinimumWidth(100)
-        combo.setFixedHeight(24)
+        combo.setFixedHeight(28)
+        combo.setStyleSheet(COMBO_STYLE)
         combo.setProperty("slot_key", slot["key"])
         combo.currentIndexChanged.connect(self._on_combo_changed)
         self.combos.append(combo)

@@ -3,8 +3,26 @@ from PyQt6.QtCore import *
 from PyQt6.QtGui import QFontDatabase, QColor
 from PyQt6.QtWidgets import QColorDialog
 from ..autostart import set_autostart, get_autostart_status
-from ..region_data import REGIONS
 from ..notice import NoticeWindow
+
+
+# ===== QSS 统一下拉框样式（边框改为 #ddd） =====
+COMBO_STYLE = """
+    QComboBox {
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        background: #f5f5f5;
+        color: #333;
+        font-size: 12px;
+        padding: 0 4px;
+        height: 28px;
+    }
+    QComboBox:hover {
+        background: #e6f4ff;
+        border: 1px solid #1677ff;
+        color: #1677ff;
+    }
+"""
 
 
 class GeneralPage(QWidget):
@@ -19,7 +37,6 @@ class GeneralPage(QWidget):
         self._loading = False
 
         self.setup_ui()
-        self.load_regions_data()
         self.load_settings()
 
     def setup_ui(self):
@@ -27,7 +44,6 @@ class GeneralPage(QWidget):
         layout.setContentsMargins(15, 20, 15, 15)
         layout.setSpacing(10)
 
-        # ---------- 开机自启动 + 查看公告（同一行） ----------
         autostart_row = QHBoxLayout()
         autostart_row.setContentsMargins(0, 0, 0, 0)
         autostart_row.setSpacing(6)
@@ -68,7 +84,6 @@ class GeneralPage(QWidget):
 
         layout.addWidget(self.autostart_widget)
 
-        # ---------- 字体设置 ----------
         font_label = QLabel("字体设置")
         font_label.setStyleSheet("font-weight: bold; margin-top: 10px;")
         layout.addWidget(font_label)
@@ -77,50 +92,34 @@ class GeneralPage(QWidget):
         font_layout.setSpacing(10)
 
         self.font_combo = QComboBox()
-        self.font_combo.setMinimumWidth(100)
+        self.font_combo.setFixedSize(120, 28)
+        self.font_combo.setStyleSheet(COMBO_STYLE)
         font_families = QFontDatabase.families()
         self.font_combo.addItems(font_families)
         font_layout.addWidget(self.font_combo)
 
         self.size_combo = QComboBox()
-        self.size_combo.setMinimumWidth(50)
+        self.size_combo.setFixedSize(90, 28)
+        self.size_combo.setStyleSheet(COMBO_STYLE)
         for size in range(8, 16):
             self.size_combo.addItem(str(size))
         font_layout.addWidget(self.size_combo)
 
         self.color_btn = QPushButton()
-        self.color_btn.setFixedSize(30, 28)
+        self.color_btn.setFixedSize(90, 28)
         self.color_btn.setStyleSheet("border: 1px solid #999; border-radius: 4px;")
         self.color_btn.clicked.connect(self.choose_color)
         font_layout.addWidget(self.color_btn)
+
         font_layout.addStretch()
-
         layout.addLayout(font_layout)
-
-        # ---------- 天气显示地区 ----------
-        region_label = QLabel("天气显示地区")
-        region_label.setStyleSheet("font-weight: bold; margin-top: 10px;")
-        layout.addWidget(region_label)
-
-        region_layout = QHBoxLayout()
-        self.province_combo = QComboBox()
-        self.province_combo.setMinimumWidth(80)
-        self.city_combo = QComboBox()
-        self.city_combo.setMinimumWidth(80)
-        self.county_combo = QComboBox()
-        self.county_combo.setMinimumWidth(80)
-        region_layout.addWidget(self.province_combo)
-        region_layout.addWidget(self.city_combo)
-        region_layout.addWidget(self.county_combo)
-        region_layout.addStretch()
-        layout.addLayout(region_layout)
 
         layout.addStretch()
 
         self.font_combo.currentTextChanged.connect(self.apply_font_settings)
         self.size_combo.currentTextChanged.connect(self.apply_font_settings)
 
-    # ---------- 打开公告窗口 ----------
+    # ---------- 其余方法保持不变 ----------
     def _open_notice_window(self):
         if self._notice_window is not None and self._notice_window.isVisible():
             self._notice_window.raise_()
@@ -149,7 +148,6 @@ class GeneralPage(QWidget):
     def _on_notice_window_destroyed(self):
         self._notice_window = None
 
-    # ---------- 开机自启动 ----------
     def update_autostart_display(self):
         if self.autostart_checked:
             self.autostart_icon.setText("✅")
@@ -168,7 +166,6 @@ class GeneralPage(QWidget):
         else:
             set_autostart(False)
 
-    # ---------- 字体设置 ----------
     def load_font_settings(self):
         settings = QSettings("MyDesktopApp", "WeatherSettings")
         font_family = settings.value("font_family", "Microsoft YaHei")
@@ -219,137 +216,15 @@ class GeneralPage(QWidget):
         settings.setValue("font_color", self._current_color)
         self.font_changed.emit()
 
-    # ---------- 地区数据 ----------
-    def load_regions_data(self):
-        provinces = list(REGIONS.keys())
-        self.province_combo.clear()
-        self.province_combo.addItem("请选择省份")
-        self.province_combo.addItems(provinces)
-        self.province_combo.currentTextChanged.connect(self.on_province_changed)
-        self.city_combo.currentTextChanged.connect(self.on_city_changed)
-        self.county_combo.currentTextChanged.connect(self.on_county_changed)
-
-    def _on_province_changed_internal(self, province):
-        self.city_combo.clear()
-        self.city_combo.addItem("请选择城市")
-        if province and province in REGIONS:
-            cities = list(REGIONS[province].get("cities", {}).keys())
-            self.city_combo.addItems(cities)
-        self.county_combo.clear()
-        self.county_combo.addItem("请选择区县")
-
-    def _on_city_changed_internal(self, city):
-        self.county_combo.clear()
-        self.county_combo.addItem("请选择区县")
-        province = self.province_combo.currentText()
-        if province and city and province in REGIONS:
-            counties = REGIONS[province].get("cities", {}).get(city, {}).get("counties", [])
-            self.county_combo.addItems(counties)
-
-    def on_province_changed(self, province):
-        if self._loading:
-            return
-        self._on_province_changed_internal(province)
-
-    def on_city_changed(self, city):
-        if self._loading:
-            return
-        self._on_city_changed_internal(city)
-        if city and city != "请选择城市":
-            self.auto_save_and_refresh_weather()
-
-    def on_county_changed(self, county):
-        if self._loading:
-            return
-        if county and county != "请选择区县":
-            self.auto_save_and_refresh_weather()
-
-    def auto_save_and_refresh_weather(self):
-        if self._loading:
-            return
-
-        province = self.province_combo.currentText()
-        city = self.city_combo.currentText()
-        county = self.county_combo.currentText()
-
-        if province == "请选择省份" or city == "请选择城市":
-            return
-
-        # ===== 读取 QSettings 中已保存的地区 =====
-        settings = QSettings("MyDesktopApp", "WeatherSettings")
-        old_province = settings.value("selected_province", "")
-        old_city = settings.value("selected_city", "")
-        old_county = settings.value("selected_county", "")
-
-        # ===== 如果地区没有变化，直接返回，不触发刷新 =====
-        if old_province == province and old_city == city and old_county == county:
-            return
-
-        # ===== 保存新地区 =====
-        settings.setValue("selected_province", province)
-        settings.setValue("selected_city", city)
-        if county != "请选择区县":
-            settings.setValue("selected_county", county)
-        else:
-            settings.remove("selected_county")
-
-        settings.remove("cached_lat")
-        settings.remove("cached_lng")
-        settings.sync()
-
-        # ===== 刷新天气（地区确实变化了） =====
-        self._refresh_main_window_weather()
-
-    def _refresh_main_window_weather(self):
-        main_window = None
-        if self.parent_dialog and hasattr(self.parent_dialog, 'parent'):
-            main_window = self.parent_dialog.parent()
-        if not main_window:
-            parent = self.parent()
-            if parent and hasattr(parent, 'parent'):
-                main_window = parent.parent()
-        if main_window and hasattr(main_window, 'start_weather_thread'):
-            main_window.start_weather_thread(force_restart=True)
-            if hasattr(main_window, 'update'):
-                main_window.update()
-
-    # ---------- 加载/保存 ----------
     def load_settings(self):
         settings = QSettings("MyDesktopApp", "WeatherSettings")
-
         self._loading = True
-
         try:
             self.autostart_checked = get_autostart_status()
             self.update_autostart_display()
-
             self.load_font_settings()
-
-            province = settings.value("selected_province", "")
-            city = settings.value("selected_city", "")
-            county = settings.value("selected_county", "")
-
-            if province:
-                idx = self.province_combo.findText(province)
-                if idx >= 0:
-                    self.province_combo.setCurrentIndex(idx)
-                    self._on_province_changed_internal(province)
-
-            if city:
-                idx_city = self.city_combo.findText(city)
-                if idx_city >= 0:
-                    self.city_combo.setCurrentIndex(idx_city)
-                    self._on_city_changed_internal(city)
-
-            if county:
-                idx_county = self.county_combo.findText(county)
-                if idx_county >= 0:
-                    self.county_combo.setCurrentIndex(idx_county)
         finally:
             self._loading = False
-
-        # ===== 关键修复：删除主动调用 _refresh_main_window_weather =====
-        # 主窗口启动时已经启动过天气线程，无需在这里再次触发
 
     def save_settings(self):
         pass

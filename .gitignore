@@ -1,26 +1,79 @@
 # Python 虚拟环境
 .venv/
 venv/
+env/
+ENV/
 
 # Python 缓存
 __pycache__/
 *.pyc
 *.pyo
+*.pyd
+*.so
+*.dylib
+*.dll
 
 # 打包目录
 dist/
 build/
 *.spec
+*.egg-info/
+*.egg
 
 # IDE 配置
 .idea/
 .vscode/
+*.swp
+*.swo
+.DS_Store
+Thumbs.db
 
-# 其他
-*.exe
+# 日志和数据库
 *.log
 *.db
+*.sqlite
+*.sqlite3
 
-# 本地打包/推送提示文件（不上传）
+# 可执行文件（本地生成）
+*.exe
+*.msi
+*.dmg
+
+# 项目特定文件
 python build.py v*
 python push.py*
+当前的规范.txt
+
+# 归档目录（项目外，但防止误加）
+_archived_builds/
+
+# PyInstaller 临时文件
+*.manifest
+*.pkg
+*.toc
+localpycs/
+
+# 测试和覆盖率
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Jupyter Notebook
+.ipynb_checkpoints/
+
+# 临时文件
+*.tmp
+*.bak
+*.swp
+
+# 环境变量文件
+.env
+.env.local
+*.local
+
+# 打包后的安装包（本地测试）
+*.Setup.exe
+DesktopWidget-v*.exe
+
+# 主题/皮肤临时文件
+skins/*/desktop*.psd

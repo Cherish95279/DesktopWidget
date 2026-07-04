@@ -6,8 +6,27 @@ from ..constants import DEFAULT_THEME, THEME_PRESETS
 from ..theme_manager import get_theme_manager
 
 
+# ===== 统一下拉框样式 =====
+COMBO_STYLE = """
+    QComboBox {
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        background: #f5f5f5;
+        color: #333;
+        font-size: 12px;
+        padding: 0 4px;
+        height: 28px;
+    }
+    QComboBox:hover {
+        background: #e6f4ff;
+        border: 1px solid #1677ff;
+        color: #1677ff;
+    }
+"""
+
+
 class ThemePage(QWidget):
-    """主题设置页面（新布局）"""
+    """主题设置页面"""
 
     theme_changed = pyqtSignal()
 
@@ -34,22 +53,38 @@ class ThemePage(QWidget):
         self.theme_label.setStyleSheet("font-weight: bold; font-size: 13px;")
         label_row.addWidget(self.theme_label)
 
-        label_row.addStretch()
+        label_row.addStretch()  # 将“背景颜色”标签推到右侧区域
+
+        # ---- 修改开始：将“背景颜色”标签放入固定宽度容器 ----
+        # 容器宽度与色块组宽度一致：
+        # 3个预设(28px) + 1个自定义(28px) + 3个间距(6px) = 130px
+        color_label_widget = QWidget()
+        color_label_widget.setFixedWidth(130)  # 已修正为 130
+        color_label_widget.setStyleSheet("background: transparent;")
+        color_label_inner = QHBoxLayout(color_label_widget)
+        color_label_inner.setContentsMargins(0, 0, 0, 0)
+        color_label_inner.setSpacing(0)
 
         self.color_label = QLabel("背景颜色")
         self.color_label.setStyleSheet("font-weight: bold; font-size: 13px;")
-        label_row.addWidget(self.color_label)
+        color_label_inner.addWidget(self.color_label)
+        color_label_inner.addStretch()  # 使标签在容器内左对齐
+
+        label_row.addWidget(color_label_widget)
+        # ---- 修改结束 ----
 
         main_layout.addLayout(label_row)
 
-        # ===== 第二行：控件并排 =====
+        # ===== 第二行：控件并排（完全不动） =====
         control_row = QHBoxLayout()
         control_row.setSpacing(10)
         control_row.setContentsMargins(0, 0, 0, 0)
 
+        # ===== 主题下拉框（统一风格） =====
         self.theme_combo = QComboBox()
         self.theme_combo.setFixedWidth(140)
         self.theme_combo.setFixedHeight(28)
+        self.theme_combo.setStyleSheet(COMBO_STYLE)
         self.theme_combo.currentTextChanged.connect(self._on_theme_changed)
         control_row.addWidget(self.theme_combo)
 
@@ -104,12 +139,11 @@ class ThemePage(QWidget):
 
         main_layout.addLayout(control_row)
 
-        # ===== 第三行：不透明度标签 =====
+        # ===== 不透明度 =====
         opacity_label = QLabel("不透明度")
         opacity_label.setStyleSheet("font-weight: bold; font-size: 13px;")
         main_layout.addWidget(opacity_label)
 
-        # ===== 第四行：不透明度滑块 =====
         opacity_row = QHBoxLayout()
         opacity_row.setSpacing(10)
 
@@ -128,27 +162,30 @@ class ThemePage(QWidget):
 
         main_layout.addLayout(opacity_row)
 
-        # ===== 第五行：着色强度 =====
+        # ===== 着色强度（滑块） =====
+        tint_label = QLabel("着色强度")
+        tint_label.setStyleSheet("font-weight: bold; font-size: 13px;")
+        main_layout.addWidget(tint_label)
+
         tint_row = QHBoxLayout()
         tint_row.setSpacing(10)
 
-        tint_label = QLabel("着色强度")
-        tint_label.setStyleSheet("font-weight: bold; font-size: 13px;")
-        tint_row.addWidget(tint_label)
+        self.tint_slider = QSlider(Qt.Orientation.Horizontal)
+        self.tint_slider.setRange(0, 255)
+        self.tint_slider.setValue(80)
+        self.tint_slider.setTickInterval(25)
+        self.tint_slider.setTickPosition(QSlider.TickPosition.TicksBelow)
+        self.tint_slider.valueChanged.connect(self._on_tint_changed)
+        tint_row.addWidget(self.tint_slider)
 
-        self.tint_spin = QSpinBox()
-        self.tint_spin.setRange(0, 255)
-        self.tint_spin.setValue(80)
-        self.tint_spin.setSingleStep(1)
-        self.tint_spin.setSuffix("")
-        self.tint_spin.setToolTip("值越小背景越透，原图越清晰；值越大颜色越浓")
-        self.tint_spin.valueChanged.connect(self._on_tint_changed)
-        tint_row.addWidget(self.tint_spin)
+        self.tint_label = QLabel("31%")
+        self.tint_label.setFixedWidth(40)
+        self.tint_label.setStyleSheet("font-size: 13px; color: #666;")
+        tint_row.addWidget(self.tint_label)
 
-        tint_row.addStretch()
         main_layout.addLayout(tint_row)
 
-        # ===== 底部：恢复默认按钮（与 display_page 保持一致） =====
+        # ===== 底部：恢复默认按钮 =====
         btn_row = QHBoxLayout()
         btn_row.addStretch()
 
@@ -181,13 +218,15 @@ class ThemePage(QWidget):
         if theme_name:
             self.theme_manager.switch_theme(theme_name)
             self.theme_changed.emit()
-            self._update_main_window()
+            self._force_reload_images()
 
     def _on_opacity_changed(self, value):
         self.opacity_label.setText(f"{value}%")
         self._apply_theme()
 
     def _on_tint_changed(self, value):
+        percent = int(value / 255 * 100)
+        self.tint_label.setText(f"{percent}%")
         self._apply_theme()
 
     def _on_preset_clicked(self, btn):
@@ -219,7 +258,7 @@ class ThemePage(QWidget):
         settings = QSettings("MyDesktopApp", "WeatherSettings")
         current_color = color if color is not None else settings.value("theme_color", DEFAULT_THEME["color"])
         current_opacity = opacity if opacity is not None else self.opacity_slider.value()
-        current_tint = tint if tint is not None else self.tint_spin.value()
+        current_tint = tint if tint is not None else self.tint_slider.value()
 
         settings.setValue("theme_color", current_color)
         settings.setValue("theme_opacity", current_opacity)
@@ -230,21 +269,22 @@ class ThemePage(QWidget):
         self._update_main_window()
 
     def _update_main_window(self):
-        parent = self.parent()
-        if parent and hasattr(parent, 'parent'):
-            main_window = parent.parent()
-            if main_window and hasattr(main_window, 'update_theme_cache'):
-                main_window.update_theme_cache()
-            elif main_window and hasattr(main_window, 'update'):
-                main_window.update()
+        main_window = self.parent_dialog.parent() if self.parent_dialog else None
+        if main_window and hasattr(main_window, 'update_theme_cache'):
+            main_window.update_theme_cache()
+        elif main_window and hasattr(main_window, 'update'):
+            main_window.update()
+
+    def _force_reload_images(self):
+        main_window = self.parent_dialog.parent() if self.parent_dialog else None
+        if main_window and hasattr(main_window, 'reload_images'):
+            main_window.reload_images()
 
     def _force_update_main_window(self):
-        parent = self.parent()
-        if parent and hasattr(parent, 'parent'):
-            main_window = parent.parent()
-            if main_window and hasattr(main_window, 'update_theme_cache'):
-                main_window.update_theme_cache(force=True)
-                main_window.update()
+        main_window = self.parent_dialog.parent() if self.parent_dialog else None
+        if main_window and hasattr(main_window, 'update_theme_cache'):
+            main_window.update_theme_cache(force=True)
+            main_window.update()
 
     # ---------- 恢复默认 ----------
     def restore_default(self):
@@ -258,7 +298,8 @@ class ThemePage(QWidget):
             self.opacity_slider.setValue(DEFAULT_THEME["opacity"])
             self.opacity_label.setText(f"{DEFAULT_THEME['opacity']}%")
 
-            self.tint_spin.setValue(80)
+            self.tint_slider.setValue(80)
+            self.tint_label.setText("31%")
 
             default_color = DEFAULT_THEME["color"]
             found = False
@@ -276,7 +317,7 @@ class ThemePage(QWidget):
             settings.setValue("theme_tint_alpha", 80)
             settings.sync()
 
-            self._force_update_main_window()
+            self._force_reload_images()
             self.theme_changed.emit()
 
         finally:
@@ -301,7 +342,9 @@ class ThemePage(QWidget):
             self.opacity_label.setText(f"{opacity}%")
 
             tint = int(settings.value("theme_tint_alpha", 80))
-            self.tint_spin.setValue(tint)
+            self.tint_slider.setValue(tint)
+            percent = int(tint / 255 * 100)
+            self.tint_label.setText(f"{percent}%")
 
             color = settings.value("theme_color", DEFAULT_THEME["color"])
             found = False
