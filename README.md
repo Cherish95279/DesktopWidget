@@ -2,12 +2,11 @@
 
 **珍爱桌面小工具** —— 基于 PyQt6 的轻量级桌面组件，集指针时钟、实时天气、性能监控、网速监控于一体，支持系统托盘和自动更新。
 
-> 当前版本：v1.2.6
+> 当前版本：v1.2.7
 
-![预览图]https://raw.githubusercontent.com/Cherish95279/DesktopWidget/main/screenshots/preview1.2.6.png
+![预览图]https://raw.githubusercontent.com/Cherish95279/DesktopWidget/main/screenshots/preview1.2.7.png
 
-![主题预览图](https://raw.githubusercontent.com/Cherish95279/DesktopWidget/main/screenshots/zhuti2.png)
----
+
 
 ## ✨ 主要功能
 
@@ -33,10 +32,10 @@
 
 ### 方式一：下载安装包（推荐）
 
-平台	下载地址
-GitHub	Releases
-Gitee（国内用户推荐）	Releases
-下载 DesktopWidget-v*.exe 双击安装即可。
+ 平台 | 下载地址 |
+| :--- | :--- |
+| **GitHub** | [Releases](https://github.com/Cherish95279/DesktopWidget/releases) |
+| **Gitee**（国内用户推荐） | [Releases](https://gitee.com/Cherish95279/DesktopWidget/releases) |
 
 ### 方式二：从源码运行
 
@@ -99,6 +98,25 @@ MIT License
 https://raw.githubusercontent.com/Cherish95279/DesktopWidget/main/screenshots/preview1.2.5.png
 
 📝 更新日志
+
+v1.2.7 (2026-07-04)
+🎨 UI 全面统一：所有设置页面的下拉框、输入框、按钮、滑块风格完全一致
+
+🎨 着色强度改为滑块：从输入框改为滑块控制（0~255 映射百分比），交互更直观
+
+🎨 主题切换实时生效：切换主题后主窗口立即更新，无需重启
+
+🐛 修复天气设置反复刷新：打开天气设置页面时不再重复触发天气更新
+
+🔄 更新渠道优化：改为下拉框选择（Gitee源 / GitHub源），默认 Gitee，界面更简洁
+
+📢 公告主动查看入口：常规设置页新增“📢 查看公告”按钮，方便随时查阅历史公告
+
+🎨 统一控件高度：所有输入框、下拉框、按钮高度统一为 28px
+
+🎨 统一下拉框样式：边框、背景、悬停效果统一，使用系统默认下拉箭头
+
+🧹 代码优化：移除冗余的天气地区选择（已在天气设置中独立管理）
 
 v1.2.6 (2026-07-03)
 🎨 新增“竹林”主题：全新主题风格，在设置 → 主题中自由切换
@@ -185,5 +203,6 @@ v1.1.9
 
 修复已知问题
 
+如果觉得好用，不妨给个 Star ⭐ 支持一下！
 
 
