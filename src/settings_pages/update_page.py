@@ -2,7 +2,6 @@ from PyQt6.QtWidgets import *
 from PyQt6.QtCore import *
 import os
 import tempfile
-import json
 
 from ..constants import VERSION, GITHUB_REPO
 from ..updater import UpdateChecker, Downloader, Updater

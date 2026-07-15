@@ -2,9 +2,9 @@
 
 **珍爱桌面小工具** —— 基于 PyQt6 的轻量级桌面组件，集指针时钟、实时天气、性能监控、网速监控于一体，支持系统托盘和自动更新。
 
-> 当前版本：v1.2.7
+> 当前版本：v1.2.8
 
-![预览图]https://raw.githubusercontent.com/Cherish95279/DesktopWidget/main/screenshots/preview1.2.7.png
+![预览图]https://raw.githubusercontent.com/Cherish95279/DesktopWidget/main/screenshots/preview1.2.8.png
 
 
 
@@ -98,6 +98,41 @@ MIT License
 https://raw.githubusercontent.com/Cherish95279/DesktopWidget/main/screenshots/preview1.2.5.png
 
 📝 更新日志
+
+v1.2.8
+移除聊天功能（完整清理）
+
+删除 src/chat_client.py、src/chat_window.py、src/settings_pages/chat_page.py
+
+恢复 main_window.py、settings_dialog.py、tray_icon.py、constants.py 到无聊天版本
+
+清理 __pycache__ 缓存文件
+
+代码质量优化（通过 Cline + DeepSeek）
+
+清理所有未使用的 import（11 处）
+
+拆分超过 50 行的长函数（11 个方法拆分）
+
+修复所有 bare except，改为具体异常类型（9 处）
+
+设置窗口 UI 改进
+
+添加最小化按钮（自定义标题栏方案）
+
+统一标题栏悬停效果（浅灰色背景）
+
+标题栏颜色改为浅蓝色 #e6f4ff
+
+导航栏背景改为 #f5f6fa
+
+禁用最大化按钮（彻底移除）
+
+VSCode 调试配置
+
+配置 launch.json，按 F5 自动杀旧进程并重启
+
+preLaunchTask 自动结束 widget.py 进程
 
 v1.2.7 (2026-07-04)
 🎨 UI 全面统一：所有设置页面的下拉框、输入框、按钮、滑块风格完全一致

@@ -8,8 +8,8 @@ from PyQt6.QtCore import *
 from PyQt6.QtGui import *
 import psutil
 
-from .constants import CENTER_X, CENTER_Y, VERSION, DEFAULT_LAYOUT
-from .utils import resource_path, get_weather_icon
+from .constants import CENTER_X, CENTER_Y, DEFAULT_LAYOUT
+from .utils import get_weather_icon
 from .solar_terms import get_next_term_info
 from .threads import ServerScanner, WeatherThread, NetSpeedThread
 from .settings_dialog import SettingsDialog
@@ -21,8 +21,9 @@ from .widgets.notice_bubble import NoticeBubble
 try:
     import GPUtil
     GPU_AVAILABLE = True
-except:
+except ImportError:
     GPU_AVAILABLE = False
+    print("⚠️ GPUtil 未安装，GPU 信息不可用")
 
 try:
     from zhdate import ZhDate
@@ -286,7 +287,6 @@ class MainWindow(QWidget):
             return
         try:
             dialog = SettingsDialog(self, initial_page=initial_page)
-            dialog.setWindowFlags(Qt.WindowType.Window | Qt.WindowType.WindowCloseButtonHint)
             screen = QApplication.primaryScreen()
             if screen:
                 geometry = screen.availableGeometry()
@@ -377,8 +377,8 @@ class MainWindow(QWidget):
                 try:
                     self.weather_thread.data_updated.disconnect()
                     self.weather_thread.error_signal.disconnect()
-                except:
-                    pass
+                except Exception as e:
+                    print(f"⚠️ 断开天气线程信号时出错: {e}")
                 self.weather_thread.stop()
                 self.weather_thread = None
             self.stop_loading_animation()
@@ -389,8 +389,8 @@ class MainWindow(QWidget):
                 try:
                     self.weather_thread.data_updated.disconnect()
                     self.weather_thread.error_signal.disconnect()
-                except:
-                    pass
+                except Exception as e:
+                    print(f"⚠️ 断开天气线程信号时出错: {e}")
                 self.weather_thread.stop()
                 self.weather_thread = None
             self.stop_loading_animation()
@@ -474,7 +474,7 @@ class MainWindow(QWidget):
             ip = s.getsockname()[0]
             s.close()
             return ip
-        except:
+        except (OSError, socket.error):
             return "127.0.0.1"
 
     def on_speed_update(self, down, up):
@@ -507,7 +507,7 @@ class MainWindow(QWidget):
             try:
                 lunar = ZhDate.from_datetime(self.now)
                 self.lunar_text = f"农历{lunar.lunar_month}月{lunar.lunar_day}日"
-            except:
+            except Exception:
                 self.lunar_text = "农历错误"
         else:
             self.lunar_text = "未安装"

@@ -44,7 +44,16 @@ class ThemePage(QWidget):
         main_layout.setContentsMargins(15, 20, 15, 15)
         main_layout.setSpacing(10)
 
-        # ===== 第一行：标签并排 =====
+        self._create_label_row(main_layout)
+        self._create_control_row(main_layout)
+        self._create_opacity_section(main_layout)
+        self._create_tint_section(main_layout)
+        self._create_reset_button(main_layout)
+
+        main_layout.addStretch()
+
+    def _create_label_row(self, parent_layout):
+        """创建第一行：主题切换 + 背景颜色标签"""
         label_row = QHBoxLayout()
         label_row.setSpacing(0)
         label_row.setContentsMargins(0, 0, 0, 0)
@@ -53,13 +62,11 @@ class ThemePage(QWidget):
         self.theme_label.setStyleSheet("font-weight: bold; font-size: 13px;")
         label_row.addWidget(self.theme_label)
 
-        label_row.addStretch()  # 将“背景颜色”标签推到右侧区域
+        label_row.addStretch()
 
-        # ---- 修改开始：将“背景颜色”标签放入固定宽度容器 ----
-        # 容器宽度与色块组宽度一致：
-        # 3个预设(28px) + 1个自定义(28px) + 3个间距(6px) = 130px
+        # 容器宽度与色块组宽度一致：3个预设(28px) + 1个自定义(28px) + 3个间距(6px) = 130px
         color_label_widget = QWidget()
-        color_label_widget.setFixedWidth(130)  # 已修正为 130
+        color_label_widget.setFixedWidth(130)
         color_label_widget.setStyleSheet("background: transparent;")
         color_label_inner = QHBoxLayout(color_label_widget)
         color_label_inner.setContentsMargins(0, 0, 0, 0)
@@ -68,19 +75,17 @@ class ThemePage(QWidget):
         self.color_label = QLabel("背景颜色")
         self.color_label.setStyleSheet("font-weight: bold; font-size: 13px;")
         color_label_inner.addWidget(self.color_label)
-        color_label_inner.addStretch()  # 使标签在容器内左对齐
+        color_label_inner.addStretch()
 
         label_row.addWidget(color_label_widget)
-        # ---- 修改结束 ----
+        parent_layout.addLayout(label_row)
 
-        main_layout.addLayout(label_row)
-
-        # ===== 第二行：控件并排（完全不动） =====
+    def _create_control_row(self, parent_layout):
+        """创建第二行：主题下拉框 + 颜色预设按钮"""
         control_row = QHBoxLayout()
         control_row.setSpacing(10)
         control_row.setContentsMargins(0, 0, 0, 0)
 
-        # ===== 主题下拉框（统一风格） =====
         self.theme_combo = QComboBox()
         self.theme_combo.setFixedWidth(140)
         self.theme_combo.setFixedHeight(28)
@@ -95,6 +100,13 @@ class ThemePage(QWidget):
         color_layout.setSpacing(6)
         color_layout.setContentsMargins(0, 0, 0, 0)
 
+        self._create_color_buttons(color_layout)
+
+        control_row.addWidget(color_widget)
+        parent_layout.addLayout(control_row)
+
+    def _create_color_buttons(self, color_layout):
+        """创建颜色预设按钮和自定义颜色按钮"""
         self.color_buttons = []
         for preset in THEME_PRESETS:
             btn = QPushButton()
@@ -135,14 +147,11 @@ class ThemePage(QWidget):
         self.custom_btn.clicked.connect(self._on_custom_color)
         color_layout.addWidget(self.custom_btn)
 
-        control_row.addWidget(color_widget)
-
-        main_layout.addLayout(control_row)
-
-        # ===== 不透明度 =====
+    def _create_opacity_section(self, parent_layout):
+        """创建不透明度滑块区域"""
         opacity_label = QLabel("不透明度")
         opacity_label.setStyleSheet("font-weight: bold; font-size: 13px;")
-        main_layout.addWidget(opacity_label)
+        parent_layout.addWidget(opacity_label)
 
         opacity_row = QHBoxLayout()
         opacity_row.setSpacing(10)
@@ -160,12 +169,13 @@ class ThemePage(QWidget):
         self.opacity_label.setStyleSheet("font-size: 13px; color: #666;")
         opacity_row.addWidget(self.opacity_label)
 
-        main_layout.addLayout(opacity_row)
+        parent_layout.addLayout(opacity_row)
 
-        # ===== 着色强度（滑块） =====
+    def _create_tint_section(self, parent_layout):
+        """创建着色强度滑块区域"""
         tint_label = QLabel("着色强度")
         tint_label.setStyleSheet("font-weight: bold; font-size: 13px;")
-        main_layout.addWidget(tint_label)
+        parent_layout.addWidget(tint_label)
 
         tint_row = QHBoxLayout()
         tint_row.setSpacing(10)
@@ -183,9 +193,10 @@ class ThemePage(QWidget):
         self.tint_label.setStyleSheet("font-size: 13px; color: #666;")
         tint_row.addWidget(self.tint_label)
 
-        main_layout.addLayout(tint_row)
+        parent_layout.addLayout(tint_row)
 
-        # ===== 底部：恢复默认按钮 =====
+    def _create_reset_button(self, parent_layout):
+        """创建底部的\"恢复默认\"按钮"""
         btn_row = QHBoxLayout()
         btn_row.addStretch()
 
@@ -208,8 +219,7 @@ class ThemePage(QWidget):
         self.restore_btn.clicked.connect(self.restore_default)
         btn_row.addWidget(self.restore_btn)
 
-        main_layout.addLayout(btn_row)
-        main_layout.addStretch()
+        parent_layout.addLayout(btn_row)
 
     # ---------- 信号处理 ----------
     def _on_theme_changed(self, theme_name):

@@ -14,7 +14,6 @@
 import uuid
 import platform
 import urllib.request
-import urllib.error
 from PyQt6.QtCore import QSettings, QTimer
 
 

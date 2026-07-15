@@ -1,5 +1,5 @@
 import socket
-from datetime import datetime, timedelta, timezone
+from datetime import datetime
 from PyQt6.QtCore import QThread, pyqtSignal, QSettings
 from concurrent.futures import ThreadPoolExecutor, as_completed
 import requests
@@ -27,7 +27,7 @@ class ServerScanner(QThread):
             s.connect(('8.8.8.8', 80))
             local_ip = s.getsockname()[0]
             s.close()
-        except:
+        except (OSError, socket.error):
             pass
         subnet = ".".join(local_ip.split('.')[:-1]) + "."
         found = None
@@ -51,7 +51,7 @@ class ServerScanner(QThread):
                 s.settimeout(0.15)
                 if s.connect_ex((ip, 8123)) == 0:
                     return ip
-        except:
+        except (OSError, socket.error):
             return None
 
 

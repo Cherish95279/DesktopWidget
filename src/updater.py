@@ -2,11 +2,9 @@
 自动更新模块
 负责检查GitHub/Gitee Releases、下载新版本、执行更新
 """
-import sys
 import os
 import tempfile
 import subprocess
-import time
 
 import requests
 from PyQt6.QtCore import QThread, pyqtSignal, QSettings

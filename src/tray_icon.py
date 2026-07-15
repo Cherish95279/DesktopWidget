@@ -1,4 +1,3 @@
-import sys
 from PyQt6.QtWidgets import QSystemTrayIcon, QMenu, QApplication
 from PyQt6.QtGui import QIcon, QAction, QPainter, QColor, QPixmap
 from PyQt6.QtCore import QSize, QTimer, QSettings, Qt

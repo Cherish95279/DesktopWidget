@@ -1,6 +1,6 @@
 from PyQt6.QtWidgets import *
 from PyQt6.QtCore import *
-from PyQt6.QtGui import QIcon, QColor, QDesktopServices, QAction
+from PyQt6.QtGui import QIcon, QDesktopServices, QAction
 import traceback
 from ..utils import resource_path
 from .notice_manager import NoticeManager

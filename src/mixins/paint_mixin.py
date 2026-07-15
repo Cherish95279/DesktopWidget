@@ -1,5 +1,5 @@
-from PyQt6.QtCore import QTimer, QElapsedTimer, QRectF, QPointF, Qt
-from PyQt6.QtGui import QPainter, QColor, QFont, QPen, QPainterPath
+from PyQt6.QtCore import QTimer, QElapsedTimer, Qt
+from PyQt6.QtGui import QPainter, QColor, QFont, QPen
 from PyQt6.QtWidgets import QApplication
 from ..constants import CENTER_X, CENTER_Y, DEFAULT_LAYOUT
 from ..utils import get_weather_icon

@@ -52,8 +52,8 @@ class WeatherMixin:
                 try:
                     self.weather_thread.data_updated.disconnect()
                     self.weather_thread.error_signal.disconnect()
-                except:
-                    pass
+                except Exception as e:
+                    print(f"⚠️ 断开天气线程信号时出错: {e}")
                 self.weather_thread.stop()
                 self.weather_thread = None
             self.stop_loading_animation()
@@ -64,8 +64,8 @@ class WeatherMixin:
                 try:
                     self.weather_thread.data_updated.disconnect()
                     self.weather_thread.error_signal.disconnect()
-                except:
-                    pass
+                except Exception as e:
+                    print(f"⚠️ 断开天气线程信号时出错: {e}")
                 self.weather_thread.stop()
                 self.weather_thread = None
             self.stop_loading_animation()

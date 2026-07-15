@@ -52,7 +52,6 @@ class DialogMixin:
 
         try:
             dialog = SettingsDialog(self, initial_page=initial_page)
-            dialog.setWindowFlags(Qt.WindowType.Window | Qt.WindowType.WindowCloseButtonHint)
 
             screen = QApplication.primaryScreen()
             if screen:

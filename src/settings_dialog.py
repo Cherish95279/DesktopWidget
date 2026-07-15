@@ -1,32 +1,134 @@
+import sys
+import ctypes
 from PyQt6.QtWidgets import *
 from PyQt6.QtCore import *
-from PyQt6.QtGui import QIcon
+from PyQt6.QtGui import QIcon, QAction
 from .utils import resource_path
 from .settings_pages import GeneralPage, DisplayPage, WeatherPage, ThemePage, UpdatePage, DonationPage, AboutPage
 
 
 class SettingsDialog(QDialog):
     def __init__(self, parent=None, initial_page="general"):
-        super().__init__(parent)
+        super().__init__(None)
+        self._main_window = parent
         self.setWindowTitle("设置")
         self.setFixedSize(500, 380)
+
+        # 无边框
         self.setWindowFlags(
-            Qt.WindowType.Window |
-            Qt.WindowType.WindowCloseButtonHint |
-            Qt.WindowType.WindowSystemMenuHint
+            Qt.WindowType.Dialog |
+            Qt.WindowType.FramelessWindowHint
         )
-        self.setWindowIcon(QIcon(resource_path("icons/app.ico")))
+
+        # 图标
+        icon_path = resource_path("icons/app.ico")
+        self.icon = QIcon(icon_path)
+        self.setWindowIcon(self.icon)
+        QApplication.setWindowIcon(self.icon)
+
+        try:
+            myappid = 'DesktopWidget.SettingsDialog.1'
+            ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID(myappid)
+        except Exception:
+            pass
 
         self._exiting = False
+        self.setAttribute(Qt.WidgetAttribute.WA_QuitOnClose, False)
 
-        main_layout = QHBoxLayout(self)
+        # ---------- 主布局 ----------
+        main_vertical = QVBoxLayout(self)
+        main_vertical.setContentsMargins(0, 0, 0, 0)
+        main_vertical.setSpacing(0)
+
+        # ---------- 自定义标题栏（浅蓝主题） ----------
+        self.title_bar = QWidget()
+        self.title_bar.setFixedHeight(32)
+        self.title_bar.setStyleSheet("""
+            QWidget {
+                background-color: #e6f4ff;
+                border-top-left-radius: 4px;
+                border-top-right-radius: 4px;
+            }
+        """)
+        title_layout = QHBoxLayout(self.title_bar)
+        title_layout.setContentsMargins(10, 0, 10, 0)
+        title_layout.setSpacing(0)
+
+        # 图标
+        icon_label = QLabel()
+        pixmap = self.icon.pixmap(16, 16)
+        icon_label.setPixmap(pixmap)
+        title_layout.addWidget(icon_label)
+
+        # 标题文字（深色）
+        title_label = QLabel("设置")
+        title_label.setStyleSheet("""
+            QLabel {
+                font-size: 12px;
+                font-weight: bold;
+                color: #333;
+                padding-left: 8px;
+            }
+        """)
+        title_layout.addWidget(title_label)
+
+        title_layout.addStretch()
+
+        # ----- 最小化按钮（统一悬停风格） -----
+        self.min_btn = QPushButton("─")
+        self.min_btn.setFixedSize(30, 24)
+        self.min_btn.setStyleSheet("""
+            QPushButton {
+                background: transparent;
+                border: none;
+                font-size: 16px;
+                color: #333;
+            }
+            QPushButton:hover {
+                background: rgba(0, 0, 0, 0.08);
+                border-radius: 3px;
+            }
+            QPushButton:pressed {
+                background: rgba(0, 0, 0, 0.15);
+            }
+        """)
+        self.min_btn.clicked.connect(self.showMinimized)
+        title_layout.addWidget(self.min_btn)
+
+        # ----- 关闭按钮（统一悬停风格） -----
+        self.close_btn = QPushButton("✕")
+        self.close_btn.setFixedSize(30, 24)
+        self.close_btn.setStyleSheet("""
+            QPushButton {
+                background: transparent;
+                border: none;
+                font-size: 16px;
+                color: #333;
+            }
+            QPushButton:hover {
+                background: rgba(0, 0, 0, 0.08);
+                border-radius: 3px;
+            }
+            QPushButton:pressed {
+                background: rgba(0, 0, 0, 0.15);
+            }
+        """)
+        self.close_btn.clicked.connect(self.close)
+        title_layout.addWidget(self.close_btn)
+
+        main_vertical.addWidget(self.title_bar)
+
+        # ---------- 内容区域 ----------
+        content_widget = QWidget()
+        content_widget.setStyleSheet("background-color: white;")
+        main_layout = QHBoxLayout(content_widget)
         main_layout.setContentsMargins(0, 0, 0, 0)
         main_layout.setSpacing(0)
 
-        # ---------- 左侧目录 ----------
+        # 左侧导航（浅灰色）
         left_panel = QWidget()
         left_panel.setFixedWidth(100)
-        left_panel.setStyleSheet("background-color: #f0f0f0;")
+        left_panel.setStyleSheet("background-color: #f5f6fa;")
         left_layout = QVBoxLayout(left_panel)
         left_layout.setContentsMargins(0, 20, 0, 20)
         left_layout.setSpacing(0)
@@ -34,11 +136,11 @@ class SettingsDialog(QDialog):
         self.cat_labels = ["常规设置", "显示项目", "天气设置", "主题", "检查更新", "捐赠", "关于"]
         self.cat_buttons = []
 
-        # ---------- 右侧内容 ----------
+        # 右侧堆叠
         self.stacked = QStackedWidget()
-        self.stacked.setStyleSheet("background-color: rgba(245, 245, 245, 0.9);")
+        self.stacked.setStyleSheet("background-color: white;")
 
-        # ---------- 页面引用（懒加载） ----------
+        # 页面引用
         self.general_page = None
         self.display_page = None
         self.weather_page = None
@@ -57,7 +159,6 @@ class SettingsDialog(QDialog):
             6: self._create_about_page,
         }
 
-        # 创建左侧导航按钮
         for i, label in enumerate(self.cat_labels):
             btn = QPushButton(label)
             btn.setFixedHeight(40)
@@ -71,12 +172,15 @@ class SettingsDialog(QDialog):
                     color: #333;
                     border: none;
                     background: transparent;
+                    border-radius: 0px;
                 }
                 QPushButton:hover {
-                    background: #e0e0e0;
+                    background: #e8edf3;
                 }
                 QPushButton:checked {
                     background: #d0e4ff;
+                    color: #1677ff;
+                    font-weight: bold;
                 }
             """)
             if i == 0:
@@ -88,14 +192,35 @@ class SettingsDialog(QDialog):
         left_layout.addStretch()
         main_layout.addWidget(left_panel)
 
-        # ---------- 默认加载第一个页面 ----------
         self.switch_page(0)
-
         main_layout.addWidget(self.stacked)
+
+        main_vertical.addWidget(content_widget)
 
         page_index = {"general": 0, "display": 1, "weather": 2, "theme": 3, "update": 4, "donation": 5, "about": 6}.get(initial_page, 0)
         self.switch_page(page_index)
 
+    # ---------- 窗口拖动 ----------
+    def mousePressEvent(self, event):
+        if event.button() == Qt.MouseButton.LeftButton:
+            if event.pos().y() <= self.title_bar.height():
+                self._drag_pos = event.globalPosition().toPoint()
+                self._drag_start = self.pos()
+            else:
+                self._drag_pos = None
+        super().mousePressEvent(event)
+
+    def mouseMoveEvent(self, event):
+        if hasattr(self, '_drag_pos') and self._drag_pos is not None:
+            delta = event.globalPosition().toPoint() - self._drag_pos
+            self.move(self._drag_start + delta)
+        super().mouseMoveEvent(event)
+
+    def mouseReleaseEvent(self, event):
+        self._drag_pos = None
+        super().mouseReleaseEvent(event)
+
+    # ---------- 以下方法保持不变 ----------
     def _create_general_page(self):
         if self.general_page is None:
             self.general_page = GeneralPage(self)
@@ -147,17 +272,14 @@ class SettingsDialog(QDialog):
             btn.setChecked(i == index)
 
     def on_font_changed(self):
-        parent = self.parent()
-        if parent and hasattr(parent, 'update'):
-            parent.update()
+        if self._main_window and hasattr(self._main_window, 'update'):
+            self._main_window.update()
 
     def on_theme_changed(self):
-        """主题变化时刷新主窗口"""
-        parent = self.parent()
-        if parent and hasattr(parent, 'update_theme_cache'):
-            parent.update_theme_cache()
-        elif parent and hasattr(parent, 'update'):
-            parent.update()
+        if self._main_window and hasattr(self._main_window, 'update_theme_cache'):
+            self._main_window.update_theme_cache()
+        elif self._main_window and hasattr(self._main_window, 'update'):
+            self._main_window.update()
 
     def save_settings(self):
         pass

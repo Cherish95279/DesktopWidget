@@ -1,4 +1,3 @@
-from PyQt6.QtCore import QTimer
 from ..updater import UpdateChecker
 
 
