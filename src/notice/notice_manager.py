@@ -109,6 +109,7 @@ class NoticeManager:
                         "content": notice.get("content"),
                         "link": notice.get("link"),
                         "timestamp": notice.get("timestamp"),
+                        "show_date": notice.get("show_date", True),
                     })
             settings = QSettings("MyDesktopApp", "WeatherSettings")
             settings.setValue("notice_history", json.dumps(history, ensure_ascii=False))
@@ -214,7 +215,7 @@ class NoticeManager:
                         "link": notice.link,
                         "timestamp": notice.timestamp,
                         "is_read": True,
-                        "show_date": True,
+                        "show_date": notice.show_date,
                     }
                     self._all_notices.append(notice_dict)
                     self._notify_data_updated()
@@ -229,7 +230,7 @@ class NoticeManager:
                 "link": notice.link,
                 "timestamp": notice.timestamp,
                 "is_read": False,
-                "show_date": True,
+                "show_date": notice.show_date,
             }
             self._all_notices.append(notice_dict)
             self._is_notifying = True
@@ -377,5 +378,5 @@ class NoticeManager:
         self._stop_timer()
         if self._checker is not None:
             self._checker.quit()
-            self._checker.wait(500)
+            self._checker.wait(6000)
             self._checker = None

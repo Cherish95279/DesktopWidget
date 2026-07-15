@@ -17,14 +17,6 @@ from .tray_icon import TrayIcon
 from .updater import UpdateChecker
 from .theme_manager import get_theme_manager
 from .widgets.notice_bubble import NoticeBubble
-from .mixins import (
-    WindowMixin,
-    PaintMixin,
-    ThemeMixin,
-    WeatherMixin,
-    UpdateMixin,
-    DialogMixin,
-)
 
 try:
     import GPUtil
@@ -49,15 +41,7 @@ if sys.platform == 'win32' and getattr(sys, 'frozen', False):
 
 
 # ---------- 主窗口 ----------
-class MainWindow(
-    WindowMixin,
-    PaintMixin,
-    ThemeMixin,
-    WeatherMixin,
-    UpdateMixin,
-    DialogMixin,
-    QWidget
-):
+class MainWindow(QWidget):
     def __init__(self):
         super().__init__()
         self.setWindowFlags(
@@ -111,7 +95,7 @@ class MainWindow(
         # API 配置状态
         self._api_configured = True
 
-        # 绘制相关（由 PaintMixin 初始化）
+        # 绘制相关
         self._init_paint()
 
         # 天气线程
@@ -172,6 +156,21 @@ class MainWindow(
     def get_update_status(self) -> str:
         """返回本次启动的更新检查状态"""
         return getattr(self, "update_check_status", "idle")
+
+    def _init_paint(self):
+        """初始化绘制统计和屏幕信息。"""
+        self.paint_count = 0
+        self.last_paint_time = QElapsedTimer()
+        self.last_paint_time.start()
+        self.fps_timer = QTimer(self)
+        self.fps_timer.timeout.connect(self.update_fps)
+        self.fps_timer.start(1000)
+
+        screen = QApplication.primaryScreen()
+        self.screen_res = (
+            f"{screen.size().width()}×{screen.size().height()}"
+            if screen else "1920×1080"
+        )
 
     # ===== 加载图片（通过主题管理器） =====
     def _load_images(self):
@@ -306,7 +305,17 @@ class MainWindow(
         self.settings_dialog = None
 
     def check_for_updates_auto(self):
-        self.update_checker = UpdateChecker()
+        if self.update_checker is not None and self.update_checker.isRunning():
+            return
+
+        settings = QSettings("MyDesktopApp", "WeatherSettings")
+        channel = settings.value("update_channel", "gitee")
+        if channel == "gitee":
+            url = "https://gitee.com/api/v5/repos/Cherish95279/DesktopWidget/releases/latest"
+            self.update_checker = UpdateChecker(url, use_token=False)
+        else:
+            self.update_checker = UpdateChecker()
+        self.update_check_status = "checking"
         self.update_checker.check_finished.connect(self.on_update_check_finished)
         self.update_checker.start()
 
@@ -434,7 +443,29 @@ class MainWindow(
             )
             event.ignore()
         else:
+            self.shutdown()
             event.accept()
+
+    def shutdown(self):
+        """停止后台任务，避免 QApplication 退出时销毁仍在运行的 QThread。"""
+        if getattr(self, "_shutdown_complete", False):
+            return
+        self._shutdown_complete = True
+
+        if self._loading_timer is not None:
+            self._loading_timer.stop()
+        for timer_name in ("clock_timer", "perf_timer", "fps_timer"):
+            timer = getattr(self, timer_name, None)
+            if timer is not None:
+                timer.stop()
+
+        for thread_name in ("weather_thread", "net_thread", "scanner"):
+            thread = getattr(self, thread_name, None)
+            if thread is not None:
+                thread.stop()
+
+        from .notice import NoticeManager
+        NoticeManager.get_instance().stop()
 
     def get_local_ip(self):
         try:

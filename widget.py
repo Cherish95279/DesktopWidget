@@ -25,6 +25,7 @@ def main():
     app.setOrganizationName("MyDesktopApp")
 
     window = MainWindow()
+    app.aboutToQuit.connect(window.shutdown)
     notice_manager = NoticeManager.get_instance()
 
     # ===== 启动后延迟上报统计（等待窗口完全初始化） =====

@@ -12,6 +12,14 @@ from .constants import AMAP_KEY
 class ServerScanner(QThread):
     ip_found = pyqtSignal(str)
 
+    def __init__(self):
+        super().__init__()
+        self._stopped = False
+
+    def stop(self):
+        self._stopped = True
+        self.wait(3000)
+
     def run(self):
         local_ip = "192.168.0.1"
         try:
@@ -26,13 +34,18 @@ class ServerScanner(QThread):
         with ThreadPoolExecutor(max_workers=20) as ex:
             futures = {ex.submit(self.check_port, subnet + str(i)): i for i in range(1, 255)}
             for f in as_completed(futures):
+                if self._stopped:
+                    break
                 res = f.result()
                 if res:
                     found = res
                     break
-        self.ip_found.emit(found if found else "192.168.0.135")
+        if not self._stopped:
+            self.ip_found.emit(found if found else "192.168.0.135")
 
     def check_port(self, ip):
+        if self._stopped:
+            return None
         try:
             with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
                 s.settimeout(0.15)
@@ -245,9 +258,14 @@ class NetSpeedThread(QThread):
         super().__init__()
         self.last_bytes = psutil.net_io_counters()
         self.last_time = datetime.now()
+        self._stopped = False
+
+    def stop(self):
+        self._stopped = True
+        self.wait(3000)
 
     def run(self):
-        while True:
+        while not self._stopped:
             now = datetime.now()
             current = psutil.net_io_counters()
             dt = (now - self.last_time).total_seconds()

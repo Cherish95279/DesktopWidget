@@ -11,6 +11,7 @@ class Notice:
     content: str = ""
     link: Optional[str] = None
     timestamp: str = ""
+    show_date: bool = True
 
     @classmethod
     def from_dict(cls, data: dict) -> "Notice":
@@ -21,6 +22,7 @@ class Notice:
             content=data.get("content", ""),
             link=data.get("link", None),
             timestamp=data.get("timestamp", ""),
+            show_date=data.get("show_date", True),
         )
 
     def is_valid(self) -> bool:

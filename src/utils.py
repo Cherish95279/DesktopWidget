@@ -22,7 +22,12 @@ def resource_path(rel_path):
             _meipass_path = None
         _meipass_checked = True
 
-    base_path = _meipass_path if _meipass_path else os.path.abspath(".")
+    # 开发环境也应相对项目根目录定位资源，而不是依赖进程当前目录。
+    base_path = (
+        _meipass_path
+        if _meipass_path
+        else os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    )
 
     # 如果路径已经以 skins/、icons/ 或 screenshots/ 开头，直接拼接，否则默认加 skins/default/
     if not rel_path.startswith(('skins/', 'icons/', 'screenshots/')):

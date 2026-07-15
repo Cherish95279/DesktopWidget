@@ -2,6 +2,7 @@
 开机自启动功能模块
 通过 Windows 注册表控制程序是否随系统启动
 """
+import os
 import sys
 import winreg
 
@@ -13,11 +14,15 @@ def set_autostart(enabled: bool) -> bool:
     """
     key_path = r"Software\Microsoft\Windows\CurrentVersion\Run"
     app_name = "DesktopWidget"
-    exe_path = sys.executable
+    if getattr(sys, "frozen", False):
+        command = f'"{sys.executable}"'
+    else:
+        script_path = os.path.abspath(sys.argv[0])
+        command = f'"{sys.executable}" "{script_path}"'
     try:
         key = winreg.OpenKey(winreg.HKEY_CURRENT_USER, key_path, 0, winreg.KEY_SET_VALUE)
         if enabled:
-            winreg.SetValueEx(key, app_name, 0, winreg.REG_SZ, f'"{exe_path}"')
+            winreg.SetValueEx(key, app_name, 0, winreg.REG_SZ, command)
         else:
             try:
                 winreg.DeleteValue(key, app_name)

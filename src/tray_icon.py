@@ -1,7 +1,7 @@
 import sys
 from PyQt6.QtWidgets import QSystemTrayIcon, QMenu, QApplication
 from PyQt6.QtGui import QIcon, QAction, QPainter, QColor, QPixmap
-from PyQt6.QtCore import QSize, QTimer, QSettings, Qt  # 添加 Qt 导入
+from PyQt6.QtCore import QSize, QTimer, QSettings, Qt
 from .utils import resource_path
 from .notice import NoticeManager, NoticeWindow
 
@@ -280,4 +280,5 @@ class TrayIcon(QSystemTrayIcon):
 
     def quit_app(self):
         self.parent_window._exiting = True
+        self.parent_window.shutdown()
         QApplication.quit()
