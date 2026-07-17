@@ -1,0 +1,24 @@
+# 默认所有文本文件自动转换换行符
+* text=auto
+
+# Python 文件强制使用 LF（推荐）
+*.py text eol=lf
+
+# Markdown、文本、JSON、YAML 等强制使用 LF
+*.md text eol=lf
+*.txt text eol=lf
+*.json text eol=lf
+*.yml text eol=lf
+*.yaml text eol=lf
+
+# Inno Setup 脚本强制使用 CRLF（Windows 原生）
+*.iss text eol=crlf
+
+# .gitattributes 本身也强制 LF
+.gitattributes text eol=lf
+
+# 二进制文件不转换
+*.png binary
+*.ico binary
+*.exe binary
+*.qm binary
