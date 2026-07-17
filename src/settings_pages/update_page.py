@@ -211,7 +211,7 @@ class UpdatePage(QWidget):
         self.token_edit.setEnabled(channel == "github")
 
         channel_name = "Gitee" if channel == "gitee" else "GitHub"
-        self.update_status_label.setText(f"已切换到 {channel_name} 源，请点击检查更新")
+        self.update_status_label.setText(self.tr("已切换到") + f" {channel_name} " + self.tr("源，请点击检查更新"))
         self.latest_version_label.setText(self.tr("最新版本：请点击检查更新"))
         self.install_update_btn.setVisible(False)
         self.check_update_btn.setVisible(True)

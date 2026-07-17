@@ -507,6 +507,42 @@
             <source>说明：API地址和密钥可在 </source>
             <translation>안내: API URL과 키는 </translation>
         </message>
+
+        <message>
+            <location filename="../settings_pages/weather_page.py" line="0"/>
+            <source>已找到</source>
+            <translation>찾음</translation>
+        </message>
+        <message>
+            <location filename="../settings_pages/weather_page.py" line="0"/>
+            <source>个结果</source>
+            <translation>개 결과</translation>
+        </message>
+        <message>
+            <location filename="../settings_pages/weather_page.py" line="0"/>
+            <source>已选择</source>
+            <translation>선택됨</translation>
+        </message>
+        <message>
+            <location filename="../settings_pages/weather_page.py" line="0"/>
+            <source>未找到匹配地点</source>
+            <translation>일치하는 위치를 찾을 수 없음</translation>
+        </message>
+        <message>
+            <location filename="../settings_pages/weather_page.py" line="0"/>
+            <source>输入太短</source>
+            <translation>입력이 너무 짧습니다</translation>
+        </message>
+        <message>
+            <location filename="../settings_pages/weather_page.py" line="0"/>
+            <source>搜索超时</source>
+            <translation>검색 시간 초과</translation>
+        </message>
+        <message>
+            <location filename="../settings_pages/weather_page.py" line="0"/>
+            <source>搜索异常</source>
+            <translation>검색 오류</translation>
+        </message>
     </context>
     <context>
         <name>ThemePage</name>

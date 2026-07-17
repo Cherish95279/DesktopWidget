@@ -506,6 +506,42 @@
             <source>说明：API地址和密钥可在 </source>
             <translation type="unfinished" />
         </message>
+
+        <message>
+            <location filename="../settings_pages/weather_page.py" line="0"/>
+            <source>已找到</source>
+            <translation>已找到</translation>
+        </message>
+        <message>
+            <location filename="../settings_pages/weather_page.py" line="0"/>
+            <source>个结果</source>
+            <translation>个结果</translation>
+        </message>
+        <message>
+            <location filename="../settings_pages/weather_page.py" line="0"/>
+            <source>已选择</source>
+            <translation>已选择</translation>
+        </message>
+        <message>
+            <location filename="../settings_pages/weather_page.py" line="0"/>
+            <source>未找到匹配地点</source>
+            <translation>未找到匹配地点</translation>
+        </message>
+        <message>
+            <location filename="../settings_pages/weather_page.py" line="0"/>
+            <source>输入太短</source>
+            <translation>输入太短</translation>
+        </message>
+        <message>
+            <location filename="../settings_pages/weather_page.py" line="0"/>
+            <source>搜索超时</source>
+            <translation>搜索超时</translation>
+        </message>
+        <message>
+            <location filename="../settings_pages/weather_page.py" line="0"/>
+            <source>搜索异常</source>
+            <translation>搜索异常</translation>
+        </message>
     </context>
     <context>
         <name>ThemePage</name>

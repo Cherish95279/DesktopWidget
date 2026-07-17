@@ -74,7 +74,7 @@ class GeocodingThread(QThread):
 
     def run(self):
         if not self.query or len(self.query) < 2:
-            self.search_failed.emit("输入太短")
+            self.search_failed.emit(QCoreApplication.translate("WeatherPage", "输入太短"))
             return
 
         url = "https://geocoding-api.open-meteo.com/v1/search"
@@ -94,7 +94,7 @@ class GeocodingThread(QThread):
             data = resp.json()
             results = data.get("results", [])
             if not results:
-                self.search_failed.emit("未找到匹配地点")
+                self.search_failed.emit(QCoreApplication.translate("WeatherPage", "未找到匹配地点"))
                 return
 
             formatted_results = []
@@ -116,11 +116,11 @@ class GeocodingThread(QThread):
             self.result_ready.emit(formatted_results)
 
         except requests.exceptions.Timeout:
-            self.search_failed.emit("搜索超时")
+            self.search_failed.emit(QCoreApplication.translate("WeatherPage", "搜索超时"))
         except requests.exceptions.ConnectionError:
-            self.search_failed.emit("网络连接失败")
+            self.search_failed.emit(QCoreApplication.translate("WeatherPage", "网络连接失败"))
         except Exception as e:
-            self.search_failed.emit(f"搜索异常: {str(e)}")
+            self.search_failed.emit(QCoreApplication.translate("WeatherPage", "搜索异常") + f": {str(e)}")
 
 
 class WeatherPage(QWidget):
@@ -474,7 +474,7 @@ class WeatherPage(QWidget):
     def on_provider_changed(self, text):
         if self._loading:
             return
-        if text == "高德":
+        if text == self.tr("高德"):
             self.url_edit.setText("https://restapi.amap.com")
             self.url_edit.setReadOnly(True)
         else:
@@ -598,9 +598,9 @@ class WeatherPage(QWidget):
             self.freq_spin.setValue(freq)
 
             if url == "https://restapi.amap.com":
-                self.url_combo.setCurrentText("高德")
+                self.url_combo.setCurrentText(self.tr("高德"))
             else:
-                self.url_combo.setCurrentText("自定义")
+                self.url_combo.setCurrentText(self.tr("自定义"))
 
             self.load_regions()
             self.check_status()

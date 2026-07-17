@@ -143,12 +143,17 @@ class DictTranslator(QTranslator):
         if lang in _builtin_translations:
             ctx_dict = _builtin_translations[lang].get(context, {})
             if source_text in ctx_dict:
-                return ctx_dict[source_text]
+                result = ctx_dict[source_text]
+                if result:
+                    return result
         if lang != _default_lang and _default_lang in _builtin_translations:
             ctx_dict = _builtin_translations[_default_lang].get(context, {})
             if source_text in ctx_dict:
-                return ctx_dict[source_text]
-        return ""  # empty = Qt falls back to source text
+                result = ctx_dict[source_text]
+                if result:
+                    return result
+        # Return empty so Qt falls back to source text as default
+        return ""
 
 
 class TranslatorManager:

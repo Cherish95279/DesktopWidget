@@ -11,7 +11,7 @@ class SettingsDialog(QWidget):
     def __init__(self, parent=None, initial_page="general"):
         super().__init__(None)
         self._main_window = parent
-        self.setWindowTitle("设置")
+        self.setWindowTitle(self.tr("设置"))
         self.setFixedSize(500, 380)
 
         # ----- 系统标题栏（保留最小化和关闭按钮） -----
@@ -49,7 +49,7 @@ class SettingsDialog(QWidget):
         left_layout.setContentsMargins(0, 20, 0, 20)
         left_layout.setSpacing(0)
 
-        self.cat_labels = ["常规设置", "显示项目", "天气设置", "主题", "检查更新", "捐赠", "关于"]
+        self.cat_labels = [self.tr("常规设置"), self.tr("显示项目"), self.tr("天气设置"), self.tr("主题"), self.tr("检查更新"), self.tr("捐赠"), self.tr("关于")]
         self.cat_buttons = []
 
         # 右侧堆叠

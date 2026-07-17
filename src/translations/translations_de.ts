@@ -507,6 +507,42 @@ Neue Ankündigung!</translation>
             <source>说明：API地址和密钥可在 </source>
             <translation>Hinweis: API-URL und Schlüssel unter </translation>
         </message>
+
+        <message>
+            <location filename="../settings_pages/weather_page.py" line="0"/>
+            <source>已找到</source>
+            <translation>Gefunden</translation>
+        </message>
+        <message>
+            <location filename="../settings_pages/weather_page.py" line="0"/>
+            <source>个结果</source>
+            <translation> Ergebnisse</translation>
+        </message>
+        <message>
+            <location filename="../settings_pages/weather_page.py" line="0"/>
+            <source>已选择</source>
+            <translation>Ausgewählt</translation>
+        </message>
+        <message>
+            <location filename="../settings_pages/weather_page.py" line="0"/>
+            <source>未找到匹配地点</source>
+            <translation>Kein passender Ort gefunden</translation>
+        </message>
+        <message>
+            <location filename="../settings_pages/weather_page.py" line="0"/>
+            <source>输入太短</source>
+            <translation>Eingabe zu kurz</translation>
+        </message>
+        <message>
+            <location filename="../settings_pages/weather_page.py" line="0"/>
+            <source>搜索超时</source>
+            <translation>Suchzeitüberschreitung</translation>
+        </message>
+        <message>
+            <location filename="../settings_pages/weather_page.py" line="0"/>
+            <source>搜索异常</source>
+            <translation>Suchfehler</translation>
+        </message>
     </context>
     <context>
         <name>ThemePage</name>

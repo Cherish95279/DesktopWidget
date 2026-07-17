@@ -42,7 +42,6 @@ Thumbs.db
 # 项目特定文件
 python build.py v*
 python push.py*
-当前的规范.txt
 
 # 归档目录（项目外，但防止误加）
 _archived_builds/

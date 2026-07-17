@@ -18,6 +18,7 @@ from .settings_dialog import SettingsDialog
 from .tray_icon import TrayIcon
 from .updater import UpdateChecker
 from .theme_manager import get_theme_manager
+from .i18n.translations import TranslatorManager
 from .widgets.notice_bubble import NoticeBubble
 
 # GPU支持：使用ctypes直接调用NVML
@@ -43,6 +44,8 @@ if sys.platform == 'win32' and getattr(sys, 'frozen', False):
 class MainWindow(QWidget):
     def __init__(self):
         super().__init__()
+        TranslatorManager().init_translator(QApplication.instance())
+        self._init_i18n()
         self.setWindowFlags(
             Qt.WindowType.FramelessWindowHint |
             Qt.WindowType.WindowStaysOnBottomHint |
@@ -170,6 +173,25 @@ class MainWindow(QWidget):
             f"{screen.size().width()}×{screen.size().height()}"
             if screen else "1920×1080"
         )
+
+
+    def _init_i18n(self):
+        """预计算所有 paintEvent 中使用的翻译字符串"""
+        t = TranslatorManager().translate
+        self._i18n = {
+            "unknown_location": t("MainWindow", "未知地区"),
+            "memory": t("MainWindow", "内存"),
+            "set_api": t("MainWindow", "设置API"),
+            "loading": t("MainWindow", "加载中"),
+            "weekdays": [t("MainWindow", d) for d in ["一","二","三","四","五","六","日"]],
+            "week": t("MainWindow", "星期"),
+            "lunar": t("MainWindow", "农历"),
+            "lunar_error": t("MainWindow", "农历错误"),
+            "not_installed": t("MainWindow", "未安装"),
+            "days_until": t("MainWindow", "离"),
+            "days_left": t("MainWindow", "还有"),
+            "day_unit": t("MainWindow", "天"),
+        }
 
     # ===== 加载图片（通过主题管理器） =====
     def _load_images(self):
@@ -539,17 +561,17 @@ class MainWindow(QWidget):
         if LUNAR_AVAILABLE:
             try:
                 lunar = ZhDate.from_datetime(self.now)
-                self.lunar_text = f"农历{lunar.lunar_month}月{lunar.lunar_day}日"
+                self.lunar_text = f"{self._i18n["lunar"]}{lunar.lunar_month}月{lunar.lunar_day}日"
             except Exception:
-                self.lunar_text = "农历错误"
+                self.lunar_text = self._i18n["lunar_error"]
         else:
-            self.lunar_text = "未安装"
+            self.lunar_text = self._i18n["not_installed"]
 
         current, next_name, days = get_next_term_info(self.now.year, self.now.month, self.now.day)
         if current:
             self.term_display = current
         elif next_name is not None and days is not None:
-            self.term_display = f"离{next_name}还有{days}天"
+            self.term_display = f"{self._i18n["days_until"]}{next_name}{self._i18n["days_left"]}{days}{self._i18n["day_unit"]}"
         else:
             self.term_display = ""
         self.update()
@@ -623,9 +645,9 @@ class MainWindow(QWidget):
         elif selected_province:
             display_city = selected_province
         else:
-            display_city = self.weather.get('city', '未知地区')
+            display_city = self.weather.get('city', self._i18n['unknown_location'])
             if display_city == "--":
-                display_city = "未知地区"
+                display_city = self._i18n["unknown_location"]
 
         weather_icon = get_weather_icon(self.weather['weather'])
         weather_text = f"{weather_icon} {self.weather['weather']} {self.weather['temp']}℃"
@@ -634,8 +656,8 @@ class MainWindow(QWidget):
         gpu_text = f"GPU{int(self.gpu)}%"
         resolution_text = f"{self.screen_res}"
         refresh_rate_text = f"{self.fps}Hz"
-        memory_text = f"内存\n{int(self.mem)}%"
-        date_text = f"{self.now.strftime('%Y/%m/%d')}\n  星期{['一','二','三','四','五','六','日'][self.now.weekday()]}"
+        memory_text = f"{self._i18n["memory"]}\n{int(self.mem)}%"
+        date_text = f"{self.now.strftime('%Y/%m/%d')}\n  {self._i18n['week']}{self._i18n['weekdays'][self.now.weekday()]}"
         lunar_text = f"{self.lunar_text}\n{self.term_display}"
 
         content_text_map = {
@@ -654,9 +676,9 @@ class MainWindow(QWidget):
 
         multiline_map = {
             "lunar": [self.lunar_text, self.term_display],
-            "date": [self.now.strftime('%Y/%m/%d'), f"星期{['一','二','三','四','五','六','日'][self.now.weekday()]}"],
+            "date": [self.now.strftime('%Y/%m/%d'), f"{self._i18n['week']}{self._i18n['weekdays'][self.now.weekday()]}"],
             "netspeed": [f"↓{self.down_speed:.1f}Mb/s", f"↑{self.up_speed:.1f}Mb/s"],
-            "memory": ["内存", f"{int(self.mem)}%"],
+            "memory": [self._i18n["memory"], f"{int(self.mem)}%"],
         }
 
         slot_position_map = {
@@ -681,12 +703,12 @@ class MainWindow(QWidget):
                 if not self._api_configured:
                     painter.drawText(x, y + h // 2, w, h // 2,
                                      Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter,
-                                     "设置API")
+                                     self._i18n["set_api"])
                 elif self._loading_weather:
                     dots_text = "." * self._loading_dots
                     painter.drawText(x, y + h // 2, w, h // 2,
                                      Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter,
-                                     f"⌛ 加载中{dots_text}")
+                                     f"⌛ {self._i18n["loading"]}{dots_text}")
                 else:
                     weather_icon = get_weather_icon(self.weather['weather'])
                     weather_text = f"{weather_icon} {self.weather['weather']} {self.weather['temp']}℃"
