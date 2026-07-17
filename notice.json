@@ -1,9 +1,9 @@
 {
-  "id": "notice_20260717_105012",
+  "id": "notice_20260717_113702",
   "enabled": true,
-  "title": "增加公告发布源",
-  "content": "增加公告发布源为国内和国际并行",
+  "title": "测试左侧导航栏取消时间戳",
+  "content": "测试左侧导航栏取消时间戳，标题可以最大限度的显示",
   "link": "",
-  "timestamp": "2026-07-17 10:50",
-  "show_date": false
+  "timestamp": "2026-07-17 11:37",
+  "show_date": true
 }
