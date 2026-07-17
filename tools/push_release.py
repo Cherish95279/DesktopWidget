@@ -22,35 +22,35 @@ def print_flush(msg):
 
 
 def run_cmd(cmd):
-    """执行命令，仅在失败时打印错误信息"""
+    """执行命令，仅在命令失败时标记错误，成功时所有输出均为普通信息"""
     print_flush(f"ℹ️ 执行: {' '.join(cmd)}")
     env = os.environ.copy()
     env["GIT_TERMINAL_PROMPT"] = "0"
     env["GIT_ASKPASS"] = "echo"
     result = subprocess.run(cmd, capture_output=True, text=True, env=env)
 
-    # 打印 stdout（正常输出）
+    # 命令执行成功，所有输出（stdout 和 stderr）均为普通信息
+    if result.returncode == 0:
+        if result.stdout:
+            for line in result.stdout.strip().split('\n'):
+                if line:
+                    print_flush(f"  {line}")
+        if result.stderr:
+            for line in result.stderr.strip().split('\n'):
+                if line:
+                    print_flush(f"  {line}")
+        return result.returncode, result.stdout, result.stderr
+
+    # 命令执行失败，打印错误信息
+    print_flush(f"  ❌ 命令执行失败（退出码: {result.returncode}）")
     if result.stdout:
         for line in result.stdout.strip().split('\n'):
             if line:
                 print_flush(f"  {line}")
-
-    if result.returncode != 0:
-        # 只在命令失败时打印 stderr（真正的错误）
-        if result.stderr:
-            for line in result.stderr.strip().split('\n'):
-                if line:
-                    print_flush(f"  ❌ {line}")
-        else:
-            print_flush(f"  ❌ 命令执行失败（退出码: {result.returncode}）")
-    else:
-        # 命令成功时，可以选择打印 stderr 中真正有用的信息（但不会标记为错误）
-        if result.stderr and not result.stdout:
-            # 如果 git push 的信息在 stderr 中，但命令成功，仍然打印出来（不加错误标记）
-            for line in result.stderr.strip().split('\n'):
-                if line:
-                    print_flush(f"  {line}")
-
+    if result.stderr:
+        for line in result.stderr.strip().split('\n'):
+            if line:
+                print_flush(f"  ❌ {line}")
     return result.returncode, result.stdout, result.stderr
 
 
