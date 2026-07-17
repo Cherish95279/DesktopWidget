@@ -1,9 +1,9 @@
 {
-  "id": "notice_20260717_100347",
+  "id": "notice_20260717_105012",
   "enabled": true,
-  "title": "增加多语言选项",
-  "content": "正在增加多语言选项的开发工作",
+  "title": "增加公告发布源",
+  "content": "增加公告发布源为国内和国际并行",
   "link": "",
-  "timestamp": "2026-07-17 10:03",
-  "show_date": true
+  "timestamp": "2026-07-17 10:50",
+  "show_date": false
 }
