@@ -1,9 +1,9 @@
 {
-  "id": "notice_20260717_113702",
+  "id": "notice_20260717_182655",
   "enabled": true,
-  "title": "测试左侧导航栏取消时间戳",
-  "content": "测试左侧导航栏取消时间戳，标题可以最大限度的显示",
+  "title": "发布修改",
+  "content": "发布修改项目",
   "link": "",
-  "timestamp": "2026-07-17 11:37",
+  "timestamp": "2026-07-17 18:26",
   "show_date": true
 }
