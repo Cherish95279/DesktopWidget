@@ -21,14 +21,19 @@ def run_cmd(cmd):
     env["GIT_TERMINAL_PROMPT"] = "0"
     env["GIT_ASKPASS"] = "echo"
     result = subprocess.run(cmd, capture_output=True, text=True, env=env)
+    # 始终输出 stdout
     if result.stdout:
         for line in result.stdout.strip().split('\n'):
             if line:
                 print_flush(f"  {line}")
+    # stderr 根据返回码决定前缀
     if result.stderr:
         for line in result.stderr.strip().split('\n'):
             if line:
-                print_flush(f"  [错误] {line}")
+                if result.returncode != 0:
+                    print_flush(f"  [错误] {line}")
+                else:
+                    print_flush(f"  {line}")
     return result.returncode, result.stdout, result.stderr
 
 
