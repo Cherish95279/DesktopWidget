@@ -4,8 +4,26 @@
 
 > 当前版本：v1.3.0
 
-![预览图]https://raw.githubusercontent.com/Cherish95279/DesktopWidget/main/screenshots/preview1.3.0.png
+<!-- ===== 方案一：语言徽标 ===== -->
+<p align="center">
+  <img src="https://img.shields.io/badge/🌍-8%20Languages-blue" alt="Languages"/>
+  <img src="https://img.shields.io/badge/简体中文-✅-green" alt="简体中文"/>
+  <img src="https://img.shields.io/badge/繁體中文-✅-green" alt="繁體中文"/>
+  <img src="https://img.shields.io/badge/English-✅-green" alt="English"/>
+  <img src="https://img.shields.io/badge/Español-✅-green" alt="Español"/>
+  <img src="https://img.shields.io/badge/日本語-✅-green" alt="日本語"/>
+  <img src="https://img.shields.io/badge/Deutsch-✅-green" alt="Deutsch"/>
+  <img src="https://img.shields.io/badge/Français-✅-green" alt="Français"/>
+  <img src="https://img.shields.io/badge/한국어-✅-green" alt="한국어"/>
+</p>
 
+<!-- ===== 方案二：语言横幅 ===== -->
+<p align="center">
+  <strong>🌍 支持 8 种语言</strong><br>
+  简体中文 · 繁體中文 · English · Español · 日本語 · Deutsch · Français · 한국어
+</p>
+
+![预览图](https://raw.githubusercontent.com/Cherish95279/DesktopWidget/main/screenshots/preview1.3.0.png)
 
 
 ## ✨ 主要功能
@@ -21,7 +39,7 @@
 - 🖥️ **系统托盘**：支持最小化到托盘，左键单击显示/隐藏窗口，双击恢复窗口
 - 🔄 **自动更新**：启动时自动检测新版本，支持一键下载安装
 - 🚀 **开机自启动**：支持设置开机自动运行
-- 🗺️ **地区选择**：支持手动选择省/市/县，天气跟随地区切换
+- 🗺️ **地区选择**：支持全球城市搜索（国内 + 国际），天气跟随地区切换
 - 🎨 **字体自定义**：支持自定义主窗口字体、字号、文字颜色，实时生效
 - 💖 **捐赠支持**：支付宝 / 微信扫码捐赠，感谢您的支持！
 - 💬 **反馈渠道**：一键直达 GitHub Discussions，方便提交问题和建议
@@ -32,7 +50,7 @@
 
 ### 方式一：下载安装包（推荐）
 
- 平台 | 下载地址 |
+| 平台 | 下载地址 |
 | :--- | :--- |
 | **GitHub** | [Releases](https://github.com/Cherish95279/DesktopWidget/releases) |
 | **Gitee**（国内用户推荐） | [Releases](https://gitee.com/Cherish95279/DesktopWidget/releases) |
@@ -49,10 +67,6 @@ pip install PyQt6 psutil requests zhdate GPUtil Pillow
 
 # 运行
 python widget.py
-
-
-
-
 🛠️ 技术栈
 技术	用途
 Python 3.12	编程语言
@@ -113,45 +127,51 @@ MIT License
 https://raw.githubusercontent.com/Cherish95279/DesktopWidget/main/screenshots/preview1.2.5.png
 
 📝 更新日志
+🚀 v1.3.0 更新内容
+🌍 多语言扩展
+新增 法语 (Français) 和 韩语 (한국어) 支持
 
-## 🚀 v1.3.0 更新内容
+重构翻译框架，使用内置字典 + QTranslator 双机制
 
-### 🌍 多语言扩展
-- 新增 **法语 (Français)**韩语 (한국어)**（中文繁体）**英语 **日语 **西班牙语** 德语 **支持
-- 重构翻译框架，使用内置字典 + QTranslator 双机制
-- 语言切换后重启生效，所有界面文字均已翻译
+语言切换后重启生效，所有界面文字均已翻译
 
-### 🌐 天气地区全球搜索
-- 移除原有的“省份 → 城市 → 区/县”三级下拉框
-- 新增 **全球城市搜索框**，支持中文/英文/日文等多语言输入
-- 国内地区使用本地 `china_regions.json` 数据库优先匹配
-- 国际地区使用 Open-Meteo Geocoding API（免费，无需 API Key）
-- 天气请求改用 **经纬度** 查询，支持全球任意城市
-- 主窗口天气地区显示短格式（如“延津县”），节省空间
+🌐 天气地区全球搜索
+移除原有的“省份 → 城市 → 区/县”三级下拉框
 
-### 📢 公告栏优化
-- 公告检查支持 Gitee 和 GitHub **双源并行**，国内用户无需代理
-- 点击“查看公告”按钮立即刷新公告列表
-- 公告窗口左侧列表去掉日期，只显示标题，界面更简洁
-- 时间戳字号增大、颜色加深，提升可读性
+新增 全球城市搜索框，支持中文/英文/日文等多语言输入
 
-### 🖥️ 设置窗口改进
-- 修复最小化按钮行为（正常缩进任务栏）
-- 移除自定义标题栏，恢复系统标题栏，避免崩溃
-- 常规设置页布局调整，语言下拉框与窗口模式对齐
+国内地区使用本地 china_regions.json 数据库优先匹配
 
-### 🐛 其他修复
-- 修复 GPU 读取在打包后失效的问题（改用 `ctypes` 直接调用 `nvml.dll`）
-- 修复设置窗口最小化后紧贴任务栏的问题
-- 修复公告窗口数据更新后不刷新列表的问题
-- 清理大量未使用的 import 和 bare except（代码质量提升）
+国际地区使用 Open-Meteo Geocoding API（免费，无需 API Key）
 
----
+天气请求改用 经纬度 查询，支持全球任意城市
 
-## 🚀 运行
+主窗口天气地区显示短格式（如“延津县”），节省空间
 
-```bash
-python widget.py
+📢 公告栏优化
+公告检查支持 Gitee 和 GitHub 双源并行，国内用户无需代理
+
+点击“查看公告”按钮立即刷新公告列表
+
+公告窗口左侧列表去掉日期，只显示标题，界面更简洁
+
+时间戳字号增大、颜色加深，提升可读性
+
+🖥️ 设置窗口改进
+修复最小化按钮行为（正常缩进任务栏）
+
+移除自定义标题栏，恢复系统标题栏，避免崩溃
+
+常规设置页布局调整，语言下拉框与窗口模式对齐
+
+🐛 其他修复
+修复 GPU 读取在打包后失效的问题（改用 ctypes 直接调用 nvml.dll）
+
+修复设置窗口最小化后紧贴任务栏的问题
+
+修复公告窗口数据更新后不刷新列表的问题
+
+清理大量未使用的 import 和 bare except（代码质量提升）
 
 v1.2.8
 移除聊天功能（完整清理）
@@ -222,7 +242,6 @@ v1.2.6 (2026-07-03)
 
 🛠️ DevTool 工具升级：项目后端工具新增“分发”功能，支持一键推送代码 + 创建 Release + 自动上传 exe（GitHub 自动，Gitee 手动）
 
-
 🎨 主题系统
 v1.2.5 起，DesktopWidget 正式支持主题切换功能，你可以根据自己的喜好定制桌面小工具的外观：
 
@@ -245,7 +264,6 @@ v1.2.5 起，DesktopWidget 正式支持主题切换功能，你可以根据自�
 主题切换即时生效，无需保存
 
 🔄 性能优化
-
 修复打开设置时反复触发天气线程重启的问题
 
 优化设置页面加载逻辑，减少不必要的网络请求
@@ -300,5 +318,3 @@ v1.1.9
 修复已知问题
 
 如果觉得好用，不妨给个 Star ⭐ 支持一下！
-
-
