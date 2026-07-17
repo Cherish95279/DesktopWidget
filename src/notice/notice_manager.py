@@ -54,6 +54,12 @@ class NoticeManager:
     """公告管理器（单例）"""
     _instance = None
 
+    # Gitee 和 GitHub 两个公告源
+    _NOTICE_URLS = [
+        "https://gitee.com/Cherish95279/DesktopWidget/raw/main/notice.json",
+        "https://raw.githubusercontent.com/Cherish95279/DesktopWidget/main/notice.json"
+    ]
+
     def __init__(self):
         self._timer = None
         self._checker = None
@@ -61,6 +67,8 @@ class NoticeManager:
         self._is_notifying = False
         self._data_loaded = False
         self._deleted_ids = set()  # 本地已删除公告 ID 集合
+        self._check_handled = False  # 标记当前轮次是否已处理有效结果
+        self._checkers: List[NoticeChecker] = []  # 当前正在运行的检查线程
 
         self._callbacks = {
             "on_new_notice": [],
@@ -168,26 +176,45 @@ class NoticeManager:
             self._timer = None
 
     def _check_now(self):
+        """同时从 Gitee 和 GitHub 两个源检查公告，先返回有效结果的优先使用"""
         try:
-            print("🔍 执行公告检查")
-            url = "https://raw.githubusercontent.com/Cherish95279/DesktopWidget/main/notice.json"
-            self._checker = NoticeChecker(url)
-            self._checker.notice_received.connect(self._on_notice_received)
-            self._checker.notice_empty.connect(self._on_no_notice)
-            self._checker.check_failed.connect(self._on_check_failed)
-            self._checker.start()
+            print("🔍 执行公告检查（双源并行）")
+            # 重置本次检查的标志
+            self._check_handled = False
+
+            # 清理已完成的检查线程
+            self._checkers = [c for c in self._checkers if c.isRunning()]
+
+            # 启动两个源的同时检查
+            for url in self._NOTICE_URLS:
+                checker = NoticeChecker(url)
+                checker.notice_received.connect(self._on_notice_received)
+                checker.notice_empty.connect(self._on_no_notice)
+                checker.check_failed.connect(self._on_check_failed)
+                checker.start()
+                self._checkers.append(checker)
+
         except Exception as e:
             print(f"⚠️ 启动检查线程失败: {e}")
             traceback.print_exc()
             self._on_check_failed(str(e))
 
+    def refresh_notice(self):
+        """手动刷新公告（由查看公告按钮触发）"""
+        self._check_now()
+
     # ---------- 核心事件处理 ----------
     def _on_notice_received(self, notice: Notice):
+        """处理成功返回的公告（只处理第一个有效结果）"""
+        # 如果已经处理过有效结果，忽略后续
+        if self._check_handled:
+            print(f"ℹ️ 已处理过有效公告，忽略本次结果: {notice.id}")
+            return
+
         try:
             # ===== 检查是否已被用户删除 =====
             if notice.id in self._deleted_ids:
                 print(f"ℹ️ 公告 {notice.id} 已被用户删除，跳过")
-                # 触发无公告回调（隐藏气泡 + 清除绿点）
                 self._on_no_notice()
                 return
 
@@ -234,6 +261,8 @@ class NoticeManager:
             }
             self._all_notices.append(notice_dict)
             self._is_notifying = True
+            # 标记已处理有效结果
+            self._check_handled = True
             print(f"📢 新公告到达! (ID: {notice.id})")
 
             self._notify_data_updated()
@@ -248,6 +277,11 @@ class NoticeManager:
             traceback.print_exc()
 
     def _on_no_notice(self):
+        """处理无公告的情况（只触发一次）"""
+        if self._check_handled:
+            return
+        # 标记已处理（本次检查无公告）
+        self._check_handled = True
         try:
             self._is_notifying = False
             self._notify_data_updated()
@@ -260,6 +294,10 @@ class NoticeManager:
             print(f"⚠️ 处理无公告异常: {e}")
 
     def _on_check_failed(self, error_msg):
+        """处理检查失败（不设置标志，允许其他源继续尝试）"""
+        # 如果已经处理过有效结果，忽略失败
+        if self._check_handled:
+            return
         try:
             print(f"❌ 公告检查失败: {error_msg}")
             for cb in self._callbacks["on_check_failed"]:
@@ -376,6 +414,12 @@ class NoticeManager:
 
     def stop(self):
         self._stop_timer()
+        # 停止所有正在运行的检查线程
+        for checker in self._checkers:
+            if checker.isRunning():
+                checker.quit()
+                checker.wait(6000)
+        self._checkers.clear()
         if self._checker is not None:
             self._checker.quit()
             self._checker.wait(6000)

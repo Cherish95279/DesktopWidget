@@ -1,4 +1,4 @@
-import sys
+﻿import sys
 import ctypes
 from PyQt6.QtWidgets import *
 from PyQt6.QtCore import *
@@ -7,17 +7,18 @@ from .utils import resource_path
 from .settings_pages import GeneralPage, DisplayPage, WeatherPage, ThemePage, UpdatePage, DonationPage, AboutPage
 
 
-class SettingsDialog(QDialog):
+class SettingsDialog(QWidget):
     def __init__(self, parent=None, initial_page="general"):
         super().__init__(None)
         self._main_window = parent
         self.setWindowTitle("设置")
         self.setFixedSize(500, 380)
 
-        # 无边框
+        # ----- 系统标题栏（保留最小化和关闭按钮） -----
         self.setWindowFlags(
-            Qt.WindowType.Dialog |
-            Qt.WindowType.FramelessWindowHint
+            Qt.WindowType.Window |
+            Qt.WindowType.WindowCloseButtonHint |
+            Qt.WindowType.WindowMinimizeButtonHint
         )
 
         # 图标
@@ -35,93 +36,8 @@ class SettingsDialog(QDialog):
         self._exiting = False
         self.setAttribute(Qt.WidgetAttribute.WA_QuitOnClose, False)
 
-        # ---------- 主布局 ----------
-        main_vertical = QVBoxLayout(self)
-        main_vertical.setContentsMargins(0, 0, 0, 0)
-        main_vertical.setSpacing(0)
-
-        # ---------- 自定义标题栏（浅蓝主题） ----------
-        self.title_bar = QWidget()
-        self.title_bar.setFixedHeight(32)
-        self.title_bar.setStyleSheet("""
-            QWidget {
-                background-color: #e6f4ff;
-                border-top-left-radius: 4px;
-                border-top-right-radius: 4px;
-            }
-        """)
-        title_layout = QHBoxLayout(self.title_bar)
-        title_layout.setContentsMargins(10, 0, 10, 0)
-        title_layout.setSpacing(0)
-
-        # 图标
-        icon_label = QLabel()
-        pixmap = self.icon.pixmap(16, 16)
-        icon_label.setPixmap(pixmap)
-        title_layout.addWidget(icon_label)
-
-        # 标题文字（深色）
-        title_label = QLabel("设置")
-        title_label.setStyleSheet("""
-            QLabel {
-                font-size: 12px;
-                font-weight: bold;
-                color: #333;
-                padding-left: 8px;
-            }
-        """)
-        title_layout.addWidget(title_label)
-
-        title_layout.addStretch()
-
-        # ----- 最小化按钮（统一悬停风格） -----
-        self.min_btn = QPushButton("─")
-        self.min_btn.setFixedSize(30, 24)
-        self.min_btn.setStyleSheet("""
-            QPushButton {
-                background: transparent;
-                border: none;
-                font-size: 16px;
-                color: #333;
-            }
-            QPushButton:hover {
-                background: rgba(0, 0, 0, 0.08);
-                border-radius: 3px;
-            }
-            QPushButton:pressed {
-                background: rgba(0, 0, 0, 0.15);
-            }
-        """)
-        self.min_btn.clicked.connect(self.showMinimized)
-        title_layout.addWidget(self.min_btn)
-
-        # ----- 关闭按钮（统一悬停风格） -----
-        self.close_btn = QPushButton("✕")
-        self.close_btn.setFixedSize(30, 24)
-        self.close_btn.setStyleSheet("""
-            QPushButton {
-                background: transparent;
-                border: none;
-                font-size: 16px;
-                color: #333;
-            }
-            QPushButton:hover {
-                background: rgba(0, 0, 0, 0.08);
-                border-radius: 3px;
-            }
-            QPushButton:pressed {
-                background: rgba(0, 0, 0, 0.15);
-            }
-        """)
-        self.close_btn.clicked.connect(self.close)
-        title_layout.addWidget(self.close_btn)
-
-        main_vertical.addWidget(self.title_bar)
-
-        # ---------- 内容区域 ----------
-        content_widget = QWidget()
-        content_widget.setStyleSheet("background-color: white;")
-        main_layout = QHBoxLayout(content_widget)
+        # ---------- 主布局（直接使用水平布局，无自定义标题栏） ----------
+        main_layout = QHBoxLayout(self)
         main_layout.setContentsMargins(0, 0, 0, 0)
         main_layout.setSpacing(0)
 
@@ -195,30 +111,8 @@ class SettingsDialog(QDialog):
         self.switch_page(0)
         main_layout.addWidget(self.stacked)
 
-        main_vertical.addWidget(content_widget)
-
         page_index = {"general": 0, "display": 1, "weather": 2, "theme": 3, "update": 4, "donation": 5, "about": 6}.get(initial_page, 0)
         self.switch_page(page_index)
-
-    # ---------- 窗口拖动 ----------
-    def mousePressEvent(self, event):
-        if event.button() == Qt.MouseButton.LeftButton:
-            if event.pos().y() <= self.title_bar.height():
-                self._drag_pos = event.globalPosition().toPoint()
-                self._drag_start = self.pos()
-            else:
-                self._drag_pos = None
-        super().mousePressEvent(event)
-
-    def mouseMoveEvent(self, event):
-        if hasattr(self, '_drag_pos') and self._drag_pos is not None:
-            delta = event.globalPosition().toPoint() - self._drag_pos
-            self.move(self._drag_start + delta)
-        super().mouseMoveEvent(event)
-
-    def mouseReleaseEvent(self, event):
-        self._drag_pos = None
-        super().mouseReleaseEvent(event)
 
     # ---------- 以下方法保持不变 ----------
     def _create_general_page(self):

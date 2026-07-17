@@ -11,7 +11,7 @@ class NoticeWindow(QDialog):
 
     def __init__(self, parent=None):
         super().__init__(parent)
-        self.setWindowTitle("💬 公告")
+        self.setWindowTitle("💬 " + self.tr("公告"))
         self.setFixedSize(500, 380)
         self.setWindowFlags(
             Qt.WindowType.Window |
@@ -72,13 +72,15 @@ class NoticeWindow(QDialog):
     def _on_data_updated(self):
         """数据更新回调（由 NoticeManager 触发）"""
         print("📢 公告数据已更新，窗口自动刷新")
+        # 重置加载状态，允许重新加载消息列表
+        self._loaded = False
         QTimer.singleShot(50, self._load_messages)
 
     def _show_loading_state(self):
         """显示加载中占位状态"""
-        self.content_title.setText("⏳ 加载中...")
+        self.content_title.setText("⏳ " + self.tr("加载中..."))
         self.content_time.setText("")
-        self.content_body.setText("正在加载公告，请稍候...")
+        self.content_body.setText(self.tr("正在加载公告，请稍候..."))
         self.placeholder_label.hide()
         self.link_btn.hide()
 
@@ -90,7 +92,7 @@ class NoticeWindow(QDialog):
 
         bottom_info = self.findChild(QLabel, "bottom_info")
         if bottom_info:
-            bottom_info.setText("加载中...")
+            bottom_info.setText(self.tr("加载中..."))
 
     def _show_window(self):
         """显示窗口（由定时器触发）"""
@@ -139,7 +141,7 @@ class NoticeWindow(QDialog):
 
         left_layout.addWidget(self.list_widget)
 
-        bottom_info = QLabel("加载中...")
+        bottom_info = QLabel(self.tr("加载中..."))
         bottom_info.setStyleSheet("font-size: 10px; color: #999; padding: 4px 10px; background-color: #f0f0f0;")
         bottom_info.setAlignment(Qt.AlignmentFlag.AlignRight)
         bottom_info.setObjectName("bottom_info")
@@ -181,7 +183,7 @@ class NoticeWindow(QDialog):
         content_layout.setContentsMargins(5, 5, 5, 5)
         content_layout.setSpacing(10)
 
-        self.content_title = QLabel("加载中...")
+        self.content_title = QLabel(self.tr("加载中..."))
         self.content_title.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.content_title.setStyleSheet("""
             font-size: 16px;
@@ -194,8 +196,8 @@ class NoticeWindow(QDialog):
         self.content_time = QLabel("")
         self.content_time.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.content_time.setStyleSheet("""
-            font-size: 11px;
-            color: #999;
+            font-size: 12px;
+            color: #333;
         """)
         content_layout.addWidget(self.content_time)
 
@@ -204,7 +206,7 @@ class NoticeWindow(QDialog):
         line.setStyleSheet("background-color: #e8e8e8; max-height: 1px;")
         content_layout.addWidget(line)
 
-        self.content_body = QLabel("正在加载公告，请稍候...")
+        self.content_body = QLabel(self.tr("正在加载公告，请稍候..."))
         self.content_body.setAlignment(Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignTop)
         self.content_body.setStyleSheet("""
             font-size: 13px;
@@ -218,7 +220,7 @@ class NoticeWindow(QDialog):
 
         btn_layout = QHBoxLayout()
         btn_layout.addStretch()
-        self.link_btn = QPushButton("📎 查看详情")
+        self.link_btn = QPushButton("📎 " + self.tr("查看详情"))
         self.link_btn.setStyleSheet("""
             QPushButton {
                 padding: 6px 20px;
@@ -237,7 +239,7 @@ class NoticeWindow(QDialog):
         btn_layout.addWidget(self.link_btn)
         content_layout.addLayout(btn_layout)
 
-        self.placeholder_label = QLabel("请选择一条消息")
+        self.placeholder_label = QLabel(self.tr("请选择一条消息"))
         self.placeholder_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.placeholder_label.setStyleSheet("""
             font-size: 14px;
@@ -265,10 +267,8 @@ class NoticeWindow(QDialog):
     def _load_messages(self):
         """加载消息列表（由数据回调或定时器触发）"""
         try:
-            if self._loaded:
-                return
-            self._loaded = True
-
+            # 移除 _loaded 检查，允许每次回调都重新加载
+            # 但为了性能，可以检查数据是否变化，这里简化，每次重新加载
             manager = NoticeManager.get_instance()
             all_notices = manager.get_all_notices()
 
@@ -277,12 +277,13 @@ class NoticeWindow(QDialog):
 
             if not all_notices:
                 if bottom_info:
-                    bottom_info.setText("共 0 条消息")
-                self.content_title.setText("暂无公告")
+                    bottom_info.setText(self.tr("共") + " 0 " + self.tr("条消息"))
+                self.content_title.setText(self.tr("暂无公告"))
                 self.content_body.setText("")
                 self.content_time.setText("")
                 self.placeholder_label.show()
                 self.link_btn.hide()
+                self._loaded = True
                 return
 
             self.list_widget.blockSignals(True)
@@ -302,6 +303,7 @@ class NoticeWindow(QDialog):
                 if first_item:
                     self._display_notice_by_item(first_item)
 
+            self._loaded = True
         except Exception as e:
             print(f"❌ 加载消息列表异常: {e}")
             traceback.print_exc()
@@ -310,11 +312,10 @@ class NoticeWindow(QDialog):
 
     def _create_list_item(self, notice: dict):
         try:
-            timestamp = notice.get("timestamp", "")
-            date_part = timestamp.split(" ")[0] if timestamp else "未知日期"
+            # 只显示标题，不显示日期
             title = notice.get("title", "无标题")
             title_part = title[:15] + "..." if len(title) > 15 else title
-            display_text = f"{date_part}  {title_part}"
+            display_text = title_part
 
             item = QListWidgetItem(display_text)
             item.setData(Qt.ItemDataRole.UserRole, notice.get("id"))
@@ -341,7 +342,7 @@ class NoticeWindow(QDialog):
                     msg = n
                     break
             if not msg:
-                self.content_title.setText("未找到公告")
+                self.content_title.setText(self.tr("未找到公告"))
                 self.content_body.setText("")
                 self.content_time.setText("")
                 self.link_btn.hide()
@@ -371,7 +372,7 @@ class NoticeWindow(QDialog):
         except Exception as e:
             print(f"❌ 显示公告内容异常: {e}")
             traceback.print_exc()
-            self.content_title.setText("显示错误")
+            self.content_title.setText(self.tr("显示错误"))
             self.content_body.setText(f"无法显示公告内容: {e}")
 
     def _on_item_clicked(self, item):
@@ -397,7 +398,6 @@ class NoticeWindow(QDialog):
 
     def select_notice_by_id(self, notice_id: str):
         if not self._loaded:
-            # 如果还没加载完成，延迟重试
             QTimer.singleShot(200, lambda: self.select_notice_by_id(notice_id))
             return
         try:
@@ -428,13 +428,13 @@ class NoticeWindow(QDialog):
             return
 
         menu = QMenu(self)
-        delete_action = QAction("🗑️ 删除此消息", self)
+        delete_action = QAction("🗑️ " + self.tr("删除此消息"), self)
         delete_action.triggered.connect(lambda: self._delete_message(notice_id))
         menu.addAction(delete_action)
 
         menu.addSeparator()
 
-        clear_action = QAction("🧹 清空消息", self)
+        clear_action = QAction("🧹 " + self.tr("清空消息"), self)
         clear_action.triggered.connect(self._clear_history_messages)
         menu.addAction(clear_action)
 
@@ -461,7 +461,6 @@ class NoticeWindow(QDialog):
             manager.delete_notice(notice_id)
             self._loaded = False  # 重置，允许重新加载
             self._load_messages()
-            self._loaded = True
         except Exception as e:
             print(f"❌ 删除消息异常: {e}")
 
@@ -472,7 +471,7 @@ class NoticeWindow(QDialog):
             count = len(all_notices)
 
             if count == 0:
-                QMessageBox.information(self, "提示", "没有消息可清空")
+                QMessageBox.information(self, self.tr("提示"), self.tr("没有消息可清空"))
                 return
 
             reply = QMessageBox.question(
@@ -488,6 +487,5 @@ class NoticeWindow(QDialog):
             manager.clear_all_notices()
             self._loaded = False
             self._load_messages()
-            self._loaded = True
         except Exception as e:
             print(f"❌ 清空消息异常: {e}")

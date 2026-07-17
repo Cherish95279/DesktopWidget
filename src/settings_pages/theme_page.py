@@ -3,6 +3,7 @@ from PyQt6.QtCore import *
 from PyQt6.QtGui import QColor
 from PyQt6.QtWidgets import QColorDialog
 from ..constants import DEFAULT_THEME, THEME_PRESETS
+from PyQt6.QtCore import QCoreApplication
 from ..theme_manager import get_theme_manager
 
 
@@ -58,7 +59,7 @@ class ThemePage(QWidget):
         label_row.setSpacing(0)
         label_row.setContentsMargins(0, 0, 0, 0)
 
-        self.theme_label = QLabel("主题切换")
+        self.theme_label = QLabel(self.tr("主题切换"))
         self.theme_label.setStyleSheet("font-weight: bold; font-size: 13px;")
         label_row.addWidget(self.theme_label)
 
@@ -72,7 +73,7 @@ class ThemePage(QWidget):
         color_label_inner.setContentsMargins(0, 0, 0, 0)
         color_label_inner.setSpacing(0)
 
-        self.color_label = QLabel("背景颜色")
+        self.color_label = QLabel(self.tr("背景颜色"))
         self.color_label.setStyleSheet("font-weight: bold; font-size: 13px;")
         color_label_inner.addWidget(self.color_label)
         color_label_inner.addStretch()
@@ -143,13 +144,13 @@ class ThemePage(QWidget):
                 border: 2px solid #888;
             }
         """)
-        self.custom_btn.setToolTip("自定义颜色")
+        self.custom_btn.setToolTip(self.tr("自定义颜色"))
         self.custom_btn.clicked.connect(self._on_custom_color)
         color_layout.addWidget(self.custom_btn)
 
     def _create_opacity_section(self, parent_layout):
         """创建不透明度滑块区域"""
-        opacity_label = QLabel("不透明度")
+        opacity_label = QLabel(self.tr("不透明度"))
         opacity_label.setStyleSheet("font-weight: bold; font-size: 13px;")
         parent_layout.addWidget(opacity_label)
 
@@ -173,7 +174,7 @@ class ThemePage(QWidget):
 
     def _create_tint_section(self, parent_layout):
         """创建着色强度滑块区域"""
-        tint_label = QLabel("着色强度")
+        tint_label = QLabel(self.tr("着色强度"))
         tint_label.setStyleSheet("font-weight: bold; font-size: 13px;")
         parent_layout.addWidget(tint_label)
 
@@ -200,7 +201,7 @@ class ThemePage(QWidget):
         btn_row = QHBoxLayout()
         btn_row.addStretch()
 
-        self.restore_btn = QPushButton("恢复默认")
+        self.restore_btn = QPushButton(self.tr("恢复默认"))
         self.restore_btn.setFixedSize(90, 28)
         self.restore_btn.setStyleSheet("""
             QPushButton {
@@ -248,7 +249,7 @@ class ThemePage(QWidget):
 
     def _on_custom_color(self):
         current_color = self._get_current_color()
-        color = QColorDialog.getColor(QColor(current_color), self, "选择背景颜色")
+        color = QColorDialog.getColor(QColor(current_color), self, self.tr("选择背景颜色"))
         if color.isValid():
             color_hex = color.name()
             for b in self.color_buttons:
@@ -300,8 +301,8 @@ class ThemePage(QWidget):
     def restore_default(self):
         self._updating = True
         try:
-            self.theme_manager.switch_theme("默认主题")
-            idx = self.theme_combo.findText("默认主题")
+            self.theme_manager.switch_theme(QCoreApplication.translate("ThemeManager", "默认主题"))
+            idx = self.theme_combo.findText(QCoreApplication.translate("ThemeManager", "默认主题"))
             if idx >= 0:
                 self.theme_combo.setCurrentIndex(idx)
 

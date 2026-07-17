@@ -1,5 +1,7 @@
-import sys
+﻿import sys
 import os
+import ctypes
+import ctypes.util
 import socket
 import subprocess
 from datetime import datetime
@@ -18,12 +20,8 @@ from .updater import UpdateChecker
 from .theme_manager import get_theme_manager
 from .widgets.notice_bubble import NoticeBubble
 
-try:
-    import GPUtil
-    GPU_AVAILABLE = True
-except ImportError:
-    GPU_AVAILABLE = False
-    print("⚠️ GPUtil 未安装，GPU 信息不可用")
+# GPU支持：使用ctypes直接调用NVML
+_GPU_AVAILABLE = True  # 假设存在，加载失败时置0
 
 try:
     from zhdate import ZhDate
@@ -296,7 +294,7 @@ class MainWindow(QWidget):
                     y = 0
                 dialog.move(x, y)
             self.settings_dialog = dialog
-            dialog.finished.connect(self._on_settings_closed)
+            dialog.destroyed.connect(self._on_settings_closed)
             dialog.show()
         except Exception as e:
             QMessageBox.critical(self, "错误", f"打开设置失败：{str(e)}")
@@ -482,24 +480,59 @@ class MainWindow(QWidget):
         self.up_speed = max(0, up)
         self.update()
 
+    # ---------- GPU 读取（使用 ctypes 直接调用 NVML） ----------
     def update_perf(self):
         try:
             self.cpu = psutil.cpu_percent()
             self.mem = psutil.virtual_memory().percent
-            if getattr(sys, 'frozen', False):
-                self.gpu = 0
-            else:
-                if GPU_AVAILABLE:
+
+            # GPU 读取
+            try:
+                # 尝试加载 nvml.dll
+                nvml = ctypes.WinDLL(r"C:\Windows\System32\nvml.dll")
+            except OSError:
+                # 尝试用 find_library 查找
+                lib_path = ctypes.util.find_library("nvml")
+                if lib_path:
                     try:
-                        gpus = GPUtil.getGPUs()
-                        self.gpu = gpus[0].load * 100 if gpus else 0
-                    except Exception:
+                        nvml = ctypes.WinDLL(lib_path)
+                    except OSError:
+                        nvml = None
+                else:
+                    nvml = None
+
+            if nvml:
+                # 定义函数原型
+                nvmlInit = nvml.nvmlInit
+                nvmlInit.restype = ctypes.c_int
+                nvmlDeviceGetHandleByIndex = nvml.nvmlDeviceGetHandleByIndex
+                nvmlDeviceGetHandleByIndex.argtypes = [ctypes.c_uint, ctypes.POINTER(ctypes.c_void_p)]
+                nvmlDeviceGetUtilizationRates = nvml.nvmlDeviceGetUtilizationRates
+                nvmlDeviceGetUtilizationRates.argtypes = [ctypes.c_void_p, ctypes.POINTER(ctypes.c_uint)]
+
+                ret = nvmlInit()
+                if ret == 0:  # NVML_SUCCESS
+                    handle = ctypes.c_void_p()
+                    ret = nvmlDeviceGetHandleByIndex(0, ctypes.byref(handle))
+                    if ret == 0:
+                        util = ctypes.c_uint()
+                        ret = nvmlDeviceGetUtilizationRates(handle, ctypes.byref(util))
+                        if ret == 0:
+                            self.gpu = util.value
+                        else:
+                            self.gpu = 0
+                    else:
                         self.gpu = 0
                 else:
                     self.gpu = 0
+            else:
+                self.gpu = 0
+
             self.update()
         except Exception:
-            pass
+            # 出错时 GPU 设为 0
+            self.gpu = 0
+            self.update()
 
     def update_clock(self):
         self.now = datetime.now()
@@ -577,11 +610,18 @@ class MainWindow(QWidget):
             slot_values[key] = settings.value(key, default_val)
 
         ip_text = f"{self.local_ip}"
-        selected_city = settings.value("selected_city", "")
+
+        # ---- 只显示短格式地区名 ----
         selected_county = settings.value("selected_county", "")
-        user_city = selected_county if selected_county else selected_city
-        if user_city:
-            display_city = user_city
+        selected_city = settings.value("selected_city", "")
+        selected_province = settings.value("selected_province", "")
+
+        if selected_county:
+            display_city = selected_county
+        elif selected_city:
+            display_city = selected_city
+        elif selected_province:
+            display_city = selected_province
         else:
             display_city = self.weather.get('city', '未知地区')
             if display_city == "--":

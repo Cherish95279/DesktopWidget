@@ -55,7 +55,7 @@ class ServerScanner(QThread):
             return None
 
 
-# ---------- 天气线程（增加 last_status 记录） ----------
+# ---------- 天气线程（增加经纬度支持） ----------
 class WeatherThread(QThread):
     data_updated = pyqtSignal(dict)
     error_signal = pyqtSignal(str)
@@ -66,8 +66,7 @@ class WeatherThread(QThread):
         self.api_key = api_key
         self.refresh_minutes = max(1, refresh_minutes)
         self._stopped = False
-        # ===== 新增：记录本次启动以来的天气请求状态 =====
-        self.last_status = "idle"  # idle / success / failed
+        self.last_status = "idle"
 
     def stop(self):
         self._stopped = True
@@ -112,33 +111,55 @@ class WeatherThread(QThread):
                 continue
 
             settings = QSettings("MyDesktopApp", "WeatherSettings")
-            selected_city = settings.value("selected_city", "")
-            selected_county = settings.value("selected_county", "")
-            user_location = selected_county if selected_county else selected_city
 
-            try:
-                city_code = None
-                display_city = None
+            # ---- 优先使用经纬度（全球城市） ----
+            lat = settings.value("selected_latitude", "")
+            lng = settings.value("selected_longitude", "")
+            city_param = None
+            display_city = None
+
+            if lat and lng:
+                # 使用经纬度（格式：经度,纬度）
+                city_param = f"{lng},{lat}"
+                display_city = settings.value("selected_location_display", "")
+                if not display_city:
+                    # 如果没有保存长格式名称，用城市名回退
+                    display_city = settings.value("selected_city", "未知地区")
+                print(f"📍 使用经纬度请求天气: {display_city} ({lng},{lat})")
+            else:
+                # ---- 回退到旧逻辑（中国城市 adcode） ----
+                selected_city = settings.value("selected_city", "")
+                selected_county = settings.value("selected_county", "")
+                user_location = selected_county if selected_county else selected_city
 
                 if user_location:
-                    city_code = self.get_adcode(user_location)
-                    if city_code:
-                        display_city = user_location
-                        print(f"✅ 使用用户选择的城市: {user_location} (adcode: {city_code})")
-                    else:
+                    city_param = self.get_adcode(user_location)
+                    display_city = user_location
+                    if not city_param:
                         print(f"⚠️ 获取 {user_location} 的 adcode 失败，回退到 IP 定位")
-                        city_code, ip_city = self.get_ip_adcode()
+                        city_param, ip_city = self.get_ip_adcode()
                         display_city = user_location
-                        if not city_code:
-                            raise Exception("无法获取城市代码")
+                        if not city_param:
+                            self.error_signal.emit("无法获取城市代码")
+                            self.last_status = "failed"
+                            self.msleep(60000)
+                            continue
                 else:
-                    city_code, ip_city = self.get_ip_adcode()
+                    city_param, ip_city = self.get_ip_adcode()
                     display_city = ip_city if ip_city else "未知地区"
-                    if not city_code:
-                        raise Exception("无法获取 IP 定位的城市代码")
-                    print(f"📍 使用 IP 定位: {display_city} (adcode: {city_code})")
+                    if not city_param:
+                        self.error_signal.emit("无法获取 IP 定位的城市代码")
+                        self.last_status = "failed"
+                        self.msleep(60000)
+                        continue
+                    print(f"📍 使用 IP 定位: {display_city} (adcode: {city_param})")
 
-                weather_url = f"{self.api_url}/v3/weather/weatherInfo?key={self.api_key}&city={city_code}&extensions=base"
+                # 如果 city_param 是 adcode（纯数字），直接使用；如果是经纬度字符串，也支持
+                # 高德 API 的 city 参数同时支持 adcode 和 经纬度
+
+            try:
+                # 构建天气请求 URL（city 参数同时支持 adcode 和 经纬度）
+                weather_url = f"{self.api_url}/v3/weather/weatherInfo?key={self.api_key}&city={city_param}&extensions=base"
                 w_resp = requests.get(weather_url, timeout=5, verify=certifi.where())
                 w_resp.raise_for_status()
                 data = w_resp.json()
@@ -153,7 +174,6 @@ class WeatherThread(QThread):
                         'sunrise': '--:--',
                         'sunset': '--:--',
                     })
-                    # ===== 成功 =====
                     self.last_status = "success"
                     print(f"✅ 天气更新成功: {display_city} {live['weather']} {live['temperature']}℃")
                 else:
@@ -172,7 +192,7 @@ class WeatherThread(QThread):
             except Exception as e:
                 print(f"❌ 天气请求异常: {e}")
                 self.last_status = "failed"
-                # 重试机制（略，保持原逻辑）
+                # 重试机制
                 retry_count = 0
                 max_retries = 6
                 while retry_count < max_retries and not self._stopped:
@@ -187,23 +207,28 @@ class WeatherThread(QThread):
                         break
                     try:
                         settings = QSettings("MyDesktopApp", "WeatherSettings")
-                        selected_city = settings.value("selected_city", "")
-                        selected_county = settings.value("selected_county", "")
-                        user_location = selected_county if selected_county else selected_city
+                        lat = settings.value("selected_latitude", "")
+                        lng = settings.value("selected_longitude", "")
 
-                        if user_location:
-                            city_code = self.get_adcode(user_location)
-                            if not city_code:
-                                city_code, ip_city = self.get_ip_adcode()
-                                display_city = user_location
-                            else:
-                                display_city = user_location
+                        if lat and lng:
+                            city_param = f"{lng},{lat}"
+                            display_city = settings.value("selected_location_display", "未知地区")
                         else:
-                            city_code, ip_city = self.get_ip_adcode()
-                            display_city = ip_city if ip_city else "未知地区"
+                            selected_city = settings.value("selected_city", "")
+                            selected_county = settings.value("selected_county", "")
+                            user_location = selected_county if selected_county else selected_city
+                            if user_location:
+                                city_param = self.get_adcode(user_location)
+                                display_city = user_location
+                                if not city_param:
+                                    city_param, ip_city = self.get_ip_adcode()
+                                    display_city = user_location
+                            else:
+                                city_param, ip_city = self.get_ip_adcode()
+                                display_city = ip_city if ip_city else "未知地区"
 
-                        if city_code:
-                            weather_url = f"{self.api_url}/v3/weather/weatherInfo?key={self.api_key}&city={city_code}&extensions=base"
+                        if city_param:
+                            weather_url = f"{self.api_url}/v3/weather/weatherInfo?key={self.api_key}&city={city_param}&extensions=base"
                             w_resp = requests.get(weather_url, timeout=5, verify=certifi.where())
                             w_resp.raise_for_status()
                             data = w_resp.json()

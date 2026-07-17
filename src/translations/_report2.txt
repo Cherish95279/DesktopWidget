@@ -1,0 +1,11 @@
+--- es (1 untranslated) ---
+  [GeneralPage] Español
+
+--- ja (5 untranslated) ---
+  [MainWindow] 日
+  [GeneralPage] 日本語
+  [DisplayPage] 空
+  [ThemePage] 竹林
+  [ThemeManager] 竹林
+
+--- de (0 untranslated) ---

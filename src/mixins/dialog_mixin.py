@@ -66,7 +66,7 @@ class DialogMixin:
             dialog.finished.connect(self._on_settings_closed)
             dialog.show()
         except Exception as e:
-            QMessageBox.critical(self, "错误", f"打开设置失败：{str(e)}")
+            QMessageBox.critical(self, self.tr("错误"), f"打开设置失败：{str(e)}")
 
     def _on_settings_closed(self):
         self.settings_dialog = None

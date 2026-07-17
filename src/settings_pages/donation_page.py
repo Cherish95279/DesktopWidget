@@ -21,7 +21,7 @@ class DonationPage(QWidget):
         main_layout.setAlignment(Qt.AlignmentFlag.AlignCenter)
 
         # 标题
-        title = QLabel("💖 捐赠支持")
+        title = QLabel("💖 " + self.tr("捐赠支持"))
         title.setStyleSheet("font-size: 16px; font-weight: bold;")
         title.setAlignment(Qt.AlignmentFlag.AlignCenter)
         main_layout.addWidget(title)
@@ -34,7 +34,7 @@ class DonationPage(QWidget):
         main_layout.addWidget(self.qrcode_label, alignment=Qt.AlignmentFlag.AlignCenter)
 
         # 提示文字
-        tip = QLabel("❤️ 感谢您的支持，您的捐赠是我持续维护的动力！")
+        tip = QLabel("❤️ " + self.tr("感谢您的支持，您的捐赠是我持续维护的动力！"))
         tip.setStyleSheet("color: #888; font-size: 11px;")
         tip.setAlignment(Qt.AlignmentFlag.AlignCenter)
         tip.setWordWrap(True)
@@ -45,13 +45,13 @@ class DonationPage(QWidget):
         btn_layout.setSpacing(16)
         btn_layout.setAlignment(Qt.AlignmentFlag.AlignCenter)
 
-        self.alipay_btn = QPushButton("💳 支付宝")
+        self.alipay_btn = QPushButton("💳 " + self.tr("支付宝"))
         self.alipay_btn.setFixedSize(90, 30)
         self.alipay_btn.setCheckable(True)
         self.alipay_btn.setChecked(True)
         self.alipay_btn.clicked.connect(lambda: self.switch_pay("alipay"))
 
-        self.wechat_btn = QPushButton("💚 微信支付")
+        self.wechat_btn = QPushButton("💚 " + self.tr("微信支付"))
         self.wechat_btn.setFixedSize(90, 30)
         self.wechat_btn.setCheckable(True)
         self.wechat_btn.clicked.connect(lambda: self.switch_pay("wechat"))
@@ -67,7 +67,7 @@ class DonationPage(QWidget):
         bottom_layout = QHBoxLayout()
         bottom_layout.addStretch()
 
-        self.donated_btn = QPushButton("❤️ 我已捐赠")
+        self.donated_btn = QPushButton("❤️ " + self.tr("我已捐赠"))
         self.donated_btn.setFixedSize(100, 30)
         self.donated_btn.setStyleSheet("""
             QPushButton {
@@ -158,16 +158,19 @@ class DonationPage(QWidget):
                 self.qrcode_label.setScaledContents(True)
                 return
 
-        self.qrcode_label.setText("请将二维码图片\n放到 icons/ 目录\n\nAlipay.png\nWeChatpay.png")
+        self.qrcode_label.setText(self.tr("请将二维码图片") + "\n" + self.tr("放到") + " icons/ \n\nAlipay.png\nWeChatpay.png")
         self.qrcode_label.setStyleSheet("border: 1px solid #ddd; border-radius: 8px; background-color: #fafafa; color: #999; font-size: 12px;")
 
     def on_donated_clicked(self):
         """我已捐赠 按钮点击事件 - 无声音"""
-        QMessageBox.information(
-            self,
-            "❤️ 感谢捐赠",
-            "非常感谢您的支持与鼓励！🙏\n\n"
-            "您的每一份心意都是我持续维护的动力。\n"
-            "我会继续努力，让 DesktopWidget 越来越好！💪\n\n"
+        msg = QMessageBox(self)
+        msg.setWindowTitle("❤️ " + self.tr("感谢捐赠"))
+        msg.setText(
+            self.tr("非常感谢您的支持与鼓励！") + "🙏\n\n"
+            + self.tr("您的每一份心意都是我持续维护的动力。") + "\n"
+            + self.tr("我会继续努力，让 DesktopWidget 越来越好！") + "💪\n\n"
             "—— Cherish"
         )
+        msg.setStandardButtons(QMessageBox.StandardButton.Ok)
+        msg.button(QMessageBox.StandardButton.Ok).setText(self.tr("确认"))
+        msg.exec()

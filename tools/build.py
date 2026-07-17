@@ -112,6 +112,7 @@ def run_pyinstaller():
         "--hidden-import", "zhdate",
         "--add-data", f"skins{os.pathsep}skins",
         "--add-data", f"icons{os.pathsep}icons",
+        "--add-data", f"src/translations{os.pathsep}translations",  # ← 新增：包含翻译文件
         "widget.py"
     ]
     result = subprocess.run(cmd, capture_output=True, text=True)

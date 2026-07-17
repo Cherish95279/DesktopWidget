@@ -1,0 +1,141 @@
+--- es (34 untranslated) ---
+  [GeneralPage] 简体中文
+  [GeneralPage] 繁体中文
+  [GeneralPage] Español
+  [GeneralPage] 日本語
+  [GeneralPage] 选择文字颜色
+  [GeneralPage] 语言已切换，翻译立即生效。请重启程序以使所有界面元素完全生效。
+  [WeatherPage] 分钟
+  [WeatherPage] 说明：API地址和密钥可在 高德API 免费获取（2000次/天）
+  [WeatherPage] 省份
+  [WeatherPage] 城市
+  [WeatherPage] 区/县
+  [WeatherPage] 状态：✔ 已连接
+  [WeatherPage] 状态：✖ 连接失败（请检查地址和密钥）
+  [WeatherPage] 状态：✖ 连接失败（网络或服务器错误）
+  [UpdatePage] 当前版本：%1
+  [UpdatePage] 保存成功
+  [UpdatePage] 检查失败：%1
+  [UpdatePage] 安装包已下载，是否立即安装？
+程序将自动退出并启动安装程序。
+  [UpdatePage] 新版本已下载完成，是否立即安装？
+程序将自动退出并启动安装程序。
+  [UpdatePage] 下载失败：%1
+  [DonationPage] 请将二维码图片放到 icons/ 目录
+
+Alipay.png
+WeChatpay.png
+  [DonationPage] 非常感谢您的支持与鼓励！
+
+您的每一份心意都是我持续维护的动力。
+我会继续努力，让 DesktopWidget 越来越好！
+
+—— Cherish
+  [AboutPage] 致谢：fkp123
+  [AboutPage] GitHub：https://github.com/Cherish95279/DesktopWidget
+  [AboutDialog] 致谢：fqk_123456
+  [AboutDialog] 基于 PyQt6 开发 | 天气数据由高德地图提供
+  [NoticeWindow] 加载中..
+  [NoticeWindow] 正在加载公告，请稍候...
+  [NoticeWindow] 没有新消息
+  [NoticeWindow] 无法显示公告内容: %1
+  [NoticeWindow] 删除此消息
+  [NoticeWindow] 清空消息
+  [NoticeWindow] 确认删除
+  [NoticeWindow] 确定要删除 "%1" 吗？
+
+--- ja (38 untranslated) ---
+  [MainWindow] 日
+  [GeneralPage] 简体中文
+  [GeneralPage] 繁体中文
+  [GeneralPage] Español
+  [GeneralPage] 日本語
+  [GeneralPage] 选择文字颜色
+  [GeneralPage] 语言已切换，翻译立即生效。请重启程序以使所有界面元素完全生效。
+  [DisplayPage] 空
+  [WeatherPage] 分钟
+  [WeatherPage] 说明：API地址和密钥可在 高德API 免费获取（2000次/天）
+  [WeatherPage] 省份
+  [WeatherPage] 城市
+  [WeatherPage] 区/县
+  [WeatherPage] 状态：✔ 已连接
+  [WeatherPage] 状态：✖ 连接失败（请检查地址和密钥）
+  [WeatherPage] 状态：✖ 连接失败（网络或服务器错误）
+  [ThemePage] 竹林
+  [UpdatePage] 当前版本：%1
+  [UpdatePage] 保存成功
+  [UpdatePage] 检查失败：%1
+  [UpdatePage] 安装包已下载，是否立即安装？
+程序将自动退出并启动安装程序。
+  [UpdatePage] 新版本已下载完成，是否立即安装？
+程序将自动退出并启动安装程序。
+  [UpdatePage] 下载失败：%1
+  [DonationPage] 请将二维码图片放到 icons/ 目录
+
+Alipay.png
+WeChatpay.png
+  [DonationPage] 非常感谢您的支持与鼓励！
+
+您的每一份心意都是我持续维护的动力。
+我会继续努力，让 DesktopWidget 越来越好！
+
+—— Cherish
+  [AboutPage] 致谢：fkp123
+  [AboutPage] GitHub：https://github.com/Cherish95279/DesktopWidget
+  [AboutDialog] 致谢：fqk_123456
+  [AboutDialog] 基于 PyQt6 开发 | 天气数据由高德地图提供
+  [NoticeWindow] 加载中..
+  [NoticeWindow] 正在加载公告，请稍候...
+  [NoticeWindow] 没有新消息
+  [NoticeWindow] 无法显示公告内容: %1
+  [NoticeWindow] 删除此消息
+  [NoticeWindow] 清空消息
+  [NoticeWindow] 确认删除
+  [NoticeWindow] 确定要删除 "%1" 吗？
+  [ThemeManager] 竹林
+
+--- de (34 untranslated) ---
+  [GeneralPage] 简体中文
+  [GeneralPage] 繁体中文
+  [GeneralPage] Español
+  [GeneralPage] 日本語
+  [GeneralPage] 选择文字颜色
+  [GeneralPage] 语言已切换，翻译立即生效。请重启程序以使所有界面元素完全生效。
+  [WeatherPage] 分钟
+  [WeatherPage] 说明：API地址和密钥可在 高德API 免费获取（2000次/天）
+  [WeatherPage] 省份
+  [WeatherPage] 城市
+  [WeatherPage] 区/县
+  [WeatherPage] 状态：✔ 已连接
+  [WeatherPage] 状态：✖ 连接失败（请检查地址和密钥）
+  [WeatherPage] 状态：✖ 连接失败（网络或服务器错误）
+  [UpdatePage] 当前版本：%1
+  [UpdatePage] 保存成功
+  [UpdatePage] 检查失败：%1
+  [UpdatePage] 安装包已下载，是否立即安装？
+程序将自动退出并启动安装程序。
+  [UpdatePage] 新版本已下载完成，是否立即安装？
+程序将自动退出并启动安装程序。
+  [UpdatePage] 下载失败：%1
+  [DonationPage] 请将二维码图片放到 icons/ 目录
+
+Alipay.png
+WeChatpay.png
+  [DonationPage] 非常感谢您的支持与鼓励！
+
+您的每一份心意都是我持续维护的动力。
+我会继续努力，让 DesktopWidget 越来越好！
+
+—— Cherish
+  [AboutPage] 致谢：fkp123
+  [AboutPage] GitHub：https://github.com/Cherish95279/DesktopWidget
+  [AboutDialog] 致谢：fqk_123456
+  [AboutDialog] 基于 PyQt6 开发 | 天气数据由高德地图提供
+  [NoticeWindow] 加载中..
+  [NoticeWindow] 正在加载公告，请稍候...
+  [NoticeWindow] 没有新消息
+  [NoticeWindow] 无法显示公告内容: %1
+  [NoticeWindow] 删除此消息
+  [NoticeWindow] 清空消息
+  [NoticeWindow] 确认删除
+  [NoticeWindow] 确定要删除 "%1" 吗？

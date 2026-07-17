@@ -48,11 +48,11 @@ class UpdatePage(QWidget):
         layout.setSpacing(8)
 
         # ---------- 当前版本 ----------
-        self.version_label = QLabel(f"当前版本：{VERSION}")
+        self.version_label = QLabel(self.tr("当前版本：") + VERSION)
         layout.addWidget(self.version_label)
 
         # ---------- 最新版本 ----------
-        self.latest_version_label = QLabel("最新版本：检查中...")
+        self.latest_version_label = QLabel(self.tr("最新版本：检查中..."))
         layout.addWidget(self.latest_version_label)
 
         # ---------- 更新状态 ----------
@@ -69,7 +69,7 @@ class UpdatePage(QWidget):
         channel_row.setSpacing(30)
         channel_row.setContentsMargins(0, 0, 0, 0)
 
-        channel_label = QLabel("更新渠道")
+        channel_label = QLabel(self.tr("更新渠道"))
         channel_label.setStyleSheet("font-size: 13px; color: #333;")
         channel_row.addWidget(channel_label)
 
@@ -78,8 +78,8 @@ class UpdatePage(QWidget):
         self.channel_combo.setFixedWidth(120)
         self.channel_combo.setFixedHeight(28)
         self.channel_combo.setStyleSheet(COMBO_STYLE)
-        self.channel_combo.addItem("Gitee源", "gitee")
-        self.channel_combo.addItem("GitHub源", "github")
+        self.channel_combo.addItem(self.tr("Gitee源"), "gitee")
+        self.channel_combo.addItem(self.tr("GitHub源"), "github")
         self.channel_combo.currentIndexChanged.connect(self._on_channel_changed)
         channel_row.addWidget(self.channel_combo)
 
@@ -87,7 +87,7 @@ class UpdatePage(QWidget):
         layout.addLayout(channel_row)
 
         # ---------- 检查更新按钮 ----------
-        self.check_update_btn = QPushButton("检查更新")
+        self.check_update_btn = QPushButton(self.tr("检查更新"))
         self.check_update_btn.setFixedHeight(28)
         self.check_update_btn.setStyleSheet("""
             QPushButton {
@@ -107,7 +107,7 @@ class UpdatePage(QWidget):
         layout.addWidget(self.check_update_btn)
 
         # ---------- 安装更新按钮 ----------
-        self.install_update_btn = QPushButton("检查更新")
+        self.install_update_btn = QPushButton(self.tr("检查更新"))
         self.install_update_btn.setVisible(False)
         self.install_update_btn.setFixedHeight(28)
         self.install_update_btn.setStyleSheet("""
@@ -128,13 +128,13 @@ class UpdatePage(QWidget):
         layout.addWidget(self.install_update_btn)
 
         # ---------- Token 区域 ----------
-        token_label = QLabel("GitHub Token")
+        token_label = QLabel(self.tr("GitHub Token"))
         token_label.setStyleSheet("font-size: 12px; color: #333;")
         layout.addWidget(token_label)
 
         token_input_layout = QHBoxLayout()
         self.token_edit = QLineEdit()
-        self.token_edit.setPlaceholderText("GitHub Token（可选）")
+        self.token_edit.setPlaceholderText(self.tr("GitHub Token（可选）"))
         self.token_edit.setEchoMode(QLineEdit.EchoMode.Password)
         self.token_edit.setMinimumHeight(28)
         token_input_layout.addWidget(self.token_edit)
@@ -142,7 +142,7 @@ class UpdatePage(QWidget):
         self.token_visibility_btn = QPushButton("👁")
         self.token_visibility_btn.setFixedSize(28, 28)
         self.token_visibility_btn.setCheckable(True)
-        self.token_visibility_btn.setToolTip("显示/隐藏 Token")
+        self.token_visibility_btn.setToolTip(self.tr("显示/隐藏 Token"))
         self.token_visibility_btn.clicked.connect(self.toggle_token_visibility)
         self.token_visibility_btn.setStyleSheet("""
             QPushButton {
@@ -161,7 +161,7 @@ class UpdatePage(QWidget):
         token_btn_layout = QHBoxLayout()
         token_btn_layout.addStretch()
 
-        self.save_token_btn = QPushButton("保存 Token")
+        self.save_token_btn = QPushButton(self.tr("保存 Token"))
         self.save_token_btn.setFixedSize(100, 28)
         self.save_token_btn.setStyleSheet("""
             QPushButton {
@@ -212,7 +212,7 @@ class UpdatePage(QWidget):
 
         channel_name = "Gitee" if channel == "gitee" else "GitHub"
         self.update_status_label.setText(f"已切换到 {channel_name} 源，请点击检查更新")
-        self.latest_version_label.setText("最新版本：请点击检查更新")
+        self.latest_version_label.setText(self.tr("最新版本：请点击检查更新"))
         self.install_update_btn.setVisible(False)
         self.check_update_btn.setVisible(True)
         self.download_url = None
@@ -230,11 +230,11 @@ class UpdatePage(QWidget):
         settings = QSettings("MyDesktopApp", "WeatherSettings")
         if token:
             settings.setValue("github_token", token)
-            self.update_status_label.setText("Token 已保存")
+            self.update_status_label.setText(self.tr("Token 已保存"))
             self.check_update_manually()
         else:
             settings.remove("github_token")
-            self.update_status_label.setText("Token 已清除")
+            self.update_status_label.setText(self.tr("Token 已清除"))
             self.check_update_manually()
 
     def toggle_token_visibility(self):
@@ -248,14 +248,14 @@ class UpdatePage(QWidget):
     # ---------- 更新检查 ----------
     def check_update_manually(self):
         if self.downloaded_setup_path and os.path.exists(self.downloaded_setup_path):
-            self.update_status_label.setText("安装包已下载")
+            self.update_status_label.setText(self.tr("安装包已下载"))
             self.check_update_btn.setVisible(False)
             self.install_update_btn.setVisible(True)
-            self.install_update_btn.setText("检查更新")
+            self.install_update_btn.setText(self.tr("检查更新"))
             self.install_update_btn.setEnabled(True)
             return
 
-        self.update_status_label.setText("正在检查...")
+        self.update_status_label.setText(self.tr("正在检查..."))
         self.check_update_btn.setEnabled(False)
         self.install_update_btn.setVisible(False)
 
@@ -274,38 +274,38 @@ class UpdatePage(QWidget):
         self.check_update_btn.setEnabled(True)
 
         if "error" in result:
-            self.update_status_label.setText(f"检查失败：{result['error']}")
+            self.update_status_label.setText(self.tr("检查失败：") + result['error'])
             if result.get("token_invalid", False):
                 self.token_edit.clear()
-                self.update_status_label.setText("Token 已失效，已自动清除")
+                self.update_status_label.setText(self.tr("Token 已失效，已自动清除"))
             return
 
         if result.get("has_update", False):
             latest_version = result['latest_version']
-            self.latest_version_label.setText(f"最新版本：{latest_version}")
+            self.latest_version_label.setText(self.tr("最新版本：") + latest_version)
 
             download_url = result.get('download_url')
             release_notes = result.get('release_notes', '')
 
-            self.update_status_label.setText(f"有新版本可用！")
+            self.update_status_label.setText(self.tr("有新版本可用！"))
             self.check_update_btn.setVisible(False)
             self.install_update_btn.setVisible(True)
-            self.install_update_btn.setText("⬇ 下载更新")
+            self.install_update_btn.setText("⬇ " + self.tr("下载更新"))
             self.download_url = download_url
 
             if release_notes:
-                self.update_status_label.setText(f"有新版本可用！\n{release_notes[:100]}...")
+                self.update_status_label.setText(self.tr("有新版本可用！") + f"\n{release_notes[:100]}...")
         else:
-            self.latest_version_label.setText(f"最新版本：{VERSION} (已是最新)")
-            self.update_status_label.setText("已是最新版本")
+            self.latest_version_label.setText(self.tr("最新版本：") + f"{VERSION} (" + self.tr("已是最新") + ")")
+            self.update_status_label.setText(self.tr("已是最新版本"))
 
     # ---------- 下载与安装 ----------
     def install_update(self):
         if self.downloaded_setup_path and os.path.exists(self.downloaded_setup_path):
             reply = QMessageBox.question(
                 self,
-                "安装更新",
-                "安装包已下载，是否立即安装？\n程序将自动退出并启动安装程序。",
+                self.tr("安装更新"),
+                self.tr("安装包已下载，是否立即安装？") + "\n" + self.tr("程序将自动退出并启动安装程序。"),
                 QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
                 QMessageBox.StandardButton.Yes
             )
@@ -316,16 +316,16 @@ class UpdatePage(QWidget):
                         parent._exiting = True
                     QApplication.quit()
                 else:
-                    self.update_status_label.setText("启动安装失败，请手动运行安装包")
+                    self.update_status_label.setText(self.tr("启动安装失败，请手动运行安装包"))
                     self.install_update_btn.setEnabled(True)
             return
 
         if not self.download_url:
-            self.update_status_label.setText("❌ 下载链接无效")
+            self.update_status_label.setText("❌ " + self.tr("下载链接无效"))
             return
 
         self.install_update_btn.setEnabled(False)
-        self.update_status_label.setText("正在下载...")
+        self.update_status_label.setText(self.tr("正在下载..."))
         self.progress_bar.setVisible(True)
         self.progress_bar.setValue(0)
 
@@ -339,14 +339,14 @@ class UpdatePage(QWidget):
         self.progress_bar.setVisible(False)
         if success:
             self.downloaded_setup_path = path_or_error
-            self.update_status_label.setText("下载完成")
+            self.update_status_label.setText(self.tr("下载完成"))
             self.install_update_btn.setEnabled(True)
-            self.install_update_btn.setText("检查更新")
+            self.install_update_btn.setText(self.tr("检查更新"))
 
             reply = QMessageBox.question(
                 self,
-                "更新已就绪",
-                "新版本已下载完成，是否立即安装？\n程序将自动退出并启动安装程序。",
+                self.tr("更新已就绪"),
+                self.tr("新版本已下载完成，是否立即安装？") + "\n" + self.tr("程序将自动退出并启动安装程序。"),
                 QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
                 QMessageBox.StandardButton.Yes
             )
@@ -357,15 +357,15 @@ class UpdatePage(QWidget):
                         parent._exiting = True
                     QApplication.quit()
                 else:
-                    self.update_status_label.setText("启动安装失败，请手动运行安装包")
+                    self.update_status_label.setText(self.tr("启动安装失败，请手动运行安装包"))
                     self.install_update_btn.setEnabled(True)
             else:
-                self.update_status_label.setText("更新已取消，下次启动可继续")
+                self.update_status_label.setText(self.tr("更新已取消，下次启动可继续"))
                 self.install_update_btn.setEnabled(True)
                 self.install_update_btn.setVisible(True)
-                self.install_update_btn.setText("检查更新")
+                self.install_update_btn.setText(self.tr("检查更新"))
                 self.check_update_btn.setVisible(False)
         else:
-            self.update_status_label.setText(f"下载失败：{path_or_error}")
+            self.update_status_label.setText(self.tr("下载失败：") + str(path_or_error))
             self.install_update_btn.setEnabled(True)
-            self.install_update_btn.setText("检查更新")
+            self.install_update_btn.setText(self.tr("检查更新"))

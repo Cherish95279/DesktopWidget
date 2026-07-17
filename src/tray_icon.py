@@ -15,7 +15,7 @@ class TrayIcon(QSystemTrayIcon):
         self._default_icon.addFile(resource_path("icons/tray_24.png"), QSize(24, 24))
         self._default_icon.addFile(resource_path("icons/tray_16.png"), QSize(16, 16))
         self.setIcon(self._default_icon)
-        self.setToolTip("珍爱桌面小工具")
+        self.setToolTip(self.tr("珍爱桌面小工具"))
 
         # 公告相关状态
         self._flash_timer = None
@@ -117,9 +117,9 @@ class TrayIcon(QSystemTrayIcon):
 
     def _update_tooltip(self):
         if self._has_notice:
-            self.setToolTip("珍爱桌面小工具\n🔔 有新的公告")
+            self.setToolTip(self.tr("珍爱桌面小工具") + "\n🔔 " + self.tr("有新的公告"))
         else:
-            self.setToolTip("珍爱桌面小工具")
+            self.setToolTip(self.tr("珍爱桌面小工具"))
 
     # ===== 窗口模式管理 =====
     def _load_window_mode(self):
@@ -172,7 +172,7 @@ class TrayIcon(QSystemTrayIcon):
         if save:
             self._save_window_mode(mode)
 
-        mode_names = {"bottom": "置底", "float": "悬浮模式", "top": "总是置顶"}
+        mode_names = {"bottom": self.tr("置底"), "float": self.tr("悬浮模式"), "top": self.tr("总是置顶")}
         print(f"📌 窗口模式: {mode_names.get(mode, mode)}")
 
     def _on_mode_triggered(self, mode):
@@ -186,23 +186,23 @@ class TrayIcon(QSystemTrayIcon):
         self.menu.clear()
 
         # 显示主窗口
-        show_action = QAction("🖥️ 显示主窗口", self)
+        show_action = QAction("🖥️ " + self.tr("显示主窗口"), self)
         show_action.triggered.connect(self.show_window)
         self.menu.addAction(show_action)
 
         self.menu.addSeparator()
 
         # 窗口模式（三个互斥选项）
-        self._bottom_action = QAction("⬇️ 置底", self)
+        self._bottom_action = QAction("⬇️ " + self.tr("置底"), self)
         self._bottom_action.setCheckable(True)
         self._bottom_action.triggered.connect(lambda: self._on_mode_triggered("bottom"))
 
-        self._float_action = QAction("↕️ 悬浮模式", self)
+        self._float_action = QAction("↕️ " + self.tr("悬浮模式"), self)
         self._float_action.setCheckable(True)
         self._float_action.setChecked(True)  # 默认选中
         self._float_action.triggered.connect(lambda: self._on_mode_triggered("float"))
 
-        self._top_action = QAction("📌 总是置顶", self)
+        self._top_action = QAction("📌 " + self.tr("总是置顶"), self)
         self._top_action.setCheckable(True)
         self._top_action.triggered.connect(lambda: self._on_mode_triggered("top"))
 
@@ -214,21 +214,21 @@ class TrayIcon(QSystemTrayIcon):
         self.menu.addSeparator()
 
         # 设置、主题、检查更新
-        settings_action = QAction("⚙️ 设置", self)
+        settings_action = QAction("⚙️ " + self.tr("设置"), self)
         settings_action.triggered.connect(self.parent_window.open_settings)
         self.menu.addAction(settings_action)
 
-        theme_action = QAction("🎨 主题", self)
+        theme_action = QAction("🎨 " + self.tr("主题"), self)
         theme_action.triggered.connect(lambda: self.parent_window.open_settings(initial_page="theme"))
         self.menu.addAction(theme_action)
 
-        update_action = QAction("🔄 检查更新", self)
+        update_action = QAction("🔄 " + self.tr("检查更新"), self)
         update_action.triggered.connect(lambda: self.parent_window.open_settings(initial_page="update"))
         self.menu.addAction(update_action)
 
         self.menu.addSeparator()
 
-        exit_action = QAction("❌ 退出", self)
+        exit_action = QAction("❌ " + self.tr("退出"), self)
         exit_action.triggered.connect(self.quit_app)
         self.menu.addAction(exit_action)
 

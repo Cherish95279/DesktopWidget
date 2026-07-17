@@ -29,30 +29,30 @@ class DisplayPage(QWidget):
 
         # 内容池定义
         self.content_pool = [
-            ("ip", "IP"),
-            ("weather", "天气"),
-            ("netspeed", "网速"),
-            ("cpu", "CPU"),
-            ("gpu", "GPU"),
-            ("resolution", "分辨率"),
-            ("refresh_rate", "刷新率"),
-            ("memory", "内存"),
-            ("date", "公历"),
-            ("lunar", "农历"),
-            ("empty", "空"),
+            ("ip", self.tr("IP")),
+            ("weather", self.tr("天气")),
+            ("netspeed", self.tr("网速")),
+            ("cpu", self.tr("CPU")),
+            ("gpu", self.tr("GPU")),
+            ("resolution", self.tr("分辨率")),
+            ("refresh_rate", self.tr("刷新率")),
+            ("memory", self.tr("内存")),
+            ("date", self.tr("公历")),
+            ("lunar", self.tr("农历")),
+            ("empty", self.tr("空")),
         ]
         self.all_values = [v for v, _ in self.content_pool]
 
         # 8个位置
         self.slot_defs = [
-            {"key": "slot_1", "name": "左一"},
-            {"key": "slot_2", "name": "左二"},
-            {"key": "slot_3", "name": "左三"},
-            {"key": "slot_4", "name": "左四"},
-            {"key": "slot_5", "name": "右一"},
-            {"key": "slot_6", "name": "右二"},
-            {"key": "slot_7", "name": "右三"},
-            {"key": "slot_8", "name": "右四"},
+            {"key": "slot_1", "name": self.tr("左一")},
+            {"key": "slot_2", "name": self.tr("左二")},
+            {"key": "slot_3", "name": self.tr("左三")},
+            {"key": "slot_4", "name": self.tr("左四")},
+            {"key": "slot_5", "name": self.tr("右一")},
+            {"key": "slot_6", "name": self.tr("右二")},
+            {"key": "slot_7", "name": self.tr("右三")},
+            {"key": "slot_8", "name": self.tr("右四")},
         ]
         self.slot_keys = [s["key"] for s in self.slot_defs]
 
@@ -83,7 +83,7 @@ class DisplayPage(QWidget):
             main_layout.addLayout(row)
 
         # 提示文字
-        info_label = QLabel("修改下拉菜单立即生效，无需保存")
+        info_label = QLabel(self.tr("修改下拉菜单立即生效，无需保存"))
         info_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
         info_label.setStyleSheet("color: #888; font-size: 12px; margin: 10px 0;")
         main_layout.addWidget(info_label)
@@ -91,7 +91,7 @@ class DisplayPage(QWidget):
         # 按钮行（恢复默认）
         btn_layout = QHBoxLayout()
         btn_layout.addStretch()
-        restore_btn = QPushButton("恢复默认")
+        restore_btn = QPushButton(self.tr("恢复默认"))
         restore_btn.setFixedSize(90, 28)
         restore_btn.setStyleSheet("""
             QPushButton {
@@ -184,7 +184,7 @@ class DisplayPage(QWidget):
             combo.clear()
             for val, text in available:
                 combo.addItem(text, val)
-            combo.addItem("空", "empty")
+            combo.addItem(self.tr(self.tr(self.tr(self.tr("空")))), "empty")
 
             combo.blockSignals(False)
 

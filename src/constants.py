@@ -1,8 +1,9 @@
+from PyQt6.QtCore import QCoreApplication
 # ---------- 常量定义 ----------
 AMAP_KEY = "c348525fc6252c6a54b8c72fa5017a45"
 ORIG_W, ORIG_H = 400, 297
 CENTER_X, CENTER_Y = 201, 144
-VERSION = "v1.2.8"
+VERSION = "v1.3.0"
 
 # GitHub 仓库信息
 GITHUB_REPO = "Cherish95279/DesktopWidget"
@@ -25,14 +26,14 @@ DEFAULT_THEME = {
     "color": "#a8c7dc",
 }
 THEME_PRESETS = [
-    {"name": "经典暗色", "color": "#1c344d"},
-    {"name": "浅色主题", "color": "#f0f0f0"},
-    {"name": "浅蓝灰", "color": "#a8c7dc"},
+    {"name": QCoreApplication.translate("Constants", "经典暗色"), "color": "#1c344d"},
+    {"name": QCoreApplication.translate("Constants", "浅色主题"), "color": "#f0f0f0"},
+    {"name": QCoreApplication.translate("Constants", "浅蓝灰"), "color": "#a8c7dc"},
 ]
 
 # ===== 新增：主题名称常量 =====
-DEFAULT_THEME_NAME = "默认主题"
+DEFAULT_THEME_NAME = QCoreApplication.translate("Constants", "默认主题")
 THEME_NAMES = {
-    "default": "默认主题",
-    "skins_01": "竹林",
+    "default": QCoreApplication.translate("Constants", "默认主题"),
+    "skins_01": QCoreApplication.translate("Constants", "竹林"),
 }

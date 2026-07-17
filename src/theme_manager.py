@@ -5,7 +5,7 @@
 """
 
 import os
-from PyQt6.QtCore import QSettings
+from PyQt6.QtCore import QCoreApplication, QSettings
 
 
 class ThemeManager:
@@ -58,15 +58,15 @@ class ThemeManager:
     def _get_display_name(self, folder_name):
         """将文件夹名转换为显示名称"""
         name_map = {
-            "default": "默认主题",
-            "skins_01": "竹林",
+            "default": QCoreApplication.translate("ThemeManager", "默认主题"),
+            "skins_01": QCoreApplication.translate("ThemeManager", "竹林"),
         }
         return name_map.get(folder_name, folder_name)
 
     def _load_settings(self):
         """从 QSettings 加载当前主题"""
         settings = QSettings("MyDesktopApp", "WeatherSettings")
-        theme_name = settings.value("theme_name", "默认主题")
+        theme_name = settings.value("theme_name", QCoreApplication.translate("ThemeManager", "默认主题"))
         self._current_theme = theme_name
 
     def _save_settings(self):
@@ -78,7 +78,7 @@ class ThemeManager:
     def _validate_current_theme(self):
         """确保当前主题有效，否则回退到默认主题"""
         if self._current_theme not in self._themes:
-            self._current_theme = "默认主题"
+            self._current_theme = QCoreApplication.translate("ThemeManager", "默认主题")
             self._save_settings()
 
     def get_current_theme(self) -> str:
@@ -97,8 +97,8 @@ class ThemeManager:
         theme_info = self._themes.get(self._current_theme)
         if not theme_info:
             # 如果当前主题无效，强制切换到默认
-            self.switch_theme("默认主题")
-            theme_info = self._themes.get("默认主题")
+            self.switch_theme(QCoreApplication.translate("ThemeManager", "默认主题"))
+            theme_info = self._themes.get(QCoreApplication.translate("ThemeManager", "默认主题"))
 
         # 先尝试当前主题
         file_path = os.path.join(theme_info["path"], filename)
@@ -106,11 +106,11 @@ class ThemeManager:
             return file_path
 
         # 回退到默认主题
-        default_info = self._themes.get("默认主题")
+        default_info = self._themes.get(QCoreApplication.translate("ThemeManager", "默认主题"))
         if default_info:
             fallback_path = os.path.join(default_info["path"], filename)
             if os.path.exists(fallback_path):
-                print(f"⚠️ {filename} 在当前主题缺失，使用默认主题")
+                print(f"⚠️ {filename} " + QCoreApplication.translate("ThemeManager", "在当前主题缺失，使用默认主题"))
                 return fallback_path
 
         # 如果默认主题也没有，返回 None（调用方处理）

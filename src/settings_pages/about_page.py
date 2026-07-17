@@ -13,19 +13,19 @@ class AboutPage(QWidget):
         layout.setAlignment(Qt.AlignmentFlag.AlignCenter)
 
         # 标题
-        title = QLabel(f"珍爱桌面小工具 {VERSION}")
+        title = QLabel(self.tr("珍爱桌面小工具") + " " + VERSION)
         title.setStyleSheet("font-size: 18px; font-weight: bold;")
         title.setAlignment(Qt.AlignmentFlag.AlignCenter)
         layout.addWidget(title)
 
         # 作者
-        author = QLabel("作者：Cherish95279")
+        author = QLabel(self.tr("作者：Cherish95279"))
         author.setAlignment(Qt.AlignmentFlag.AlignCenter)
         layout.addWidget(author)
 
         # 致谢（fkp123 可点击）
         thanks = QLabel(
-            '致谢：<a href="https://github.com/fkp123" style="color: #0366d6; text-decoration: none;">fkp123</a>'
+            self.tr("致谢") + '：<a href="https://github.com/fkp123" style="color: #0366d6; text-decoration: none;">fkp123</a>'
         )
         thanks.setOpenExternalLinks(True)
         thanks.setAlignment(Qt.AlignmentFlag.AlignCenter)
@@ -41,7 +41,7 @@ class AboutPage(QWidget):
         layout.addWidget(github)
 
         # 反馈按钮
-        feedback_btn = QPushButton("💬 前往讨论区")
+        feedback_btn = QPushButton("💬 " + self.tr("前往讨论区"))
         feedback_btn.setStyleSheet("""
             QPushButton {
                 padding: 6px 14px;
