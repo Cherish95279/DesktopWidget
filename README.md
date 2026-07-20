@@ -2,7 +2,6 @@
 
 **珍爱桌面小工具** —— 基于 PyQt6 的轻量级桌面组件，集指针时钟、实时天气、性能监控、网速监控于一体，支持系统托盘和自动更新。
 
-> 当前版本：v1.3.0
 
 <!-- ===== 方案一：语言徽标 ===== -->
 <p align="center">
@@ -23,7 +22,9 @@
   简体中文 · 繁體中文 · English · Español · 日本語 · Deutsch · Français · 한국어
 </p>
 
-![预览图](https://raw.githubusercontent.com/Cherish95279/DesktopWidget/main/screenshots/preview1.3.0.png)
+> 当前版本：v1.3.1
+
+![预览图](https://raw.githubusercontent.com/Cherish95279/DesktopWidget/main/screenshots/preview1.3.1.png)
 
 
 ## ✨ 主要功能
@@ -127,6 +128,28 @@ MIT License
 https://raw.githubusercontent.com/Cherish95279/DesktopWidget/main/screenshots/preview1.2.5.png
 
 📝 更新日志
+
+
+🚀 v1.3.1 更新内容
+
+新增3项天气设置服务，默认天气服务由原来的高德改为Open-meteo，这个服务不需要密钥，URL已硬编码在代码中
+
+另有Weather API/和风天气与Open-meteo同样支持全球各地区天气
+
+所有新增的用户可见语言均已翻译为8种语言
+
+优化了天气显示地区的设置方式，由之前的省市县修改为当前的一个搜索框
+
+搜索框的地址池由本地地址数据库（仅中国地区，关键词匹配不到时交给网络）和网络搜索结合组成
+
+地址搜索支持各种语言
+
+API密钥支持了明文和暗码切换显示
+
+说明文字根据选择的服务和语言相应展示，需要api密钥可点击说明文字里的超级链接自行获取（各个服务平台对个人相当慷慨）
+
+
+
 🚀 v1.3.0 更新内容
 🌍 多语言扩展
 新增 法语 (Français) 和 韩语 (한국어) 支持
