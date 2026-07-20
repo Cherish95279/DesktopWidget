@@ -43,7 +43,7 @@ class TrayIcon(QSystemTrayIcon):
         manager = NoticeManager.get_instance()
         manager.register_callback("on_new_notice", self._on_notice_received)
         manager.register_callback("on_no_notice", self._on_notice_cleared)
-        print("📢 托盘回调注册成功")
+        print("[Tray] 托盘回调注册成功")
 
     def _on_notice_received(self, notice):
         print("🔔 托盘：收到新公告，开始闪烁")
@@ -111,9 +111,9 @@ class TrayIcon(QSystemTrayIcon):
 
             painter.end()
             self.setIcon(QIcon(pixmap))
-            print("✅ 绿色小点已绘制")
+            print("[OK] 绿色小点已绘制")
         except Exception as e:
-            print(f"⚠️ 绘制绿点失败: {e}")
+            print(f"[WARN] 绘制绿点失败: {e}")
 
     def _update_tooltip(self):
         if self._has_notice:
@@ -235,7 +235,7 @@ class TrayIcon(QSystemTrayIcon):
     def on_activated(self, reason):
         if reason == QSystemTrayIcon.ActivationReason.Trigger:
             if self._has_notice and not self._notice_opened:
-                print("🖱️ 左键单击托盘图标 → 打开公告")
+                print("🖱 左键单击托盘图标 → 打开公告")
                 self._open_notice_window()
             else:
                 self.toggle_window()

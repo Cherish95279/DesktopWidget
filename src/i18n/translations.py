@@ -10,7 +10,7 @@ import os
 import sys
 from typing import Optional, Dict, Tuple
 
-from PyQt6.QtCore import QLocale, QSettings, QTranslator
+from PyQt6.QtCore import QLocale, QSettings, QTranslator, QLibraryInfo
 from PyQt6.QtWidgets import QApplication
 
 
@@ -103,7 +103,7 @@ def _load_builtin_translations():
                     entry_count += 1
 
         except Exception as e:
-            print(f"⚠️ [i18n] Failed to load {lang_code}: {e}")
+            print(f" [i18n] Failed to load {lang_code}: {e}")
 
     if "zh_CN" in _builtin_translations:
         _default_lang = "zh_CN"
@@ -153,7 +153,7 @@ class DictTranslator(QTranslator):
                 if result:
                     return result
         # Return empty so Qt falls back to source text as default
-        return ""
+        # No translation found; Qt will try next translator or use source text
 
 
 class TranslatorManager:
@@ -178,6 +178,7 @@ class TranslatorManager:
         self._initialized = True
 
         self._qt_translator: Optional[object] = None
+        self._qt_base_translator: Optional[QTranslator] = None
         self._current_lang: str = "zh_CN"
         self._app: Optional[QApplication] = None
         self._loading: bool = False
@@ -249,6 +250,11 @@ class TranslatorManager:
             if lang_code not in SUPPORTED_LANGUAGES:
                 lang_code = "zh_CN"
 
+            # Remove old Qt base translator (QColorDialog etc.)
+            if self._qt_base_translator is not None and self._app is not None:
+                self._app.removeTranslator(self._qt_base_translator)
+                self._qt_base_translator = None
+            # Remove old app translators
             if self._qt_translator is not None and self._app is not None:
                 self._app.removeTranslator(self._qt_translator)
                 self._qt_translator = None
@@ -287,6 +293,19 @@ class TranslatorManager:
                     self._app.installTranslator(self._dict_translator)
                 except Exception:
                     pass
+
+            # Load Qt base translation for standard dialogs (QColorDialog etc.)
+            # English (en) has 0-byte qtbase_en.qm, skip it
+            if self._app is not None and lang_code != "en":
+                try:
+                    qt_path = QLibraryInfo.path(QLibraryInfo.LibraryPath.TranslationsPath)
+                    self._qt_base_translator = QTranslator(self._app)
+                    if self._qt_base_translator.load("qtbase_" + lang_code, qt_path):
+                        self._app.installTranslator(self._qt_base_translator)
+                    else:
+                        self._qt_base_translator = None
+                except Exception:
+                    self._qt_base_translator = None
 
             self._current_lang = lang_code
 

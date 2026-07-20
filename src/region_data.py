@@ -1,4 +1,4 @@
-# -*- coding: utf-8 -*-
+﻿# -*- coding: utf-8 -*-
 """
 中国行政区划数据（省/市/县三级）
 数据来源：公开行政区划信息
@@ -1286,3 +1286,69 @@ REGIONS = {
         }
     }
 }
+
+# ===== 中国区县坐标数据（用于 Open-Meteo 等需要经纬度的天气服务）=====
+_COORDS_BY_CODE = {}
+_COORDS_BY_NAME = {}
+_coords_loaded = False
+
+
+def _load_coords():
+    """加载 china_regions.json 中的坐标数据到内存缓存"""
+    global _coords_loaded
+    if _coords_loaded:
+        return
+    try:
+        import json
+        import os
+        json_path = os.path.join(os.path.dirname(__file__), "china_regions.json")
+        if not os.path.exists(json_path):
+            print(f"[WARN] china_regions.json 不存在: {json_path}")
+            _coords_loaded = True
+            return
+        with open(json_path, "r", encoding="utf-8") as f:
+            data = json.load(f)
+        for item in data:
+            code = item.get("code", "")
+            name = item.get("name", "")
+            lat = item.get("lat")
+            lng = item.get("lng")
+            if code and lat is not None and lng is not None:
+                _COORDS_BY_CODE[code] = (lat, lng)
+                if name and name not in _COORDS_BY_NAME:
+                    _COORDS_BY_NAME[name] = (lat, lng)
+        print(f"[OK] 加载了 {len(_COORDS_BY_CODE)} 个区县的坐标")
+    except Exception as e:
+        print(f"[WARN] 加载坐标数据失败: {e}")
+    _coords_loaded = True
+
+
+def get_coords_by_name(name):
+    """根据区/县/县级市名称获取经纬度，返回 (lat, lng) 或 None"""
+    _load_coords()
+    return _COORDS_BY_NAME.get(name)
+
+
+def get_coords_for_city(city_name):
+    """根据城市名获取经纬度：先尝试直接匹配，再尝试找下属第一个区县"""
+    _load_coords()
+    # 直接匹配
+    if city_name in _COORDS_BY_NAME:
+        return _COORDS_BY_NAME[city_name]
+    # 遍历 REGIONS 找该城市下属第一个区县
+    for province, pdata in REGIONS.items():
+        cities = pdata.get("cities", {})
+        for city, cdata in cities.items():
+            if city == city_name:
+                counties = cdata.get("counties", [])
+                for county in counties:
+                    coords = _COORDS_BY_NAME.get(county)
+                    if coords:
+                        return coords
+                # 如果该市没有区县列表，直接尝试市名本身
+                break
+    return None
+
+
+# 导入时预加载
+_load_coords()

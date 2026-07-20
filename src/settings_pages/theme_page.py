@@ -249,13 +249,18 @@ class ThemePage(QWidget):
 
     def _on_custom_color(self):
         current_color = self._get_current_color()
-        color = QColorDialog.getColor(QColor(current_color), self, self.tr("选择背景颜色"))
-        if color.isValid():
-            color_hex = color.name()
-            for b in self.color_buttons:
-                b.setChecked(False)
-            self.custom_btn.setChecked(True)
-            self._apply_theme(color=color_hex)
+        dialog = QColorDialog(QColor(current_color), self)
+        # ???? Qt ???????Windows ????????? Qt ?????
+        dialog.setOption(QColorDialog.ColorDialogOption.DontUseNativeDialog, True)
+        dialog.setWindowTitle(self.tr("选择背景颜色"))
+        if dialog.exec() == QDialog.DialogCode.Accepted:
+            color = dialog.currentColor()
+            if color.isValid():
+                color_hex = color.name()
+                for b in self.color_buttons:
+                    b.setChecked(False)
+                self.custom_btn.setChecked(True)
+                self._apply_theme(color=color_hex)
 
     # ---------- 核心方法 ----------
     def _get_current_color(self):
@@ -287,7 +292,11 @@ class ThemePage(QWidget):
             main_window.update()
 
     def _force_reload_images(self):
-        main_window = self.parent_dialog.parent() if self.parent_dialog else None
+        main_window = None
+        if self.parent_dialog:
+            main_window = getattr(self.parent_dialog, '_main_window', None)
+        if main_window is None and self.parent_dialog:
+            main_window = self.parent_dialog.parent()
         if main_window and hasattr(main_window, 'reload_images'):
             main_window.reload_images()
 

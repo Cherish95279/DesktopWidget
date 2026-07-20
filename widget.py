@@ -4,6 +4,13 @@ from PyQt6.QtWidgets import QApplication
 from PyQt6.QtCore import QSettings, QTimer
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+# Fix console encoding for emoji support on Windows
+if sys.platform == 'win32':
+    try:
+        sys.stdout.reconfigure(encoding='utf-8', errors='replace')
+    except Exception:
+        pass
+
 
 from src.main_window import MainWindow
 from src.notice import NoticeManager

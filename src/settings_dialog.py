@@ -170,8 +170,10 @@ class SettingsDialog(QWidget):
             self._main_window.update()
 
     def on_theme_changed(self):
-        if self._main_window and hasattr(self._main_window, 'update_theme_cache'):
-            self._main_window.update_theme_cache()
+        if self._main_window and hasattr(self._main_window, 'reload_images'):
+            self._main_window.reload_images()
+        elif self._main_window and hasattr(self._main_window, 'update_theme_cache'):
+            self._main_window.update_theme_cache(force=True)
         elif self._main_window and hasattr(self._main_window, 'update'):
             self._main_window.update()
 

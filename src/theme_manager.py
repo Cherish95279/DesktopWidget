@@ -110,7 +110,7 @@ class ThemeManager:
         if default_info:
             fallback_path = os.path.join(default_info["path"], filename)
             if os.path.exists(fallback_path):
-                print(f"⚠️ {filename} " + QCoreApplication.translate("ThemeManager", "在当前主题缺失，使用默认主题"))
+                print(f" {filename} " + QCoreApplication.translate("ThemeManager", "在当前主题缺失，使用默认主题"))
                 return fallback_path
 
         # 如果默认主题也没有，返回 None（调用方处理）
@@ -119,7 +119,7 @@ class ThemeManager:
     def switch_theme(self, theme_name: str):
         """切换主题"""
         if theme_name not in self._themes:
-            print(f"❌ 主题 '{theme_name}' 不存在")
+            print(f" 主题 '{theme_name}' 不存在")
             return False
 
         if theme_name == self._current_theme:
@@ -127,7 +127,7 @@ class ThemeManager:
 
         self._current_theme = theme_name
         self._save_settings()
-        print(f"✅ 切换主题: {theme_name}")
+        print(f" 切换主题: {theme_name}")
         return True
 
     def get_theme_folder(self) -> str:

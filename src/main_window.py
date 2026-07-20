@@ -12,6 +12,7 @@ import psutil
 
 from .constants import CENTER_X, CENTER_Y, DEFAULT_LAYOUT
 from .utils import get_weather_icon
+from .region_data import get_coords_by_name, get_coords_for_city
 from .solar_terms import get_next_term_info
 from .threads import ServerScanner, WeatherThread, NetSpeedThread
 from .settings_dialog import SettingsDialog
@@ -216,7 +217,7 @@ class MainWindow(QWidget):
 
         # 检查关键图片是否存在
         if any(p.isNull() for p in [self.bg, self.hour, self.minute, self.second, self.center_dot]):
-            print("⚠️ 部分图片加载失败，请检查主题文件")
+            print(" 部分图片加载失败，请检查主题文件")
 
     # ===== 重新加载图片（切换主题时调用） =====
     def reload_images(self):
@@ -224,7 +225,7 @@ class MainWindow(QWidget):
         self._load_images()
         # 强制重建背景缓存
         self._cached_bg = None
-        self.update_theme_cache()
+        self.update_theme_cache(force=True)
         self.update()
 
     # ---------- 主题缓存 ----------
@@ -376,11 +377,72 @@ class MainWindow(QWidget):
         self.update()
 
     def start_weather_thread(self, force_restart=False):
+        """智能启动天气线程：根据布局配置和服务类型决定是否启动"""
         settings = QSettings("MyDesktopApp", "WeatherSettings")
-        api_url = settings.value("api_url", "")
-        api_key = settings.value("api_key", "")
+        settings.sync()  # 确保读取最新配置
+
+        weather_service = settings.value("weather_service", "open_meteo")
+        api_url = settings.value(f"api_url_{weather_service}", "")
+        api_key = settings.value(f"api_key_{weather_service}", "")
         refresh_minutes = int(settings.value("refresh_minutes", 120))
-        self._api_configured = bool(api_url and api_key)
+        lat = settings.value("selected_latitude", "")
+        lng = settings.value("selected_longitude", "")
+
+        print(f"🌤️ start_weather_thread 被调用，weather_service={weather_service}, force_restart={force_restart}")
+        print(f"🌤️ lat={lat}, lng={lng}")
+
+        # Open-Meteo: 尝试获取坐标（JSON 反查 > IP 定位）
+        if weather_service == "open_meteo":
+            if not lat or not lng:
+                # 优先从本地 JSON 反查坐标（高德 IP 定位可能已写入城市名）
+                city_name = settings.value("selected_city", "") or settings.value("selected_location_display", "")
+                coords_from_json = False
+                if city_name:
+                    coords = get_coords_for_city(city_name) or get_coords_by_name(city_name)
+                    if coords:
+                        settings.setValue("selected_latitude", str(coords[0]))
+                        settings.setValue("selected_longitude", str(coords[1]))
+                        settings.setValue("location_source", "json")
+                        settings.sync()
+                        lat = str(coords[0])
+                        lng = str(coords[1])
+                        coords_from_json = True
+                        print(f"🌐 从本地 JSON 推导坐标成功: {city_name} -> {coords[0]}, {coords[1]}")
+
+                # JSON 反查失败才尝试网络 IP 定位
+                if not coords_from_json:
+                    ip_attempted = settings.value("_ip_attempted", False, type=bool)
+                    if not ip_attempted:
+                        from .utils import get_ip_location
+                        print("🌐 JSON 无匹配，尝试 IP 自动定位...")
+                        new_lat, new_lng, city = get_ip_location()
+                        settings.setValue("_ip_attempted", True)
+                        if new_lat and new_lng:
+                            settings.setValue("selected_latitude", str(new_lat))
+                            settings.setValue("selected_longitude", str(new_lng))
+                            if city:
+                                settings.setValue("selected_city", city)
+                                settings.setValue("selected_location_display", city)
+                            settings.setValue("location_source", "ip")
+                            settings.sync()
+                            lat = str(new_lat)
+                            lng = str(new_lng)
+                            print(f"🌐 IP 定位成功: {city} ({new_lat}, {new_lng})")
+                        else:
+                            print("🌐 IP 定位失败，请手动搜索城市")
+                            settings.sync()
+
+        # 按服务类型读取 API Key（Open-Meteo 不需要）
+        if weather_service != "open_meteo":
+            api_key = api_key or settings.value(f"api_key_{weather_service}", "")
+
+        # 判断 API 是否配置完整
+        if weather_service == "open_meteo":
+            self._api_configured = bool(lat and lng)
+        else:
+            self._api_configured = bool(api_url and api_key)
+
+        print(f"🌤️ _api_configured={self._api_configured}")
 
         has_weather = False
         slot_keys = ["slot_1", "slot_2", "slot_3", "slot_4", "slot_5", "slot_6", "slot_7", "slot_8"]
@@ -393,24 +455,25 @@ class MainWindow(QWidget):
 
         if not has_weather:
             if self.weather_thread is not None:
-                print("🌤️ 布局中未配置天气，停止天气线程")
+                print(" 布局中未配置天气，停止天气线程")
                 try:
                     self.weather_thread.data_updated.disconnect()
                     self.weather_thread.error_signal.disconnect()
                 except Exception as e:
-                    print(f"⚠️ 断开天气线程信号时出错: {e}")
+                    print(f" 断开天气线程信号时出错: {e}")
                 self.weather_thread.stop()
                 self.weather_thread = None
             self.stop_loading_animation()
             return
 
         if not self._api_configured:
+            print(f"🌤️ API 未配置，跳过启动")
             if self.weather_thread is not None:
                 try:
                     self.weather_thread.data_updated.disconnect()
                     self.weather_thread.error_signal.disconnect()
                 except Exception as e:
-                    print(f"⚠️ 断开天气线程信号时出错: {e}")
+                    print(f" 断开天气线程信号时出错: {e}")
                 self.weather_thread.stop()
                 self.weather_thread = None
             self.stop_loading_animation()
@@ -418,36 +481,39 @@ class MainWindow(QWidget):
             return
 
         if self.weather_thread is not None and not force_restart:
+            print(f"🌤️ 线程已运行且非强制重启，跳过")
             return
 
         if self.weather_thread is not None:
-            print("🔄 断开旧天气线程信号并停止...")
+            print(" 断开旧天气线程信号并停止...")
             try:
                 self.weather_thread.data_updated.disconnect()
                 self.weather_thread.error_signal.disconnect()
             except Exception as e:
-                print(f"⚠️ 断开信号时出错: {e}")
+                print(f" 断开信号时出错: {e}")
             self.weather_thread.stop()
             self.weather_thread = None
 
         if force_restart or self.weather.get("city") == "--":
             self.start_loading_animation()
 
-        print("🌤️ 启动新天气线程...")
+        print(" 启动新天气线程...")
         self.weather_thread = WeatherThread(api_url, api_key, refresh_minutes)
         self.weather_thread.data_updated.connect(self.update_weather)
         self.weather_thread.error_signal.connect(self.on_weather_error)
         self.weather_thread.start()
-        print("🌤️ 天气线程已启动")
+        print(f"🌤️ 线程启动状态: {self.weather_thread is not None}")
 
     def update_weather(self, data):
-        print(f"🔔 主窗口收到天气更新: {data.get('city')} {data.get('weather')} {data.get('temp')}℃")
+        print(f" 主窗口收到天气更新: {data.get('city')} {data.get('weather')} {data.get('temp')}℃")
         self.stop_loading_animation()
         self.weather = data
         self.update()
 
     def on_weather_error(self, err_msg):
-        print(f"❌ 天气错误: {err_msg}")
+        if not err_msg:            # 空字符串不打印
+            return
+        print(f" 天气错误: {err_msg}")
 
     def closeEvent(self, event):
         if self._exiting:

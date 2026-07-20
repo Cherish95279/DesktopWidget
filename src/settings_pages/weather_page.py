@@ -1,10 +1,11 @@
-from PyQt6.QtWidgets import *
+﻿from PyQt6.QtWidgets import *
 from PyQt6.QtCore import *
+from PyQt6.QtCore import QCoreApplication
 import requests
 import certifi
 import json
 import re
-from ..region_data import REGIONS
+from ..region_data import REGIONS, get_coords_by_name, get_coords_for_city
 
 
 # ===== 统一下拉框样式 =====
@@ -137,7 +138,13 @@ class WeatherPage(QWidget):
         self._selected_lat = None
         self._selected_lng = None
         self._selected_display = None
-        self._block_search = False  # 防止程序设置文本时触发搜索
+        self._block_search = False
+
+        # 加载状态动画相关
+        self._loading_dots = 0
+        self._loading_timer = None
+        self._last_weather_received = False
+        self._timeout_timer = None  # 120秒超时定时器
 
         self.setup_ui()
         self.load_settings()
@@ -155,8 +162,16 @@ class WeatherPage(QWidget):
         self.url_combo = QComboBox()
         self.url_combo.setFixedHeight(28)
         self.url_combo.setStyleSheet(COMBO_STYLE)
-        self.url_combo.addItems([self.tr("高德"), self.tr("自定义")])
-        self.url_combo.currentTextChanged.connect(self.on_provider_changed)
+        self._providers = [
+            ("gaode",      QCoreApplication.translate("WeatherPage", "高德")),
+            ("open_meteo", QCoreApplication.translate("WeatherPage", "Open-Meteo")),
+            ("qweather",   QCoreApplication.translate("WeatherPage", "和风天气")),
+            ("weatherapi", QCoreApplication.translate("WeatherPage", "WeatherAPI")),
+            ("custom",     QCoreApplication.translate("WeatherPage", "自定义")),
+        ]
+        for key, label in self._providers:
+            self.url_combo.addItem(label, key)
+        self.url_combo.currentIndexChanged.connect(self._on_provider_index_changed)
         url_layout.addWidget(self.url_combo)
 
         self.url_edit = QLineEdit()
@@ -177,11 +192,25 @@ class WeatherPage(QWidget):
         self.key_edit.setStyleSheet(LINEEDIT_STYLE)
         self.key_edit.setFixedHeight(28)
         self.key_edit.textChanged.connect(self.on_key_changed)
-        layout.addWidget(self.key_edit)
+
+        # 密钥显示/隐藏切换（小眼睛）
+        self._key_visible = False
+        self.eye_btn = QPushButton(self.tr("👁"))
+        self.eye_btn.setFixedSize(24, 24)
+        self.eye_btn.setStyleSheet("QPushButton { border: none; background: transparent; font-size: 14px; color: #888; } QPushButton:hover { color: #1677ff; }")
+        self.eye_btn.setToolTip(self.tr("显示密钥"))
+        self.eye_btn.clicked.connect(self._toggle_key_visibility)
+        self.eye_btn.setCursor(Qt.CursorShape.PointingHandCursor)
+
+        # 密钥输入框 + 眼睛按钮容器
+        key_row = QHBoxLayout()
+        key_row.addWidget(self.key_edit)
+        key_row.addWidget(self.eye_btn)
+        layout.addLayout(key_row)
 
         # ---------- 状态 + 刷新频率 ----------
         status_freq_layout = QHBoxLayout()
-        self.status_label = QLabel(self.tr("状态：未配置"))
+        self.status_label = QLabel(self.tr("状态：加载中..."))
         status_freq_layout.addWidget(self.status_label)
         status_freq_layout.addStretch()
 
@@ -204,15 +233,11 @@ class WeatherPage(QWidget):
         layout.addLayout(status_freq_layout)
 
         # ---------- 说明文字 ----------
-        info_label = QLabel(
-            self.tr(
-                "说明：API地址和密钥可在 ") + '<a href="https://lbs.amap.com/" style="color: #0366d6; text-decoration: none;">' + self.tr(
-                "高德API") + '</a> ' + self.tr("免费获取，5000次/月")
-        )
-        info_label.setOpenExternalLinks(True)
-        info_label.setWordWrap(True)
-        info_label.setStyleSheet("color: #555; font-size: 12px; font-weight: normal;")
-        layout.addWidget(info_label)
+        self.info_label = QLabel(self.tr("说明：请选择服务并填写对应信息"))
+        self.info_label.setOpenExternalLinks(True)
+        self.info_label.setWordWrap(True)
+        self.info_label.setStyleSheet("color: #555; font-size: 12px; font-weight: normal;")
+        layout.addWidget(self.info_label)
 
         # ---------- 天气显示地区 ----------
         region_label = QLabel(self.tr("天气显示地区"))
@@ -322,11 +347,28 @@ class WeatherPage(QWidget):
                 unique_results.append(r)
         type_order = {"county": 0, "city": 1, "province": 2}
         unique_results.sort(key=lambda x: type_order.get(x.get("type", "province"), 2))
+
+        # 为本地搜索结果填充经纬度（用于 Open-Meteo 等需要坐标的服务）
+        for r in unique_results[:10]:
+            if r["latitude"] is not None and r["longitude"] is not None:
+                continue
+            name = r.get("name", "")
+            if r["type"] == "county":
+                coords = get_coords_by_name(name)
+                if coords:
+                    r["latitude"] = coords[0]
+                    r["longitude"] = coords[1]
+            elif r["type"] == "city":
+                coords = get_coords_for_city(name)
+                if coords:
+                    r["latitude"] = coords[0]
+                    r["longitude"] = coords[1]
+            # province 类型暂不填充（范围太大，无意义）
+
         return unique_results[:10]
 
     # ---------- 搜索相关 ----------
     def _on_search_text_changed(self, text):
-        # 如果正在程序主动设置文本，跳过所有操作
         if self._block_search:
             return
 
@@ -350,7 +392,6 @@ class WeatherPage(QWidget):
         if len(query) < 2:
             return
 
-        # 重置标志，确保用户输入触发的搜索正常工作
         self._block_search = False
 
         self.search_status_label.setText(self.tr("搜索中..."))
@@ -457,7 +498,10 @@ class WeatherPage(QWidget):
             settings.remove("selected_longitude")
         settings.sync()
 
-        # 程序主动设置搜索框文本，阻止触发搜索
+        # 标记用户已手动选择城市，后续启动不再调用 IP 定位
+        settings.setValue("location_source", "user")
+        settings.sync()
+
         self._block_search = True
         self.search_edit.setText(self._selected_display)
         self._block_search = False
@@ -470,17 +514,176 @@ class WeatherPage(QWidget):
         self.region_changed.emit()
         self._refresh_main_window_weather()
 
-    # ---------- API 相关 ----------
-    def on_provider_changed(self, text):
-        if self._loading:
-            return
-        if text == self.tr("高德"):
-            self.url_edit.setText("https://restapi.amap.com")
-            self.url_edit.setReadOnly(True)
+    def _toggle_key_visibility(self):
+        """切换 API Key 的显示/隐藏状态"""
+        self._key_visible = not self._key_visible
+        if self._key_visible:
+            self.key_edit.setEchoMode(QLineEdit.EchoMode.Normal)
+            self.eye_btn.setText(self.tr("👁"))
+            self.eye_btn.setStyleSheet("QPushButton { border: none; background: transparent; font-size: 14px; color: #1677ff; }")
+            self.eye_btn.setToolTip(self.tr("隐藏密钥"))
         else:
-            self.url_edit.clear()
-            self.url_edit.setReadOnly(False)
-        self.save_api_settings()
+            self.key_edit.setEchoMode(QLineEdit.EchoMode.Password)
+            self.eye_btn.setText(self.tr("👁"))
+            self.eye_btn.setStyleSheet("QPushButton { border: none; background: transparent; font-size: 14px; color: #888; } QPushButton:hover { color: #1677ff; }")
+            self.eye_btn.setToolTip(self.tr("显示密钥"))
+
+    def _update_info_label(self, service_key: str):
+        """根据当前选中的服务动态更新说明文字"""
+        if service_key == "gaode":
+            self.info_label.setText(
+                self.tr("说明：填入") +
+                '<a href="https://lbs.amap.com/" style="color: #0366d6; text-decoration: none;">' +
+                self.tr("高德API Key") +
+                '</a>' +
+                self.tr("，仅支持中国")
+            )
+        elif service_key == "open_meteo":
+            self.info_label.setText(
+                self.tr("说明：无需密钥，支持全球天气")
+            )
+        elif service_key == "qweather":
+            self.info_label.setText(
+                self.tr("说明：填入和风") +
+                '<a href="https://www.qweather.com/" style="color: #0366d6; text-decoration: none;">' +
+                self.tr("Host & API Key") +
+                '</a>' +
+                self.tr("，查看全球天气")
+            )
+        elif service_key == "weatherapi":
+            self.info_label.setText(
+                self.tr("说明：填入") +
+                '<a href="https://www.weatherapi.com/" style="color: #0366d6; text-decoration: none;">' +
+                self.tr("WeatherAPI Key") +
+                '</a>' +
+                self.tr("，查看全球天气")
+            )
+        elif service_key == "custom":
+            self.info_label.setText(
+                self.tr("说明：填入自定义API地址与Key")
+            )
+        else:
+            self.info_label.setText(
+                self.tr("说明：请选择服务并填写对应信息")
+            )
+
+    # ---------- API 相关 ----------
+
+    def _start_loading_status(self):
+        """启动加载状态动画（正在连接...）"""
+        # 如果已经收到过天气，不启动加载动画
+        if self._last_weather_received:
+            return
+        # 先彻底清理之前的定时器
+        self._stop_loading_status()
+        self._loading_dots = 0
+        self._loading_timer = QTimer()
+        self._loading_timer.timeout.connect(self._update_loading_status)
+        self._loading_timer.start(500)
+        self._update_loading_status()
+        self._start_timeout_timer()
+
+    def _stop_loading_status(self):
+        """停止加载状态动画和超时定时器"""
+        if self._loading_timer is not None:
+            self._loading_timer.stop()
+            self._loading_timer = None
+        self._stop_timeout_timer()
+
+    def _update_loading_status(self):
+        """更新加载状态文字（三个点循环）"""
+        # 如果已经收到过天气，停止更新
+        if self._last_weather_received:
+            self._stop_loading_status()
+            return
+        self._loading_dots = (self._loading_dots + 1) % 4
+        dots = "." * self._loading_dots
+        self.status_label.setText(self.tr("状态") + "：⏳ " + self.tr("正在连接") + dots)
+
+    def _start_timeout_timer(self):
+        """启动120秒超时定时器"""
+        self._stop_timeout_timer()
+        self._timeout_timer = QTimer()
+        self._timeout_timer.setSingleShot(True)
+        self._timeout_timer.timeout.connect(self._on_connect_timeout)
+        self._timeout_timer.start(120000)
+
+    def _stop_timeout_timer(self):
+        """停止超时定时器"""
+        if self._timeout_timer is not None:
+            self._timeout_timer.stop()
+            self._timeout_timer = None
+            self._timeout_timer = None  # 确保引用被清除
+
+    def _on_connect_timeout(self):
+        """120秒超时回调"""
+        # 如果已经收到天气，不显示连接超时
+        if self._last_weather_received:
+            return
+        self._stop_loading_status()
+        self.status_label.setText(self.tr("状态") + "：❌ " + self.tr("连接超时"))
+
+    def _on_provider_index_changed(self, index):
+        if index < 0:
+            return
+
+        service_key = self.url_combo.currentData()
+        if not service_key:
+            return
+
+        service_map = {
+            "gaode":      ("https://restapi.amap.com",                        QCoreApplication.translate("WeatherPage", "请输入高德 API Key"),       True),
+            "open_meteo": ("https://api.open-meteo.com/v1/forecast",          QCoreApplication.translate("WeatherPage", "无需 API Key（可留空）"),   True),
+            "qweather":   ("https://devapi.qweather.com/v7/weather/now",      QCoreApplication.translate("WeatherPage", "请输入和风天气 API Key"),    False),
+            "weatherapi": ("https://api.weatherapi.com/v1/current.json",      QCoreApplication.translate("WeatherPage", "请输入 WeatherAPI Key"),     True),
+            "custom":     ("",                                                 QCoreApplication.translate("WeatherPage", "请输入 API Key"),            False),
+        }
+
+        if service_key in service_map:
+            _, key_placeholder, readonly = service_map[service_key]
+            self._updating = True
+            settings = QSettings("MyDesktopApp", "WeatherSettings")
+
+            # 按服务读取已保存的 URL
+            saved_url = settings.value(f"api_url_{service_key}", "")
+            if saved_url:
+                self.url_edit.setText(saved_url)
+            elif service_key == "gaode":
+                self.url_edit.setText("https://restapi.amap.com")
+            elif service_key == "open_meteo":
+                self.url_edit.setText("https://api.open-meteo.com/v1/forecast")
+            elif service_key == "weatherapi":
+                self.url_edit.setText("https://api.weatherapi.com/v1/current.json")
+            else:
+                self.url_edit.setText("")
+
+            # qweather: 特殊占位符，其他服务恢复默认
+            if service_key == "qweather":
+                self.url_edit.setPlaceholderText(
+                    QCoreApplication.translate("WeatherPage", "输入你的个人和风Host")
+                )
+            else:
+                self.url_edit.setPlaceholderText(self.tr("请输入 API 地址"))
+            self.url_edit.setReadOnly(readonly)
+            self.key_edit.setPlaceholderText(key_placeholder)
+            # 重置密钥显示状态为隐藏（闭眼）
+            self._key_visible = False
+            self.key_edit.setEchoMode(QLineEdit.EchoMode.Password)
+            if hasattr(self, 'eye_btn'):
+                self.eye_btn.setStyleSheet("QPushButton { border: none; background: transparent; font-size: 14px; color: #888; } QPushButton:hover { color: #1677ff; }")
+                self.eye_btn.setToolTip(self.tr("显示密钥"))
+            self._restore_key_for_service(service_key)
+            self._updating = False
+
+            # 更新说明文字
+            self._update_info_label(service_key)
+            # 切换服务时重置天气标志
+            self._last_weather_received = False
+
+        if not self._loading:
+            self.save_api_settings()
+            # ===== 修改点：切换 API 后刷新天气 =====
+            self._refresh_main_window_weather()
 
     def on_url_changed(self, text):
         if not self._updating and not self._loading:
@@ -494,12 +697,39 @@ class WeatherPage(QWidget):
         if not self._updating and not self._loading:
             self.save_api_settings()
 
+    def _restore_key_for_service(self, service_key):
+        if not service_key or service_key == "open_meteo":
+            self.key_edit.clear()
+            return
+        settings = QSettings("MyDesktopApp", "WeatherSettings")
+        saved_key = settings.value(f"api_key_{service_key}", "")
+        self.key_edit.setText(saved_key)
+
     def save_api_settings(self):
         if self._loading:
             return
         settings = QSettings("MyDesktopApp", "WeatherSettings")
-        settings.setValue("api_url", self.url_edit.text().strip())
-        settings.setValue("api_key", self.key_edit.text().strip())
+        service_key = self.url_combo.currentData()
+        if service_key:
+            settings.setValue(f"api_url_{service_key}", self.url_edit.text().strip())
+            settings.setValue("weather_service", service_key)
+            if service_key != "open_meteo":
+                settings.setValue(f"api_key_{service_key}", self.key_edit.text().strip())
+        else:
+            settings.setValue("api_url", self.url_edit.text().strip())
+            settings.setValue("api_key", self.key_edit.text().strip())
+            current_url = self.url_edit.text().strip()
+            if current_url == "https://restapi.amap.com":
+                settings.setValue("weather_service", "gaode")
+            elif current_url == "https://api.open-meteo.com/v1/forecast":
+                settings.setValue("weather_service", "open_meteo")
+            elif "qweather" in current_url.lower() or "qweatherapi" in current_url.lower():
+                settings.setValue("weather_service", "qweather")
+            elif current_url.startswith("https://api.weatherapi.com"):
+                settings.setValue("weather_service", "weatherapi")
+            else:
+                settings.setValue("weather_service", "custom")
+
         settings.setValue("refresh_minutes", self.freq_spin.value())
         self.check_status()
 
@@ -511,19 +741,50 @@ class WeatherPage(QWidget):
             self._refresh_main_window_weather()
 
     def _refresh_main_window_weather(self):
+        """强制刷新主窗口天气线程"""
         if self._loading:
             return
+
         main_window = None
-        if self.parent_dialog and hasattr(self.parent_dialog, 'parent'):
-            main_window = self.parent_dialog.parent()
+
+        # 方法1：通过 parent_dialog._main_window 属性（SettingsDialog 存储的引用）
+        if self.parent_dialog and hasattr(self.parent_dialog, '_main_window'):
+            main_window = self.parent_dialog._main_window
+
+        # 方法2：通过 parent() 链向上查找
         if not main_window:
-            parent = self.parent()
-            if parent and hasattr(parent, 'parent'):
-                main_window = parent.parent()
+            obj = self.parent()
+            while obj:
+                if obj.__class__.__name__ == "MainWindow":
+                    main_window = obj
+                    break
+                obj = obj.parent()
+
+        # 方法3：通过 parent_dialog 链向上查找
+        if not main_window and self.parent_dialog:
+            obj = self.parent_dialog
+            while obj:
+                if obj.__class__.__name__ == "MainWindow":
+                    main_window = obj
+                    break
+                obj = obj.parent()
+
+        # 方法4：遍历顶层窗口（兜底）
+        if not main_window:
+            for widget in QApplication.topLevelWidgets():
+                if widget.__class__.__name__ == "MainWindow":
+                    main_window = widget
+                    break
+
         if main_window and hasattr(main_window, 'start_weather_thread'):
+            print("🔄 强制刷新天气线程")
             main_window.start_weather_thread(force_restart=True)
+            # 重新连接设置页的天气信号（新线程需重新绑定）
+            self._connect_weather_signal()
             if hasattr(main_window, 'update'):
                 main_window.update()
+        else:
+            print("⚠️ 未找到主窗口，无法刷新天气")
 
     # ---------- 加载设置 ----------
     def load_regions(self):
@@ -540,6 +801,7 @@ class WeatherPage(QWidget):
             self.search_edit.setText(location_display)
             self._block_search = False
             self.current_location_label.setText(f"{self.tr('当前地区')}：{location_display}")
+            self.search_status_label.setText("✅ " + self.tr("已选择"))
         else:
             province = settings.value("selected_province", "")
             city = settings.value("selected_city", "")
@@ -557,16 +819,37 @@ class WeatherPage(QWidget):
                 self.search_edit.setText(display)
                 self._block_search = False
                 self.current_location_label.setText(f"{self.tr('当前地区')}：{display}")
+                self.search_status_label.setText("✅ " + self.tr("已选择"))
             else:
                 self.search_edit.clear()
                 self.current_location_label.setText(self.tr("当前地区：未选择"))
 
     def _get_main_window(self):
-        if self.parent_dialog and hasattr(self.parent_dialog, 'parent'):
-            return self.parent_dialog.parent()
-        parent = self.parent()
-        if parent and hasattr(parent, 'parent'):
-            return parent.parent()
+        """???????????"""
+        # ??1??? parent_dialog._main_window ??
+        if self.parent_dialog and hasattr(self.parent_dialog, '_main_window'):
+            return self.parent_dialog._main_window
+
+        # ??2??? parent() ?????
+        obj = self.parent()
+        while obj:
+            if obj.__class__.__name__ == "MainWindow":
+                return obj
+            obj = obj.parent()
+
+        # ??3??? parent_dialog ?????
+        if self.parent_dialog:
+            obj = self.parent_dialog
+            while obj:
+                if obj.__class__.__name__ == "MainWindow":
+                    return obj
+                obj = obj.parent()
+
+        # ??4???????????
+        for widget in QApplication.topLevelWidgets():
+            if widget.__class__.__name__ == "MainWindow":
+                return widget
+
         return None
 
     def _connect_weather_signal(self):
@@ -578,52 +861,120 @@ class WeatherPage(QWidget):
                     weather_thread.data_updated.disconnect(self._on_weather_updated)
                 except:
                     pass
+                try:
+                    weather_thread.error_signal.disconnect(self._on_weather_error)
+                except:
+                    pass
                 weather_thread.data_updated.connect(self._on_weather_updated)
+                weather_thread.error_signal.connect(self._on_weather_error)
                 self._signal_connected = True
 
+                # 如果主窗口已有天气数据，设标志后由 check_status 判断（避免旧服务数据污染新服务）
+                if hasattr(main_window, 'weather') and main_window.weather.get('city') != '--':
+                    self._last_weather_received = True
+                    self.check_status()
+
+    def _on_weather_error(self, err_msg):
+        """天气线程报错：标记配置无效，显示待配置"""
+        if self._last_weather_received:
+            return  # 之前成功过，保留"已连接"
+        self._stop_loading_status()
+        self.status_label.setText(self.tr("状态") + "：🛠️ " + self.tr("待配置"))
+
     def _on_weather_updated(self, data):
-        self.check_status()
+        # 过滤占位数据（线程失败时的兜底 ⚠️/?℃）
+        if data.get("weather") == "⚠️" or data.get("temp") == "?":
+            self._on_weather_error("")
+            return
+
+        # 强制停止所有定时器 - 直接操作，不依赖函数
+        if self._loading_timer is not None:
+            self._loading_timer.stop()
+            self._loading_timer = None
+        if self._timeout_timer is not None:
+            self._timeout_timer.stop()
+            self._timeout_timer = None
+        # 标记已收到天气
+        self._last_weather_received = True
+        # 强制显示已连接
+        self.status_label.setText(self.tr("状态") + "：✅ " + self.tr("已连接"))
 
     def load_settings(self):
         self._updating = True
         self._loading = True
         try:
             settings = QSettings("MyDesktopApp", "WeatherSettings")
-            url = settings.value("api_url", "")
-            key = settings.value("api_key", "")
             freq = int(settings.value("refresh_minutes", 120))
-
-            self.url_edit.setText(url)
-            self.key_edit.setText(key)
             self.freq_spin.setValue(freq)
 
-            if url == "https://restapi.amap.com":
-                self.url_combo.setCurrentText(self.tr("高德"))
-            else:
-                self.url_combo.setCurrentText(self.tr("自定义"))
+            weather_service = settings.value("weather_service", "")
 
+            # ---- 首次安装：无记录时默认 Open-Meteo；后续启动记住用户选择 ----
+            if not weather_service:
+                weather_service = "open_meteo"
+                settings.setValue("weather_service", "open_meteo")
+                settings.setValue("api_url_open_meteo", "https://api.open-meteo.com/v1/forecast")
+                settings.sync()
+
+            idx = self.url_combo.findData(weather_service)
+            if idx >= 0:
+                self.url_combo.setCurrentIndex(idx)
+            else:
+                idx = self.url_combo.findData("open_meteo")
+                if idx >= 0:
+                    self.url_combo.setCurrentIndex(idx)
+
+            self._on_provider_index_changed(self.url_combo.currentIndex())
             self.load_regions()
-            self.check_status()
+
+            # 重置标志并交由 check_status 统一判断状态
+            self._last_weather_received = False
             self._connect_weather_signal()
 
         finally:
             self._loading = False
             self._updating = False
 
+        # 必须在 finally 之后调用，否则 _loading=True 会导致 check_status 直接 return
+        self.check_status()
+
     def check_status(self):
         if self._loading:
             return
-        url = self.url_edit.text().strip()
-        key = self.key_edit.text().strip()
-        if not url or not key:
-            self.status_label.setText(self.tr("状态") + "：❌ " + self.tr("未填写完整"))
+
+        settings = QSettings("MyDesktopApp", "WeatherSettings")
+        service_key = self.url_combo.currentData() or "custom"
+
+        # 获取 URL 和 Key：优先从 QSettings 读取，fallback 到输入框
+        url = settings.value(f"api_url_{service_key}", "")
+        if not url:
+            url = self.url_edit.text().strip()
+
+        key = settings.value(f"api_key_{service_key}", "")
+        if not key:
+            key = self.key_edit.text().strip()
+
+        # ---- 判断当前服务是否已配置完整 ----
+        is_configured = False
+        if service_key == "open_meteo":
+            is_configured = True  # Open-Meteo 永远已配置
+        elif service_key == "gaode":
+            is_configured = bool(key)  # 高德 URL 固定，只需要 Key
+        else:
+            is_configured = bool(url and key)
+
+        # ---- 如果未配置：重置标志，显示待配置 ----
+        if not is_configured:
+            self._last_weather_received = False
+            self._stop_loading_status()
+            self.status_label.setText(self.tr("状态") + "：🛠️ " + self.tr("待配置"))
             return
-        try:
-            test_url = f"{url}/v3/ip?key={key}"
-            resp = requests.get(test_url, timeout=3, verify=certifi.where())
-            if resp.status_code == 200 and resp.json().get('status') == '1':
-                self.status_label.setText(self.tr("状态") + "：✅ " + self.tr("已连接"))
-            else:
-                self.status_label.setText(self.tr("状态") + "：❌ " + self.tr("连接失败（请检查地址和密钥）"))
-        except requests.RequestException:
-            self.status_label.setText(self.tr("状态") + "：❌ " + self.tr("连接失败（网络或服务器错误）"))
+
+        # ---- 已配置 + 已收到天气 → 已连接 ----
+        if self._last_weather_received:
+            self._stop_loading_status()
+            self.status_label.setText(self.tr("状态") + "：✅ " + self.tr("已连接"))
+            return
+
+        # ---- 已配置但未收到天气 → 正在连接... ----
+        self._start_loading_status()
