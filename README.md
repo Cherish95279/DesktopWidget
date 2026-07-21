@@ -1,343 +1,220 @@
-# 🖥️ DesktopWidget - 珍爱桌面小工具
+# 🖥️ DesktopWidget
 
-**珍爱桌面小工具** —— 基于 PyQt6 的轻量级桌面组件，集指针时钟、实时天气、性能监控、网速监控于一体，支持系统托盘和自动更新。
+> [English](README.md) | [简体中文](README_CN.md)
 
+**DesktopWidget** is a lightweight and customizable Windows desktop widget built with PyQt6, focused on real-time system monitoring and desktop information display.
 
-<!-- ===== 方案一：语言徽标 ===== -->
+It integrates system performance monitoring, network monitoring, weather information, calendar information, and theme customization into a simple desktop component.
+
+<p align="center">
+  <img src="https://img.shields.io/badge/version-v1.3.1-blue" alt="Version"/>
+  <img src="https://img.shields.io/badge/Python-3.12+-blue" alt="Python"/>
+  <img src="https://img.shields.io/badge/PyQt6-GUI-green" alt="PyQt6"/>
+  <img src="https://img.shields.io/badge/license-MIT-green" alt="License"/>
+</p>
+
 <p align="center">
   <img src="https://img.shields.io/badge/🌍-8%20Languages-blue" alt="Languages"/>
-  <img src="https://img.shields.io/badge/简体中文-✅-green" alt="简体中文"/>
-  <img src="https://img.shields.io/badge/繁體中文-✅-green" alt="繁體中文"/>
+  <img src="https://img.shields.io/badge/简体中文-✅-green" alt="Chinese"/>
+  <img src="https://img.shields.io/badge/繁體中文-✅-green" alt="Traditional Chinese"/>
   <img src="https://img.shields.io/badge/English-✅-green" alt="English"/>
-  <img src="https://img.shields.io/badge/Español-✅-green" alt="Español"/>
-  <img src="https://img.shields.io/badge/日本語-✅-green" alt="日本語"/>
-  <img src="https://img.shields.io/badge/Deutsch-✅-green" alt="Deutsch"/>
-  <img src="https://img.shields.io/badge/Français-✅-green" alt="Français"/>
-  <img src="https://img.shields.io/badge/한국어-✅-green" alt="한국어"/>
+  <img src="https://img.shields.io/badge/Español-✅-green" alt="Spanish"/>
+  <img src="https://img.shields.io/badge/日本語-✅-green" alt="Japanese"/>
+  <img src="https://img.shields.io/badge/Deutsch-✅-green" alt="German"/>
+  <img src="https://img.shields.io/badge/Français-✅-green" alt="French"/>
+  <img src="https://img.shields.io/badge/한국어-✅-green" alt="Korean"/>
 </p>
 
-<!-- ===== 方案二：语言横幅 ===== -->
-<p align="center">
-  <strong>🌍 支持 8 种语言</strong><br>
-  简体中文 · 繁體中文 · English · Español · 日本語 · Deutsch · Français · 한국어
-</p>
+**Current Version: v1.3.1**
 
-> 当前版本：v1.3.1
+![Preview](screenshots/preview.gif)
 
-![预览图](https://raw.githubusercontent.com/Cherish95279/DesktopWidget/main/screenshots/preview1.3.1.png)
-
-
-## ✨ 主要功能
-
-- 🕐 **指针时钟**：模拟石英钟，秒针平滑转动
-- 🌤️ **实时天气**：支持高德 API，可自定义 API 地址和密钥，可设置刷新频率
-- 📊 **性能监控**：实时显示 CPU / GPU / 内存占用
-- 🌐 **网速监控**：实时显示上行 / 下行速度
-- 📅 **农历 + 节气**：显示农历日期，自动计算下一个节气及倒计时
-- ⚙️ **自定义布局**：8 个信息槽位自由排列，下拉菜单实时生效，无需保存
-- 🎨 **主题系统**：内置“默认主题”和“竹林”双主题，支持背景颜色、着色强度、不透明度独立调节，一键恢复默认
-- 📢 **公告系统**：支持远程推送公告，有新公告时气泡+托盘闪烁提醒，内置历史公告管理
-- 🖥️ **系统托盘**：支持最小化到托盘，左键单击显示/隐藏窗口，双击恢复窗口
-- 🔄 **自动更新**：启动时自动检测新版本，支持一键下载安装
-- 🚀 **开机自启动**：支持设置开机自动运行
-- 🗺️ **地区选择**：支持全球城市搜索（国内 + 国际），天气跟随地区切换
-- 🎨 **字体自定义**：支持自定义主窗口字体、字号、文字颜色，实时生效
-- 💖 **捐赠支持**：支付宝 / 微信扫码捐赠，感谢您的支持！
-- 💬 **反馈渠道**：一键直达 GitHub Discussions，方便提交问题和建议
 
 ---
 
-## 🚀 快速开始
+# ✨ Features
 
-### 方式一：下载安装包（推荐）
+## 🖥️ System Monitoring
 
-| 平台 | 下载地址 |
-| :--- | :--- |
-| **GitHub** | [Releases](https://github.com/Cherish95279/DesktopWidget/releases) |
-| **Gitee**（国内用户推荐） | [Releases](https://gitee.com/Cherish95279/DesktopWidget/releases) |
+- Real-time CPU usage monitoring
+- GPU usage monitoring
+- Memory usage monitoring
+- Network upload/download speed monitoring
+- Screen refresh rate display
+- IP address display
 
-### 方式二：从源码运行
+
+## 🕐 Date & Time Information
+
+- Analog clock with smooth second hand movement
+- Gregorian calendar
+- Lunar calendar
+- 24 Solar Terms calculation
+- Next solar term countdown
+
+
+## 🌤️ Weather Information
+
+- Real-time weather display
+- Global city search
+- Multiple weather service support
+- Custom API configuration
+- Adjustable refresh interval
+
+
+## 🎨 Customization
+
+- Multiple built-in themes
+- Default theme and Bamboo theme
+- Custom widget layout
+- Background color adjustment
+- Transparency control
+- Font customization
+- Real-time setting changes
+
+
+## ⚙️ System Features
+
+- System tray support
+- Start with Windows
+- Automatic update checking
+- Remote announcement system
+- Feedback through GitHub Discussions
+
+
+---
+
+# 📷 Screenshots
+
+## Main Interface
+
+### Default Theme
+
+![Default Theme](screenshots/main_default.png)
+
+
+### Bamboo Theme
+
+![Bamboo Theme](screenshots/main_bamboo.png)
+
+
+## Settings
+
+### General Settings
+
+![General Settings](screenshots/settings_general.png)
+
+
+### Widget Settings
+
+![Widget Settings](screenshots/settings_widgets.png)
+
+
+### Theme Settings
+
+![Theme Settings](screenshots/settings_theme.png)
+
+
+### Weather Settings
+
+![Weather Settings](screenshots/settings_weather.png)
+
+
+## Other
+
+### System Tray Menu
+
+![Tray Menu](screenshots/tray_menu.png)
+
+
+### Update Interface
+
+![Update Interface](screenshots/update.png)
+
+
+---
+
+# 🚀 Getting Started
+
+## Download Release (Recommended)
+
+Download the latest executable version:
+
+| Platform | Download |
+| --- | --- |
+| GitHub | [Releases](https://github.com/Cherish95279/DesktopWidget/releases) |
+| Gitee | [Releases](https://gitee.com/Cherish95279/DesktopWidget/releases) |
+
+
+## Run From Source
+
+### Requirements
+
+- Windows 10 / Windows 11
+- Python 3.12+
+
+
+### Install Dependencies
 
 ```bash
-# 克隆仓库
-git clone https://github.com/Cherish95279/DesktopWidget.git
-cd DesktopWidget
-
-# 安装依赖
 pip install PyQt6 psutil requests zhdate GPUtil Pillow
-
-# 运行
+Run
 python widget.py
-🛠️ 技术栈
-技术	用途
-Python 3.12	编程语言
-PyQt6	GUI 框架
-psutil	系统性能监控
-requests	网络请求
-zhdate	农历转换
-GPUtil	GPU 监控
-Inno Setup	安装包制作
-PyInstaller	打包为独立 exe
-📦 一键打包
-bash
-# 激活虚拟环境
+🛠️ Technology Stack
+Technology	Purpose
+Python 3.12	Programming language
+PyQt6	GUI framework
+psutil	System performance monitoring
+GPUtil	GPU monitoring
+zhdate	Lunar calendar conversion
+requests	Network requests
+Pillow	Image processing
+PyInstaller	Executable packaging
+Inno Setup	Installer creation
+📦 Build
+
+Activate virtual environment:
+
 .venv\Scripts\activate
 
-# 执行打包（指定版本号）
-python build.py v1.2.1
-脚本自动完成：版本号更新 → 旧文件归档 → PyInstaller 打包 → Inno Setup 编译
+Build executable:
 
-🛠️ 开发环境
-Python 3.12+
+python build.py v1.3.1
 
-PyQt6
+The build script automatically handles:
 
-psutil
+Version update
+Old file archive
+PyInstaller packaging
+Inno Setup installer generation
+🌍 Language Support
 
-zhdate（农历）
+DesktopWidget supports 8 languages:
 
-GPUtil（可选）
+Language	Code
+简体中文	zh_CN
+繁體中文	zh_TW
+English	en
+Español	es
+日本語	ja
+Deutsch	de
+Français	fr
+한국어	ko
 
-requests
+Language settings are saved through QSettings.
 
-certifi
+A restart is required after changing the language.
 
-🌍 多语言支持
-语言	代码	显示名称
-简体中文	zh_CN	中文简体
-繁体中文	zh_TW	中文繁體
-英语	en	English
-西班牙语	es	Español
-日语	ja	日本語
-德语	de	Deutsch
-法语	fr	Français
-韩语	ko	한국어
-语言设置保存在 QSettings 中，切换后需重启程序生效。
+📄 License
 
-📄 许可证
 MIT License
 
-🙏 致谢
-感谢 fkp123 的大力支持
-
-天气数据由 高德开放平台 提供
-
-农历转换基于 zhdate
-
-📸 预览图
-https://raw.githubusercontent.com/Cherish95279/DesktopWidget/main/screenshots/preview1.2.5.png
-
-📝 更新日志
-
-
-🚀 v1.3.1 更新内容
-
-新增3项天气设置服务，默认天气服务由原来的高德改为Open-meteo，这个服务不需要密钥，URL已硬编码在代码中
-
-另有Weather API/和风天气与Open-meteo同样支持全球各地区天气
-
-所有新增的用户可见语言均已翻译为8种语言
-
-优化了天气显示地区的设置方式，由之前的省市县修改为当前的一个搜索框
-
-搜索框的地址池由本地地址数据库（仅中国地区，关键词匹配不到时交给网络）和网络搜索结合组成
-
-地址搜索支持各种语言
-
-API密钥支持了明文和暗码切换显示
-
-说明文字根据选择的服务和语言相应展示，需要api密钥可点击说明文字里的超级链接自行获取（各个服务平台对个人相当慷慨）
-
-
-
-🚀 v1.3.0 更新内容
-🌍 多语言扩展
-新增 法语 (Français) 和 韩语 (한국어) 支持
-
-重构翻译框架，使用内置字典 + QTranslator 双机制
-
-语言切换后重启生效，所有界面文字均已翻译
-
-🌐 天气地区全球搜索
-移除原有的“省份 → 城市 → 区/县”三级下拉框
-
-新增 全球城市搜索框，支持中文/英文/日文等多语言输入
-
-国内地区使用本地 china_regions.json 数据库优先匹配
-
-国际地区使用 Open-Meteo Geocoding API（免费，无需 API Key）
-
-天气请求改用 经纬度 查询，支持全球任意城市
-
-主窗口天气地区显示短格式（如“延津县”），节省空间
-
-📢 公告栏优化
-公告检查支持 Gitee 和 GitHub 双源并行，国内用户无需代理
-
-点击“查看公告”按钮立即刷新公告列表
-
-公告窗口左侧列表去掉日期，只显示标题，界面更简洁
-
-时间戳字号增大、颜色加深，提升可读性
-
-🖥️ 设置窗口改进
-修复最小化按钮行为（正常缩进任务栏）
-
-移除自定义标题栏，恢复系统标题栏，避免崩溃
-
-常规设置页布局调整，语言下拉框与窗口模式对齐
-
-🐛 其他修复
-修复 GPU 读取在打包后失效的问题（改用 ctypes 直接调用 nvml.dll）
-
-修复设置窗口最小化后紧贴任务栏的问题
-
-修复公告窗口数据更新后不刷新列表的问题
-
-清理大量未使用的 import 和 bare except（代码质量提升）
-
-v1.2.8
-移除聊天功能（完整清理）
-
-删除 src/chat_client.py、src/chat_window.py、src/settings_pages/chat_page.py
-
-恢复 main_window.py、settings_dialog.py、tray_icon.py、constants.py 到无聊天版本
-
-清理 __pycache__ 缓存文件
-
-代码质量优化（通过 Cline + DeepSeek）
-
-清理所有未使用的 import（11 处）
-
-拆分超过 50 行的长函数（11 个方法拆分）
-
-修复所有 bare except，改为具体异常类型（9 处）
-
-设置窗口 UI 改进
-
-添加最小化按钮（自定义标题栏方案）
-
-统一标题栏悬停效果（浅灰色背景）
-
-标题栏颜色改为浅蓝色 #e6f4ff
-
-导航栏背景改为 #f5f6fa
-
-禁用最大化按钮（彻底移除）
-
-VSCode 调试配置
-
-配置 launch.json，按 F5 自动杀旧进程并重启
-
-preLaunchTask 自动结束 widget.py 进程
-
-v1.2.7 (2026-07-04)
-🎨 UI 全面统一：所有设置页面的下拉框、输入框、按钮、滑块风格完全一致
-
-🎨 着色强度改为滑块：从输入框改为滑块控制（0~255 映射百分比），交互更直观
-
-🎨 主题切换实时生效：切换主题后主窗口立即更新，无需重启
-
-🐛 修复天气设置反复刷新：打开天气设置页面时不再重复触发天气更新
-
-🔄 更新渠道优化：改为下拉框选择（Gitee源 / GitHub源），默认 Gitee，界面更简洁
-
-📢 公告主动查看入口：常规设置页新增“📢 查看公告”按钮，方便随时查阅历史公告
-
-🎨 统一控件高度：所有输入框、下拉框、按钮高度统一为 28px
-
-🎨 统一下拉框样式：边框、背景、悬停效果统一，使用系统默认下拉箭头
-
-🧹 代码优化：移除冗余的天气地区选择（已在天气设置中独立管理）
-
-v1.2.6 (2026-07-03)
-🎨 新增“竹林”主题：全新主题风格，在设置 → 主题中自由切换
-
-🇨🇳 新增 Gitee 更新渠道：国内用户可在设置 → 检查更新中切换至 Gitee 源，加速更新下载
-
-📢 新增公告主动查看入口：在设置 → 常规页面增加“📢 查看公告”按钮，方便随时查阅历史公告
-
-🎨 主题设置页面布局优化：主题切换与背景颜色并排，恢复默认按钮统一风格
-
-🐛 修复打开设置时天气线程重启问题：避免不必要的网络请求
-
-🎨 UI 统一优化：各设置页面的“恢复默认”按钮尺寸和位置保持一致
-
-🛠️ DevTool 工具升级：项目后端工具新增“分发”功能，支持一键推送代码 + 创建 Release + 自动上传 exe（GitHub 自动，Gitee 手动）
-
-🎨 主题系统
-v1.2.5 起，DesktopWidget 正式支持主题切换功能，你可以根据自己的喜好定制桌面小工具的外观：
-
-主题切换：内置“默认主题”和“竹林”两套主题，一键切换，实时生效
-
-背景颜色：提供“经典暗色”、“浅色主题”、“浅蓝灰”三种预设颜色，支持自定义取色
-
-着色强度：独立控制背景颜色叠加层的透明度（0~255），值越小越透（原图清晰），值越大颜色越浓
-
-不透明度：调节窗口整体透明度（20%~100%），让桌面小工具与你的桌面环境更好地融合
-
-恢复默认：一键重置所有主题相关设置，快速回到初始状态
-
-新增“默认主题”和“竹林”双主题切换，设置页面集成主题下拉框
-
-优化“不透明度”调节：滑块范围 20%~100%，映射窗口透明度 75%~100%
-
-新增“恢复默认”按钮：一键重置所有主题设置
-
-主题切换即时生效，无需保存
-
-🔄 性能优化
-修复打开设置时反复触发天气线程重启的问题
-
-优化设置页面加载逻辑，减少不必要的网络请求
-
-v1.2.3 (2026-06-28)
-修复了一些已知问题
-
-更新预告：主题功能即将逐步上线
-
-v1.2.2 (2026-06-26)
-安装界面中文化：安装器界面全面切换为中文，提升用户安装体验
-
-公告窗口优化：优化公告消息窗口的显示逻辑，提升稳定性和交互流畅度
-
-DevTool 开发者工具：新增独立后端工具，实现打包、推送、发公告一站式自动化
-
-v1.2.1 (2026-06-25)
-公告系统完整上线：支持远程推送公告，气泡+托盘联动提醒
-
-公告历史管理：已读公告自动归档，支持右键删除和清空
-
-窗口体验优化：公告窗口秒开，数据无感加载
-
-托盘绿点提示：有新公告时显示绿点，已读后自动消失
-
-设置窗口非模态：公告窗口与设置窗口独立，互不干扰
-
-反馈渠道：关于页面新增 GitHub Discussions 入口
-
-修复公告已读后气泡/绿点不消失的问题
-
-优化公告窗口加载速度
-
-v1.2.0 (2026-06-24)
-重构显示项目布局，8 个信息槽位自由排列
-
-下拉菜单实时生效，取消保存按钮
-
-新增捐赠页面（支付宝 / 微信扫码）
-
-修复 CPU、GPU、分辨率、刷新率显示位置错乱
-
-调整左一/右一高度为两行显示
-
-优化主窗口绘制逻辑，提升显示准确性
-
-v1.1.9
-新增日出日落功能
-
-优化天气线程缓存机制
-
-修复已知问题
-
-如果觉得好用，不妨给个 Star ⭐ 支持一下！
+🙏 Acknowledgements
+Weather data provided by weather service providers
+Lunar calendar conversion based on zhdate
+Thanks to fkp123 for support
+📝 Changelog
+
+See:
+
+CHANGELOG.md
