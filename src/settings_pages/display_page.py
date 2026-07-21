@@ -1,4 +1,4 @@
-from PyQt6.QtWidgets import *
+﻿from PyQt6.QtWidgets import *
 from PyQt6.QtCore import *
 from ..constants import DEFAULT_LAYOUT
 
@@ -39,6 +39,7 @@ class DisplayPage(QWidget):
             ("memory", self.tr("内存")),
             ("date", self.tr("公历")),
             ("lunar", self.tr("农历")),
+            ("term", self.tr("节气")),
             ("empty", self.tr("空")),
         ]
         self.all_values = [v for v, _ in self.content_pool]

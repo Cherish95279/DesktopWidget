@@ -65,7 +65,7 @@ SPINBOX_STYLE = """
 
 
 class GeocodingThread(QThread):
-    """后台线程：调用 Open-Meteo Geocoding API"""
+    """后台线程：Open-Meteo Geocoding API + Nominatim 回退"""
     result_ready = pyqtSignal(list)
     search_failed = pyqtSignal(str)
 
@@ -73,60 +73,121 @@ class GeocodingThread(QThread):
         super().__init__()
         self.query = query.strip()
 
+    def _search_open_meteo(self):
+        """主搜索引擎：Open-Meteo Geocoding"""
+        url = "https://geocoding-api.open-meteo.com/v1/search"
+        app_lang = QSettings("MyDesktopApp", "WeatherSettings").value("language", "")
+        geocoding_lang = app_lang.split("_")[0] if "_" in app_lang else (app_lang or "zh")
+        params = {
+            "name": self.query,
+            "language": geocoding_lang,
+            "count": 10,
+            "format": "json"
+        }
+        resp = requests.get(url, params=params, timeout=8)
+        if resp.status_code != 200:
+            return None
+        data = resp.json()
+        return data.get("results", [])
+
+    def _search_nominatim(self):
+        """回退引擎：Nominatim (OpenStreetMap)，对非拉丁脚本支持更好"""
+        mirrors = [
+            "https://nominatim.openstreetmap.org/search",
+            "https://nominatim.openstreetmap.fr/search",
+        ]
+        app_lang = QSettings("MyDesktopApp", "WeatherSettings").value("language", "en")
+        headers = {
+            "User-Agent": "DesktopWidget/1.0 (weather app)",
+            "Accept-Language": app_lang
+        }
+        params = {
+            "q": self.query,
+            "format": "json",
+            "limit": 10,
+            "addressdetails": 1
+        }
+        last_error = None
+        for mirror_url in mirrors:
+            try:
+                resp = requests.get(mirror_url, params=params, headers=headers, timeout=8)
+                if resp.status_code == 200:
+                    data = resp.json()
+                    if data:
+                        break
+            except Exception as e:
+                last_error = e
+                continue
+        else:
+            return []
+        results = []
+        for item in data:
+            addr = item.get("address", {})
+            name = addr.get("city") or addr.get("town") or addr.get("village") or addr.get("municipality") or item.get("name", "")
+            admin1 = addr.get("state") or addr.get("region") or addr.get("province") or ""
+            country = addr.get("country", "")
+            parts = [p for p in [name, admin1, country] if p]
+            results.append({
+                "display": ", ".join(parts),
+                "name": name,
+                "admin1": admin1,
+                "country": country,
+                "latitude": float(item.get("lat", 0)),
+                "longitude": float(item.get("lon", 0)),
+            })
+        return results
+
+    def _format_results(self, raw_items):
+        """统一格式化搜索结果"""
+        formatted = []
+        for item in raw_items:
+            name = item.get("name", "")
+            admin1 = item.get("admin1", "")
+            country = item.get("country", "")
+            parts = [p for p in [name, admin1, country] if p]
+            formatted.append({
+                "display": ", ".join(parts),
+                "name": name,
+                "admin1": admin1,
+                "country": country,
+                "latitude": item.get("latitude"),
+                "longitude": item.get("longitude"),
+            })
+        return formatted
+
     def run(self):
         if not self.query or len(self.query) < 2:
             self.search_failed.emit(QCoreApplication.translate("WeatherPage", "输入太短"))
             return
 
-        url = "https://geocoding-api.open-meteo.com/v1/search"
-        params = {
-            "name": self.query,
-            "language": "zh",
-            "count": 10,
-            "format": "json"
-        }
-
+        # 每个搜索引擎独立 try，一个挂了不影响另一个
+        om_results = None
         try:
-            resp = requests.get(url, params=params, timeout=8)
-            if resp.status_code != 200:
-                self.search_failed.emit(f"HTTP {resp.status_code}")
+            om_results = self._search_open_meteo()
+        except Exception:
+            pass
+
+        if om_results:
+            formatted = self._format_results(om_results)
+            if formatted:
+                self.result_ready.emit(formatted)
                 return
 
-            data = resp.json()
-            results = data.get("results", [])
-            if not results:
-                self.search_failed.emit(QCoreApplication.translate("WeatherPage", "未找到匹配地点"))
-                return
+        # Open-Meteo 无结果或异常 → Nominatim 回退
+        nominatim_results = []
+        try:
+            nominatim_results = self._search_nominatim()
+        except Exception:
+            pass
 
-            formatted_results = []
-            for item in results:
-                name = item.get("name", "")
-                admin1 = item.get("admin1", "")
-                country = item.get("country", "")
-                parts = [p for p in [name, admin1, country] if p]
-                display_text = ", ".join(parts)
-                formatted_results.append({
-                    "display": display_text,
-                    "name": name,
-                    "admin1": admin1,
-                    "country": country,
-                    "latitude": item.get("latitude"),
-                    "longitude": item.get("longitude"),
-                })
+        if nominatim_results:
+            self.result_ready.emit(nominatim_results)
+            return
 
-            self.result_ready.emit(formatted_results)
-
-        except requests.exceptions.Timeout:
-            self.search_failed.emit(QCoreApplication.translate("WeatherPage", "搜索超时"))
-        except requests.exceptions.ConnectionError:
-            self.search_failed.emit(QCoreApplication.translate("WeatherPage", "网络连接失败"))
-        except Exception as e:
-            self.search_failed.emit(QCoreApplication.translate("WeatherPage", "搜索异常") + f": {str(e)}")
+        self.search_failed.emit(QCoreApplication.translate("WeatherPage", "未找到匹配地点"))
 
 
 class WeatherPage(QWidget):
-    region_changed = pyqtSignal()
-
     def __init__(self, parent=None):
         super().__init__(parent)
         self.parent_dialog = parent
@@ -248,7 +309,7 @@ class WeatherPage(QWidget):
         search_layout = QHBoxLayout()
 
         self.search_edit = QLineEdit()
-        self.search_edit.setPlaceholderText(self.tr("输入城市名称（如 北京、New York）"))
+        self.search_edit.setPlaceholderText(self.tr("搜索城市名称"))
         self.search_edit.setStyleSheet(LINEEDIT_STYLE)
         self.search_edit.setFixedHeight(28)
         self.search_edit.setMinimumWidth(250)
@@ -298,6 +359,9 @@ class WeatherPage(QWidget):
 
     # ---------- 本地搜索 ----------
     def _contains_chinese(self, text: str) -> bool:
+        """仅中文（排除日文假名/韩文谚文的 CJK 干扰）"""
+        if re.search(r'[\u3040-\u30ff\uac00-\ud7af]', text):
+            return False
         return bool(re.search(r'[\u4e00-\u9fff]', text))
 
     def _search_local_regions(self, query: str) -> list:
@@ -511,8 +575,16 @@ class WeatherPage(QWidget):
         self.search_status_label.setText("✅ " + self.tr("已选择"))
         self.result_list.hide()
 
-        self.region_changed.emit()
-        self._refresh_main_window_weather()
+        # 延迟发射信号，避免在信号处理中触发天气线程重启导致崩溃
+        QTimer.singleShot(0, self._safe_region_changed)
+
+    def _safe_region_changed(self):
+        """安全地发射区域变更信号（延迟到下一事件循环）"""
+        try:
+            self.region_changed.emit()
+            self._refresh_main_window_weather()
+        except Exception:
+            pass
 
     def _toggle_key_visibility(self):
         """切换 API Key 的显示/隐藏状态"""
@@ -957,7 +1029,10 @@ class WeatherPage(QWidget):
         # ---- 判断当前服务是否已配置完整 ----
         is_configured = False
         if service_key == "open_meteo":
-            is_configured = True  # Open-Meteo 永远已配置
+            # Open-Meteo 不需要 Key，但必须有经纬度
+            lat = settings.value("selected_latitude", "")
+            lng = settings.value("selected_longitude", "")
+            is_configured = bool(lat and lng)
         elif service_key == "gaode":
             is_configured = bool(key)  # 高德 URL 固定，只需要 Key
         else:

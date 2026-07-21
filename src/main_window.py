@@ -13,7 +13,7 @@ import psutil
 from .constants import CENTER_X, CENTER_Y, DEFAULT_LAYOUT
 from .utils import get_weather_icon
 from .region_data import get_coords_by_name, get_coords_for_city
-from .solar_terms import get_next_term_info
+from .solar_terms import get_next_term_info, translate_term
 from .threads import ServerScanner, WeatherThread, NetSpeedThread
 from .settings_dialog import SettingsDialog
 from .tray_icon import TrayIcon
@@ -189,6 +189,7 @@ class MainWindow(QWidget):
             "lunar": t("MainWindow", "农历"),
             "lunar_error": t("MainWindow", "农历错误"),
             "not_installed": t("MainWindow", "未安装"),
+            "distance": t("MainWindow", "距"),
             "days_until": t("MainWindow", "离"),
             "days_left": t("MainWindow", "还有"),
             "day_unit": t("MainWindow", "天"),
@@ -627,7 +628,7 @@ class MainWindow(QWidget):
         if LUNAR_AVAILABLE:
             try:
                 lunar = ZhDate.from_datetime(self.now)
-                self.lunar_text = f"{self._i18n["lunar"]}{lunar.lunar_month}月{lunar.lunar_day}日"
+                self.lunar_text = f"{self._i18n["lunar"]} {self.now:%y/%m/%d}"
             except Exception:
                 self.lunar_text = self._i18n["lunar_error"]
         else:
@@ -635,9 +636,10 @@ class MainWindow(QWidget):
 
         current, next_name, days = get_next_term_info(self.now.year, self.now.month, self.now.day)
         if current:
-            self.term_display = current
+            self.term_display = translate_term(current)
         elif next_name is not None and days is not None:
-            self.term_display = f"{self._i18n["days_until"]}{next_name}{self._i18n["days_left"]}{days}{self._i18n["day_unit"]}"
+            trans_name = translate_term(next_name)
+            self.term_display = f"{self._i18n["distance"]}{trans_name} {days}{self._i18n["day_unit"]}"
         else:
             self.term_display = ""
         self.update()
@@ -723,8 +725,9 @@ class MainWindow(QWidget):
         resolution_text = f"{self.screen_res}"
         refresh_rate_text = f"{self.fps}Hz"
         memory_text = f"{self._i18n["memory"]}\n{int(self.mem)}%"
+        term_text = self.term_display if self.term_display else ""
         date_text = f"{self.now.strftime('%Y/%m/%d')}\n  {self._i18n['week']}{self._i18n['weekdays'][self.now.weekday()]}"
-        lunar_text = f"{self.lunar_text}\n{self.term_display}"
+        lunar_text = self.lunar_text
 
         content_text_map = {
             "ip": ip_text,
@@ -737,11 +740,11 @@ class MainWindow(QWidget):
             "memory": memory_text,
             "date": date_text,
             "lunar": lunar_text,
+            "term": term_text,
             "empty": "",
         }
 
         multiline_map = {
-            "lunar": [self.lunar_text, self.term_display],
             "date": [self.now.strftime('%Y/%m/%d'), f"{self._i18n['week']}{self._i18n['weekdays'][self.now.weekday()]}"],
             "netspeed": [f"↓{self.down_speed:.1f}Mb/s", f"↑{self.up_speed:.1f}Mb/s"],
             "memory": [self._i18n["memory"], f"{int(self.mem)}%"],

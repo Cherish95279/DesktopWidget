@@ -185,13 +185,6 @@ class TrayIcon(QSystemTrayIcon):
     def setup_menu(self):
         self.menu.clear()
 
-        # 显示主窗口
-        show_action = QAction("🖥️ " + self.tr("显示主窗口"), self)
-        show_action.triggered.connect(self.show_window)
-        self.menu.addAction(show_action)
-
-        self.menu.addSeparator()
-
         # 窗口模式（三个互斥选项）
         self._bottom_action = QAction("⬇️ " + self.tr("置底"), self)
         self._bottom_action.setCheckable(True)
@@ -267,12 +260,6 @@ class TrayIcon(QSystemTrayIcon):
         if self.parent_window.isVisible():
             self.parent_window.hide()
         else:
-            self.parent_window.show()
-            self.parent_window.raise_()
-            self.parent_window.activateWindow()
-
-    def show_window(self):
-        if not self.parent_window.isVisible():
             self.parent_window.show()
             self.parent_window.raise_()
             self.parent_window.activateWindow()

@@ -79,7 +79,17 @@
             <source>未安装</source>
             <translation type="unfinished" />
         </message>
-    </context>
+            <message>
+            <location filename="main_window.py" line="0"/>
+            <source>距</source>
+            <translation>距</translation>
+        </message>
+        <message>
+            <location filename="main_window.py" line="0"/>
+            <source>天</source>
+            <translation>天</translation>
+        </message>
+</context>
     <context>
         <name>TrayIcon</name>
         <message>
@@ -399,7 +409,12 @@
             <source>恢复默认</source>
             <translation type="unfinished" />
         </message>
-    </context>
+            <message>
+            <location filename="settings_pages/display_page.py" line="0"/>
+            <source>节气</source>
+            <translation>节气</translation>
+        </message>
+</context>
             <context>
         <name>WeatherPage</name>
         <message>
@@ -647,7 +662,12 @@
             <location filename="settings_pages/weather_page.py" line="0"/>
             <source>隐藏密钥</source>
             <translation type="unfinished"></translation>
-        </message></context>
+        </message>        <message>
+            <location filename="settings_pages/weather_page.py" line="0"/>
+            <source>搜索城市名称</source>
+            <translation>搜索城市名称</translation>
+        </message>
+</context>
     <context>
         <name>ThemePage</name>
         <message>
@@ -694,6 +714,16 @@
             <location filename="../settings_pages/theme_page.py" line="0"/>
             <source>取消</source>
             <translation>取消</translation>
+        </message>
+        <message>
+            <location filename="settings_pages/theme_page.py" line="0"/>
+            <source>不透明度</source>
+            <translation>不透明度</translation>
+        </message>
+        <message>
+            <location filename="settings_pages/theme_page.py" line="0"/>
+            <source>着色强度</source>
+            <translation>着色强度</translation>
         </message>
 </context>
     <context>
@@ -839,7 +869,52 @@
             <source>新版本已下载完成，是否立即安装？</source>
             <translation type="unfinished" />
         </message>
-    </context>
+            <message>
+            <location filename="settings_pages/update_page.py" line="0"/>
+            <source>当前版本：</source>
+            <translation>当前版本：</translation>
+        </message>
+        <message>
+            <location filename="settings_pages/update_page.py" line="0"/>
+            <source>正在检查...</source>
+            <translation>正在检查...</translation>
+        </message>
+        <message>
+            <location filename="settings_pages/update_page.py" line="0"/>
+            <source>下载更新</source>
+            <translation>下载更新</translation>
+        </message>
+        <message>
+            <location filename="settings_pages/update_page.py" line="0"/>
+            <source>Token 已保存</source>
+            <translation>Token 已保存</translation>
+        </message>
+        <message>
+            <location filename="settings_pages/update_page.py" line="0"/>
+            <source>Token 已清除</source>
+            <translation>Token 已清除</translation>
+        </message>
+        <message>
+            <location filename="settings_pages/update_page.py" line="0"/>
+            <source>最新版本：请点击检查更新</source>
+            <translation>最新版本：请点击检查更新</translation>
+        </message>
+        <message>
+            <location filename="settings_pages/update_page.py" line="0"/>
+            <source>已切换到</source>
+            <translation>已切换到</translation>
+        </message>
+        <message>
+            <location filename="settings_pages/update_page.py" line="0"/>
+            <source>源，请点击检查更新</source>
+            <translation>源，请点击检查更新</translation>
+        </message>
+        <message>
+            <location filename="settings_pages/update_page.py" line="0"/>
+            <source>检查失败：</source>
+            <translation>检查失败：</translation>
+        </message>
+</context>
     <context>
         <name>DonationPage</name>
         <message>

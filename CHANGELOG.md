@@ -2,6 +2,8 @@
 
 All notable changes to DesktopWidget are documented in this file.
 
+> Chinese version:
+> [CHANGELOG_CN.md](CHANGELOG_CN.md)
 
 ---
 
@@ -9,118 +11,455 @@ All notable changes to DesktopWidget are documented in this file.
 
 ## 🌤️ Weather System Improvements
 
-- Added three weather service options.
-- Changed the default weather service from Amap Weather to Open-Meteo.
+- Added 3 new weather service options.
+
+- Changed the default weather provider from Amap Weather to Open-Meteo.
+
+- Open-Meteo does not require an API Key.
+  The service URL is built into the application.
+
 - Added support for:
+
   - Open-Meteo
   - Weather API
   - QWeather
 
-- Added global city search.
-- Weather location search now supports multiple languages.
-- Improved weather location selection:
-  - Removed the previous province/city/district selection method.
-  - Added a unified search interface.
+
+All supported weather services now provide global weather data.
+
+
+---
+
+## 🌍 Localization Improvements
+
+- All newly added user-visible text has been translated.
+
+- DesktopWidget now supports 8 languages:
+
+  - Simplified Chinese
+  - Traditional Chinese
+  - English
+  - Japanese
+  - Korean
+  - German
+  - French
+  - Spanish
+
+
+---
+
+## 🌐 Weather Location Search Improvements
+
+Improved the weather location configuration system.
+
+Changes:
+
+- Removed the previous province / city / district selection method.
+
+- Added a unified search box.
+
+The location search system combines:
+
+- Local region database (priority for China regions)
+- Online search service (when local matching fails)
+
+Additional improvements:
+
+- Supports multilingual location search.
+
+
+---
 
 ## 🔑 API Configuration Improvements
 
-- Added API key visibility switching:
-  - Plain text display
-  - Masked display
+Added API Key display options:
 
-- Added dynamic help text based on selected weather service and language.
-- Added direct links to weather service platforms for API key registration.
+- Plain text display
+- Masked display
 
-## 🌍 Localization
 
-- Completed all newly added user-visible translations.
-- All supported features are now translated into 8 languages.
+Improved service instructions:
+
+- Help text dynamically changes according to the selected weather service.
+
+- Help information follows the current interface language.
+
+- If an API Key is required, users can directly open the registration link from the help text.
 
 
 ---
 
 # 🚀 v1.3.0 (2026-07-10)
 
-## 🌍 Multi-language Support
+## 🌍 Multi-language Expansion
 
-- Added French support.
-- Added Korean support.
-- Improved translation framework.
-- All interface text is now translated.
+Added:
 
-## 🌤️ Global Weather Location Search
+- French (Français)
+- Korean (한국어)
 
-- Replaced the previous three-level region selection system.
-- Added global city search.
-- Supports Chinese, English, Japanese and other languages.
+
+Translation system improvements:
+
+- Rebuilt the localization framework.
+- Uses a dual translation system:
+  - Built-in dictionary
+  - QTranslator
+
+
+Language switching:
+
+- Requires application restart after changing language.
+- All user interface text has been translated.
+
+
+---
+
+## 🌐 Global Weather Location Search
+
+Removed the previous:
+
+```
+Province → City → District/County
+```
+
+three-level selection system.
+
+
+Added:
+
+- Global city search.
+- Multilingual input support including Chinese, English and Japanese.
+
 
 Location search system:
 
-- Uses local China region database first.
-- Uses online geocoding service for international locations.
+### China regions
 
-Weather requests now use latitude and longitude queries.
+- Uses local `china_regions.json` database first.
+
+
+### International regions
+
+- Uses Open-Meteo Geocoding API.
+
+Features:
+
+- Free to use.
+- No API Key required.
+
+
+Weather requests:
+
+- Changed to latitude and longitude based queries.
+- Supports weather data for any location worldwide.
+
+
+Display optimization:
+
+- Weather location display now uses a shorter format.
+
+Example:
+
+```
+Yanjin County
+```
+
+to reduce occupied space.
+
+
+---
 
 ## 📢 Announcement System Improvements
 
-- Added GitHub and Gitee dual update sources.
-- Improved announcement refresh behavior.
-- Optimized announcement interface layout.
+Added:
 
-## ⚙️ Settings Improvements
+- Dual-source announcement checking:
+  - GitHub
+  - Gitee
 
-- Improved settings window stability.
-- Restored system title bar.
-- Fixed window behavior issues.
+Domestic users can receive update announcements without proxy access.
 
-## 🐛 Bug Fixes
 
-- Fixed GPU detection failure after packaging.
-- Improved GPU monitoring reliability.
-- Cleaned unused code and improved code quality.
+Improved announcement window:
+
+- Removed dates from the left announcement list.
+- Only displays announcement titles.
+- Simplified interface layout.
+
+
+Improved timestamp display:
+
+- Increased font size.
+- Increased contrast.
+- Improved readability.
+
+
+---
+
+## 🖥️ Settings Window Improvements
+
+Fixed:
+
+- Incorrect minimize button behavior.
+
+Changes:
+
+- Restored the system title bar.
+- Removed the custom title bar design to avoid possible crashes.
+
+Improved:
+
+- General settings page layout.
+- Language selector alignment with window mode options.
+
+
+---
+
+## 🐛 Other Fixes
+
+Fixed:
+
+- GPU detection failure after packaging.
+
+Solution:
+
+- Directly call `nvml.dll` through ctypes.
+
+
+Other improvements:
+
+- Fixed settings window position issues after minimizing.
+- Fixed announcement list not refreshing after data updates.
+- Removed large amounts of unused imports.
+- Replaced bare except statements with specific exception handling.
 
 
 ---
 
 # 🚀 v1.2.8
 
-## Code Optimization
+## 🧹 Code Optimization
 
-- Removed chat functionality completely.
-- Improved project structure.
-- Removed unused imports.
-- Improved exception handling.
+Removed the chat feature completely.
 
-## Settings Interface Improvements
+Deleted:
 
-- Added improved settings window layout.
-- Unified control styles.
-- Improved user interaction experience.
+- `src/chat_client.py`
+- `src/chat_window.py`
+- `src/settings_pages/chat_page.py`
+
+
+Restored the following modules to the non-chat version:
+
+- `main_window.py`
+- `settings_dialog.py`
+- `tray_icon.py`
+- `constants.py`
+
+
+Other improvements:
+
+- Cleaned unused `__pycache__` files.
+
+
+Code quality improvements:
+
+- Optimized code with assistance from Cline + DeepSeek.
+- Removed unused imports (11 locations).
+- Split long functions exceeding 50 lines (11 methods).
+- Replaced all bare except statements with specific exception handling.
+
+
+---
+
+## ⚙️ Settings Window UI Improvements
+
+Added:
+
+- Custom title bar minimize button.
+
+
+Unified:
+
+- Title bar hover effects.
+- Light gray hover feedback.
+
+
+Updated colors:
+
+Title bar:
+
+```text
+#e6f4ff
+```
+
+Navigation bar:
+
+```text
+#f5f6fa
+```
+
+
+Other changes:
+
+- Disabled maximize button.
+- Completely removed maximize functionality.
+
+
+---
+
+## 🛠️ VSCode Debug Configuration
+
+Added:
+
+- `launch.json` debugging configuration.
+
+
+Features:
+
+- Press F5 to automatically terminate old processes.
+- Automatically restart `widget.py`.
+
+
+Added:
+
+- `preLaunchTask` for automatic process cleanup.
 
 
 ---
 
 # 🚀 v1.2.7 (2026-07-04)
 
-## 🎨 UI Improvements
+## 🎨 UI Consistency Improvements
 
-- Unified all settings page styles.
-- Improved input boxes, buttons and sliders.
-- Changed theme color intensity control to slider.
-- Added real-time theme switching.
+Unified the style of all settings pages:
+
+- Combo boxes
+- Input fields
+- Buttons
+- Sliders
+
+
+All controls now share a consistent visual style.
+
+
+---
+
+## 🎨 Theme Control Improvements
+
+Changed theme intensity control:
+
+Before:
+
+- Manual input field.
+
+After:
+
+- Slider control.
+
+
+Range:
+
+```text
+0 ~ 255
+```
+
+Values are displayed as percentage mapping.
+
+Improved usability and interaction.
+
+
+---
+
+## 🎨 Real-time Theme Switching
+
+Added:
+
+- Instant theme switching.
+
+Changes:
+
+- Apply immediately to the main window.
+- No restart required.
+
+
+---
+
+## 🐛 Bug Fixes
+
+Fixed:
+
+- Weather updates being triggered repeatedly when opening the weather settings page.
+
+
+---
 
 ## 🔄 Update System Improvements
 
-- Added update source selection:
-  - Gitee
-  - GitHub
+Added update source selection:
 
-- Default update source changed to Gitee for better domestic access.
+- Gitee
+- GitHub
+
+
+Default source:
+
+- Gitee
+
+
+Improves update speed for users in regions where GitHub access is slower.
+
+
+---
 
 ## 📢 Announcement Improvements
 
-- Added manual announcement viewing.
-- Improved announcement management.
+Added:
+
+- "View Announcements" button in General Settings.
+
+
+Users can now:
+
+- Check historical announcements at any time.
+
+
+---
+
+## 🎨 UI Component Standardization
+
+Unified:
+
+- Input field height.
+- Combo box height.
+- Button height.
+
+Standard size:
+
+```text
+28px
+```
+
+
+Improved:
+
+- Combo box borders.
+- Background style.
+- Hover effects.
+
+Kept the native system dropdown arrow.
+
+
+---
+
+## 🧹 Code Cleanup
+
+Removed:
+
+- Redundant weather location selection code.
+
+Weather location management is now handled independently.
 
 
 ---
@@ -129,124 +468,368 @@ Weather requests now use latitude and longitude queries.
 
 ## 🎨 Theme System
 
-Added complete theme customization:
+Added:
 
-- Added Bamboo theme.
-- Added default theme.
-- Added background color customization.
-- Added transparency adjustment.
-- Added color intensity adjustment.
-- Added restore default settings.
-
-Theme changes now apply immediately without restarting.
+- New "Bamboo" theme.
 
 
-## 🌐 Update Improvements
+Users can switch themes from:
 
-- Added Gitee update source.
-- Improved update experience for domestic users.
+```
+Settings → Theme
+```
 
 
-## 🛠️ Development Tools
+---
 
-- Added internal development tools.
-- Improved packaging and release workflow.
+## 🇨🇳 Gitee Update Source
+
+Added:
+
+- Gitee update channel.
+
+
+Users can switch update sources from:
+
+```
+Settings → Check for Updates
+```
+
+
+Provides faster downloads for users in China.
+
+
+---
+
+## 📢 Announcement System
+
+Added:
+
+- "View Announcements" entry in General Settings.
+
+
+Allows users to:
+
+- Browse announcement history anytime.
+
+
+---
+
+## 🎨 Theme Settings Improvements
+
+Improved:
+
+- Theme switching layout.
+- Background color settings layout.
+- Restore default button style.
+
+
+---
+
+## 🐛 Performance Improvements
+
+Fixed:
+
+- Weather thread restarting unnecessarily when opening settings.
+
+
+Optimized:
+
+- Settings page loading logic.
+- Reduced unnecessary network requests.
 
 
 ---
 
 # 🚀 v1.2.5
 
-## 🎨 Theme Support
+## 🎨 Theme System Release
 
-DesktopWidget officially introduced theme customization.
+DesktopWidget officially introduced theme customization starting from v1.2.5.
+
+
+### Theme Switching
+
+Built-in themes:
+
+- Default Theme
+- Bamboo Theme
+
 
 Features:
 
-- Multiple themes.
-- Background customization.
-- Transparency control.
-- Color intensity adjustment.
-- One-click restore default settings.
+- One-click switching.
+- Real-time application.
 
 
-## ⚡ Performance Improvements
+---
 
-- Optimized weather thread handling.
-- Reduced unnecessary network requests.
+### Background Color
+
+Preset options:
+
+- Classic Dark
+- Light Theme
+- Light Blue Gray
+
+
+Also supports:
+
+- Custom colors.
+
+
+---
+
+### Theme Intensity
+
+Added:
+
+- Background color overlay control.
+
+
+Range:
+
+```text
+0 ~ 255
+```
+
+
+Lower values:
+
+- More transparent.
+- Original image remains clearer.
+
+
+Higher values:
+
+- Stronger color overlay.
+
+
+---
+
+### Window Opacity
+
+Supports:
+
+```text
+20% ~ 100%
+```
+
+
+Allows DesktopWidget to better blend with different desktop environments.
+
+
+---
+
+### Restore Default Settings
+
+Added:
+
+- One-click reset for all theme settings.
+
+
+Other improvements:
+
+- Theme switching applies instantly.
+- No save operation required.
 
 
 ---
 
 # 🚀 v1.2.3 (2026-06-28)
 
-- Fixed known issues.
-- Prepared theme system improvements.
+## 🐛 Bug Fixes
+
+- Fixed several known issues.
+
+
+## 📢 Preview
+
+- Announced that the theme system would be introduced gradually.
 
 
 ---
 
 # 🚀 v1.2.2 (2026-06-26)
 
-## Installation Improvements
+## 📦 Installation Experience Improvements
 
-- Localized installer interface.
+- Fully localized the installer interface into Chinese.
 
-## Announcement System
+Improved:
 
-- Improved announcement display.
-- Added developer tools for release management.
+- Installation experience for users.
+
+
+---
+
+## 📢 Announcement Window Improvements
+
+Optimized:
+
+- Announcement display logic.
+- Stability.
+- User interaction experience.
+
+
+---
+
+## 🛠️ DevTool Developer Tools
+
+Added an independent backend development tool.
+
+Supports:
+
+- One-click packaging.
+- Code pushing.
+- Release creation.
+- Automatic EXE uploading.
+
+
+Current workflow:
+
+- GitHub upload: automatic.
+- Gitee upload: manual.
 
 
 ---
 
 # 🚀 v1.2.1 (2026-06-25)
 
-## 📢 Announcement System
+## 📢 Announcement System Release
 
-Added complete announcement support:
+Fully released the announcement system.
+
+Added:
 
 - Remote announcement push.
-- Notification bubble.
-- System tray notification.
-- Announcement history management.
+- Popup notifications.
+- Tray icon notifications.
 
-## Feedback
 
-- Added GitHub Discussions feedback channel.
+---
+
+## 📚 Announcement History Management
+
+Added:
+
+- Automatic archiving of read announcements.
+- Right-click delete support.
+- Clear announcement history support.
+
+
+---
+
+## 🖥️ Window Experience Improvements
+
+Optimized:
+
+- Instant announcement window opening.
+- Background data loading without noticeable delay.
+
+
+Added:
+
+- Tray green dot notification.
+
+When new announcements are available:
+
+- Green dot appears.
+- Automatically disappears after reading.
+
+
+---
+
+## 💬 Feedback Channel
+
+Added:
+
+- GitHub Discussions link in the About page.
+
+
+Fixed:
+
+- Popup notification and tray indicator not disappearing after reading announcements.
+
+
+Optimized:
+
+- Announcement window loading speed.
 
 
 ---
 
 # 🚀 v1.2.0 (2026-06-24)
 
-## Widget Layout System
+## 📐 Layout System Refactoring
 
-Added customizable widget layout:
+Rebuilt the display item layout system.
 
-- 8 information slots.
-- Free arrangement.
-- Real-time changes without saving.
+Added:
 
-## Improvements
+- 8 customizable information slots.
+- Free arrangement of displayed items.
 
-- Fixed CPU/GPU/display information positioning.
-- Improved main window rendering.
+
+Improved:
+
+- Settings changes apply instantly.
+- Removed the save button.
+
+
+---
+
+## 💖 Donation Support
+
+Added:
+
+- Donation page.
+
+Supported:
+
+- Alipay QR Code.
+- WeChat Pay QR Code.
+
+
+---
+
+## 🐛 Bug Fixes
+
+Fixed incorrect display positions for:
+
+- CPU usage.
+- GPU usage.
+- Resolution.
+- Refresh rate.
+
+
+Improved:
+
+- Left 1 / Right 1 information areas changed to two-line display.
+- Main window rendering logic.
 
 
 ---
 
 # 🚀 v1.1.9
 
-## Weather Improvements
+## 🌅 Weather Feature Improvements
 
-- Added sunrise and sunset information.
-- Improved weather caching.
-- Fixed known issues.
+Added:
+
+- Sunrise and sunset information.
+
+
+Optimized:
+
+- Weather thread cache mechanism.
+
+
+Fixed:
+
+- Known issues.
 
 
 ---
 
-# 📌 Notes
-
-For detailed development history, please refer to Git commit history.
+If DesktopWidget is useful to you, consider giving the project a Star ⭐ on GitHub to support continued development.

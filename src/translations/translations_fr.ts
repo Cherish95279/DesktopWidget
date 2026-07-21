@@ -79,7 +79,17 @@
             <source>未安装</source>
             <translation>Non installé</translation>
         </message>
-    </context>
+            <message>
+            <location filename="main_window.py" line="0"/>
+            <source>距</source>
+            <translation>dans </translation>
+        </message>
+        <message>
+            <location filename="main_window.py" line="0"/>
+            <source>天</source>
+            <translation>j</translation>
+        </message>
+</context>
     <context>
         <name>TrayIcon</name>
         <message>
@@ -400,7 +410,12 @@ Nouvelle annonce !</translation>
             <source>恢复默认</source>
             <translation>Réinitialiser</translation>
         </message>
-    </context>
+            <message>
+            <location filename="settings_pages/display_page.py" line="0"/>
+            <source>节气</source>
+            <translation>Terme solaire</translation>
+        </message>
+</context>
             <context>
         <name>WeatherPage</name>
         <message>
@@ -648,7 +663,12 @@ Nouvelle annonce !</translation>
             <location filename="settings_pages/weather_page.py" line="0"/>
             <source>隐藏密钥</source>
             <translation>Masquer clé</translation>
-        </message></context>
+        </message>        <message>
+            <location filename="settings_pages/weather_page.py" line="0"/>
+            <source>搜索城市名称</source>
+            <translation>Rechercher une ville</translation>
+        </message>
+</context>
     <context>
         <name>ThemePage</name>
         <message>
@@ -695,6 +715,16 @@ Nouvelle annonce !</translation>
             <location filename="../settings_pages/theme_page.py" line="0"/>
             <source>取消</source>
             <translation>Annuler</translation>
+        </message>
+        <message>
+            <location filename="settings_pages/theme_page.py" line="0"/>
+            <source>不透明度</source>
+            <translation>Opacité</translation>
+        </message>
+        <message>
+            <location filename="settings_pages/theme_page.py" line="0"/>
+            <source>着色强度</source>
+            <translation>Intensité de teinte</translation>
         </message>
 </context>
     <context>
@@ -842,7 +872,52 @@ L'app va se fermer.</translation>
             <source>新版本已下载完成，是否立即安装？</source>
             <translation>Installer la nouvelle version ?</translation>
         </message>
-    </context>
+            <message>
+            <location filename="settings_pages/update_page.py" line="0"/>
+            <source>当前版本：</source>
+            <translation>Version actuelle : </translation>
+        </message>
+        <message>
+            <location filename="settings_pages/update_page.py" line="0"/>
+            <source>正在检查...</source>
+            <translation>Vérification...</translation>
+        </message>
+        <message>
+            <location filename="settings_pages/update_page.py" line="0"/>
+            <source>下载更新</source>
+            <translation>Télécharger la mise à jour</translation>
+        </message>
+        <message>
+            <location filename="settings_pages/update_page.py" line="0"/>
+            <source>Token 已保存</source>
+            <translation>Jeton enregistré</translation>
+        </message>
+        <message>
+            <location filename="settings_pages/update_page.py" line="0"/>
+            <source>Token 已清除</source>
+            <translation>Jeton effacé</translation>
+        </message>
+        <message>
+            <location filename="settings_pages/update_page.py" line="0"/>
+            <source>最新版本：请点击检查更新</source>
+            <translation>Dernière : cliquez sur Vérifier</translation>
+        </message>
+        <message>
+            <location filename="settings_pages/update_page.py" line="0"/>
+            <source>已切换到</source>
+            <translation>Basculé vers </translation>
+        </message>
+        <message>
+            <location filename="settings_pages/update_page.py" line="0"/>
+            <source>源，请点击检查更新</source>
+            <translation> source, cliquez sur Vérifier</translation>
+        </message>
+        <message>
+            <location filename="settings_pages/update_page.py" line="0"/>
+            <source>检查失败：</source>
+            <translation>Échec de la vérification : </translation>
+        </message>
+</context>
     <context>
         <name>DonationPage</name>
         <message>

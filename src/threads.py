@@ -4,7 +4,7 @@ from PyQt6.QtCore import QThread, pyqtSignal, QSettings
 from concurrent.futures import ThreadPoolExecutor, as_completed
 import requests
 import certifi
-from .utils import translate_weather_text
+from .utils import translate_weather_text, translate_weather_text_cn
 import urllib.request
 import urllib.error
 import gzip
@@ -119,7 +119,8 @@ class WeatherThread(QThread):
                 data = json.loads(resp.read().decode("utf-8"))
             cw = data.get("current_weather", {})
             weather_code = cw.get("weathercode", 0)
-            weather_text = self._WEATHERCODE_MAP.get(weather_code, "未知")
+            weather_raw = self._WEATHERCODE_MAP.get(weather_code, "未知")
+            weather_text = translate_weather_text_cn(weather_raw)
             temp = str(cw.get("temperature", "--"))
             wind_dir = self._wind_direction(cw.get("winddirection", 0))
             wind_speed = cw.get("windspeed", 0)
@@ -290,7 +291,7 @@ class WeatherThread(QThread):
                                 display = settings.value("selected_location_display", "") or city_name
                                 self.data_updated.emit({
                                     "city": display,
-                                    "weather": now.get("text", "\u672a\u77e5"),
+                                    "weather": translate_weather_text_cn(now.get("text", "\u672a\u77e5")),
                                     "temp": now.get("temp", "--"),
                                     "wind": f"{wind_dir}{wind_speed}km/h" if wind_dir else "",
                                     "sunrise": "--:--",
@@ -385,13 +386,15 @@ class WeatherThread(QThread):
                                 raise Exception("No current field in response")
 
                             cond = cur.get("condition", {})
+                            weather_en = cond.get("text", "Unknown")
+                            weather_translated = translate_weather_text(weather_en)
                             wd = cur.get("wind_dir", "")
                             wk = cur.get("wind_kph", 0)
                             wind_text = f"{wd}{wk}km/h" if wd else ""
 
                             self.data_updated.emit({
                                 "city": display,
-                                "weather": cond.get("text", "Unknown"),
+                                "weather": weather_translated,
                                 "temp": str(cur.get("temp_c", "--")),
                                 "wind": wind_text,
                                 "sunrise": "--:--",
@@ -399,7 +402,7 @@ class WeatherThread(QThread):
                             })
                             self.last_status = "success"
                             self.error_signal.emit("")  # 清空错误
-                            print(f"🌤️ WeatherAPI 更新成功: {display} {cond.get('text')} {cur.get('temp_c')}℃")
+                            print(f"🌤️ WeatherAPI 更新成功: {display} {weather_translated} {cur.get('temp_c')}℃")
                             success = True
                             break
 
@@ -492,7 +495,7 @@ class WeatherThread(QThread):
                     live = data['lives'][0]
                     self.data_updated.emit({
                         'city': display_city,
-                        'weather': live['weather'],
+                        'weather': translate_weather_text_cn(live['weather']),
                         'temp': live['temperature'],
                         'wind': live['winddirection'] + live['windpower'] + '级',
                         'sunrise': '--:--',
@@ -520,7 +523,7 @@ class WeatherThread(QThread):
                             live = fb_data['lives'][0]
                             self.data_updated.emit({
                                 'city': display_city,
-                                'weather': live['weather'],
+                                'weather': translate_weather_text_cn(live['weather']),
                                 'temp': live['temperature'],
                                 'wind': live['winddirection'] + live['windpower'] + '级',
                                 'sunrise': '--:--',
@@ -601,7 +604,7 @@ class WeatherThread(QThread):
                                 live = data['lives'][0]
                                 self.data_updated.emit({
                                     'city': display_city,
-                                    'weather': live['weather'],
+                                    'weather': translate_weather_text_cn(live['weather']),
                                     'temp': live['temperature'],
                                     'wind': live['winddirection'] + live['windpower'] + '级',
                                     'sunrise': '--:--',

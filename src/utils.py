@@ -42,57 +42,67 @@ def resource_path(rel_path):
 
 # ---------- 天气图标 ----------
 def get_weather_icon(weather_str):
-    mapping = {
-        # ===== 中文映射（原有） =====
-        "晴": "☀️",
-        "晴间多云": "⛅",
-        "多云": "⛅",
-        "阴": "☁️",
-        "小雨": "🌦️",
-        "中雨": "🌧️",
-        "大雨": "🌧️",
-        "雷阵雨": "⛈️",
-        "雷阵雨并伴有冰雹": "⛈️",
-        "阵雨": "🌦️",
-        "强阵雨": "🌧️",
-        "小雪": "🌨️",
-        "中雪": "❄️",
-        "大雪": "❄️",
-        "阵雪": "🌨️",
-        "毛毛雨/细雨": "🌦️",
-        "雨": "🌧️",
-        "雪": "❄️",
-        "冻雨": "🌧️",
-        "雾": "🌫️",
-        "霾": "🌫️",
-        "大风": "💨",
+    """Get emoji icon for weather text in any language (auto-detects via translation tables)."""
+    if not weather_str:
+        return "🌡️"
 
-        # ===== 英文映射（新增，用于 WeatherAPI） =====
-        "Sunny": "☀️",
-        "Clear": "☀️",
-        "Partly cloudy": "⛅",
-        "Cloudy": "☁️",
-        "Overcast": "☁️",
-        "Mist": "🌫️",
-        "Fog": "🌫️",
-        "Light rain": "🌦️",
-        "Moderate rain": "🌧️",
-        "Heavy rain": "🌧️",
-        "Patchy rain possible": "🌦️",
-        "Light drizzle": "🌦️",
-        "Thundery outbreaks possible": "⛈️",
-        "Light snow": "🌨️",
-        "Moderate snow": "❄️",
-        "Heavy snow": "❄️",
-        "Patchy snow possible": "🌨️",
-        "Blizzard": "❄️",
-        "Windy": "💨",
-        "Strong winds": "💨",
-    }
     first = weather_str.split('转')[0] if '转' in weather_str else weather_str
-    return mapping.get(first, "🌡️")
 
+    # English-only icon mapping (single source of truth)
+    _ICON_MAP = {
+        "Sunny": "☀️", "Clear": "☀️",
+        "Fair to cloudy": "⛅", "Partly cloudy": "⛅",
+        "Cloudy": "☁️", "Overcast": "☁️",
+        "Mist": "🌫️", "Fog": "🌫️", "Freezing fog": "🌫️",
+        "Smoke": "🌫️", "Haze": "🌫️", "Smokey haze": "🌫️", "Smoky haze": "🌫️",
+        "Light drizzle": "🌦️", "Patchy light drizzle": "🌦️",
+        "Patchy rain possible": "🌦️", "Patchy rain nearby": "🌦️",
+        "Light rain": "🌦️", "Light rain shower": "🌦️",
+        "Rain": "🌧️", "Rain shower": "🌦️",
+        "Moderate rain": "🌧️", "Moderate rain at times": "🌧️",
+        "Moderate or heavy rain shower": "🌧️", "Heavy rain shower": "🌧️",
+        "Heavy rain": "🌧️", "Heavy rain at times": "🌧️",
+        "Torrential rain shower": "🌧️",
+        "Light freezing rain": "🌧️", "Moderate or heavy freezing rain": "🌧️",
+        "Freezing rain": "🌧️",
+        "Light sleet": "🌨️", "Moderate or heavy sleet": "🌨️",
+        "Light sleet showers": "🌨️", "Moderate or heavy sleet showers": "🌨️",
+        "Patchy sleet possible": "🌨️",
+        "Freezing drizzle": "🌧️", "Heavy freezing drizzle": "🌧️",
+        "Patchy freezing drizzle possible": "🌧️",
+        "Light snow": "🌨️", "Patchy light snow": "🌨️",
+        "Moderate snow": "❄️", "Patchy moderate snow": "❄️",
+        "Heavy snow": "❄️", "Patchy heavy snow": "❄️",
+        "Snow": "❄️",
+        "Patchy snow possible": "🌨️",
+        "Snow shower": "🌨️",
+        "Light snow showers": "🌨️", "Moderate or heavy snow showers": "❄️",
+        "Blowing snow": "❄️", "Blizzard": "❄️",
+        "Ice pellets": "🌨️",
+        "Light showers of ice pellets": "🌨️",
+        "Moderate or heavy showers of ice pellets": "🌨️",
+        "Thundery outbreaks possible": "⛈️",
+        "Thunderstorm": "⛈️", "Thunderstorm with hail": "⛈️",
+        "Patchy light rain with thunder": "⛈️",
+        "Moderate or heavy rain with thunder": "⛈️",
+        "Patchy light snow with thunder": "⛈️",
+        "Moderate or heavy snow with thunder": "⛈️",
+        "Windy": "💨", "Strong winds": "💨",
+        "Hail": "🌨️",
+    }
 
+    # 1. Try direct English match (WeatherAPI or untranslated)
+    if first in _ICON_MAP:
+        return _ICON_MAP[first]
+
+    # 2. Reverse-translate from any language back to English, then look up icon
+    for lang_key, translations in _WEATHER_TRANSLATIONS.items():
+        for en_key, trans_val in translations.items():
+            if trans_val == first:
+                if en_key in _ICON_MAP:
+                    return _ICON_MAP[en_key]
+
+    return "🌡️"
 # ---------- IP 定位 ----------
 def get_ip_location():
     """
@@ -115,83 +125,251 @@ def get_ip_location():
         pass
     return None, None, None
 
-# ---------- 天气文本翻译（用于 WeatherAPI 英文→多语言） ----------
+# ---------- 天气文本翻译（用于 WeatherAPI 英文→多语言）----------
 _WEATHER_TRANSLATIONS = {
     "en": {
         "Sunny": "Sunny", "Clear": "Clear", "Partly cloudy": "Partly cloudy",
-        "Cloudy": "Cloudy", "Overcast": "Overcast", "Mist": "Mist", "Fog": "Fog",
+        "Cloudy": "Cloudy", "Overcast": "Overcast", "Mist": "Mist",
+        "Fog": "Fog", "Freezing fog": "Freezing fog",
+        "Light drizzle": "Light drizzle", "Patchy rain possible": "Patchy rain possible",
+        "Patchy rain nearby": "Patchy rain nearby", "Patchy light drizzle": "Patchy light drizzle",
         "Light rain": "Light rain", "Moderate rain": "Moderate rain",
-        "Heavy rain": "Heavy rain", "Patchy rain possible": "Patchy rain possible",
-        "Light drizzle": "Light drizzle", "Thundery outbreaks possible": "Thundery outbreaks possible",
+        "Rain": "Rain", "Freezing rain": "Freezing rain",
+        "Rain shower": "Rain shower", "Heavy rain shower": "Heavy rain shower",
+        "Snow": "Snow", "Snow shower": "Snow shower",
+        "Thunderstorm": "Thunderstorm", "Thunderstorm with hail": "Thunderstorm with hail",
+        "Fair to cloudy": "Fair to cloudy",
+        "Moderate rain at times": "Moderate rain at times",
+        "Heavy rain": "Heavy rain", "Heavy rain at times": "Heavy rain at times",
+        "Light rain shower": "Light rain shower",
+        "Moderate or heavy rain shower": "Moderate or heavy rain shower",
+        "Torrential rain shower": "Torrential rain shower",
+        "Light freezing rain": "Light freezing rain",
+        "Moderate or heavy freezing rain": "Moderate or heavy freezing rain",
+        "Light sleet": "Light sleet", "Moderate or heavy sleet": "Moderate or heavy sleet",
+        "Light sleet showers": "Light sleet showers",
+        "Moderate or heavy sleet showers": "Moderate or heavy sleet showers",
+        "Patchy sleet possible": "Patchy sleet possible",
+        "Freezing drizzle": "Freezing drizzle",
+        "Heavy freezing drizzle": "Heavy freezing drizzle",
+        "Patchy freezing drizzle possible": "Patchy freezing drizzle possible",
         "Light snow": "Light snow", "Moderate snow": "Moderate snow",
         "Heavy snow": "Heavy snow", "Patchy snow possible": "Patchy snow possible",
-        "Blizzard": "Blizzard", "Windy": "Windy", "Strong winds": "Strong winds",
+        "Patchy light snow": "Patchy light snow", "Patchy moderate snow": "Patchy moderate snow",
+        "Patchy heavy snow": "Patchy heavy snow",
+        "Light snow showers": "Light snow showers",
+        "Moderate or heavy snow showers": "Moderate or heavy snow showers",
+        "Blowing snow": "Blowing snow", "Blizzard": "Blizzard",
+        "Ice pellets": "Ice pellets",
+        "Light showers of ice pellets": "Light showers of ice pellets",
+        "Moderate or heavy showers of ice pellets": "Moderate or heavy showers of ice pellets",
+        "Thundery outbreaks possible": "Thundery outbreaks possible",
+        "Patchy light rain with thunder": "Patchy light rain with thunder",
+        "Moderate or heavy rain with thunder": "Moderate or heavy rain with thunder",
+        "Patchy light snow with thunder": "Patchy light snow with thunder",
+        "Moderate or heavy snow with thunder": "Moderate or heavy snow with thunder",
+        "Smoke": "Smoke", "Haze": "Haze", "Smokey haze": "Smokey haze", "Smoky haze": "Smoky haze",
+        "Windy": "Windy", "Strong winds": "Strong winds", "Hail": "Hail",
+        "Shower rain": "Rain shower", "Shower Rain": "Rain shower",
     },
     "zh": {
-        "Sunny": "晴", "Clear": "晴", "Partly cloudy": "多云", "Cloudy": "阴",
-        "Overcast": "阴", "Mist": "雾", "Fog": "雾", "Light rain": "小雨",
-        "Moderate rain": "中雨", "Heavy rain": "大雨", "Patchy rain possible": "阵雨",
-        "Light drizzle": "毛毛雨", "Thundery outbreaks possible": "雷阵雨",
+        "Sunny": "晴", "Clear": "晴", "Partly cloudy": "多云",
+        "Cloudy": "阴", "Overcast": "阴", "Mist": "薄雾",
+        "Fog": "雾", "Freezing fog": "冻雾",
+        "Light drizzle": "毛毛雨", "Patchy rain possible": "局部阵雨",
+        "Patchy rain nearby": "附近有雨", "Patchy light drizzle": "局部毛毛雨",
+        "Light rain": "小雨", "Moderate rain": "中雨",
+        "Rain": "雨", "Freezing rain": "冻雨",
+        "Rain shower": "阵雨", "Heavy rain shower": "强阵雨",
+        "Snow": "雪", "Snow shower": "阵雪",
+        "Thunderstorm": "雷阵雨", "Thunderstorm with hail": "雷阵雨并伴有冰雹",
+        "Fair to cloudy": "晴间多云",
+        "Moderate rain at times": "间或中雨",
+        "Heavy rain": "大雨", "Heavy rain at times": "间或大雨",
+        "Light rain shower": "小阵雨",
+        "Moderate or heavy rain shower": "中到大阵雨",
+        "Torrential rain shower": "暴雨",
+        "Light freezing rain": "小冻雨",
+        "Moderate or heavy freezing rain": "中到大冻雨",
+        "Light sleet": "小雨夹雪", "Moderate or heavy sleet": "中到大雨夹雪",
+        "Light sleet showers": "小阵雨夹雪",
+        "Moderate or heavy sleet showers": "中到大阵雨夹雪",
+        "Patchy sleet possible": "局部雨夹雪",
+        "Freezing drizzle": "冻毛毛雨",
+        "Heavy freezing drizzle": "大冻毛毛雨",
+        "Patchy freezing drizzle possible": "局部冻毛毛雨",
+        "Light snow": "小雪", "Moderate snow": "中雪",
+        "Heavy snow": "大雪", "Patchy snow possible": "局部阵雪",
+        "Patchy light snow": "局部小雪", "Patchy moderate snow": "局部中雪",
+        "Patchy heavy snow": "局部大雪",
+        "Light snow showers": "小阵雪",
+        "Moderate or heavy snow showers": "中到大阵雪",
+        "Blowing snow": "吹雪", "Blizzard": "暴雪",
+        "Ice pellets": "冰粒",
+        "Light showers of ice pellets": "小冰粒阵雨",
+        "Moderate or heavy showers of ice pellets": "中到大冰粒阵雨",
+        "Thundery outbreaks possible": "可能有雷暴",
+        "Patchy light rain with thunder": "局部雷阵雨",
+        "Moderate or heavy rain with thunder": "中到大雷雨",
+        "Patchy light snow with thunder": "局部雷阵雪",
+        "Moderate or heavy snow with thunder": "中到大雷雪",
+        "Smoke": "烟", "Haze": "霾", "Smokey haze": "烟雾霾", "Smoky haze": "烟雾霾",
+        "Windy": "大风", "Strong winds": "强风", "Hail": "冰雹",
+    },
+    "zh_TW": {
+        "Sunny": "晴", "Clear": "晴", "Partly cloudy": "多雲",
+        "Cloudy": "陰", "Overcast": "陰", "Mist": "薄霧",
+        "Fog": "霧", "Freezing fog": "凍霧",
+        "Light drizzle": "毛毛雨", "Patchy rain possible": "局部陣雨",
+        "Patchy rain nearby": "附近有雨",
+        "Light rain": "小雨", "Moderate rain": "中雨",
+        "Rain": "雨", "Freezing rain": "冻雨",
+        "Rain shower": "阵雨", "Heavy rain shower": "强阵雨",
+        "Snow": "雪", "Snow shower": "阵雪",
+        "Thunderstorm": "雷阵雨", "Thunderstorm with hail": "雷阵雨并伴有冰雹",
+        "Fair to cloudy": "晴间多云",
+        "Heavy rain": "大雨",
+        "Light sleet": "小雨夾雪", "Moderate or heavy sleet": "中到大雨夾雪",
+        "Patchy sleet possible": "局部雨夾雪",
+        "Light snow": "小雪", "Moderate snow": "中雪",
+        "Heavy snow": "大雪", "Patchy snow possible": "局部陣雪",
+        "Blizzard": "暴雪",
+        "Thundery outbreaks possible": "可能有雷暴",
+        "Smoke": "煙", "Haze": "霾", "Smokey haze": "煙霧霾", "Smoky haze": "煙霧霾",
+        "Windy": "大風", "Strong winds": "強風",
+    },
+    "zh_TW": {
+        "Sunny": "晴", "Clear": "晴", "Partly cloudy": "多雲",
+        "Cloudy": "陰", "Overcast": "陰", "Mist": "薄霧",
+        "Fog": "霧", "Freezing fog": "凍霧",
+        "Light rain": "小雨", "Moderate rain": "中雨", "Heavy rain": "大雨",
+        "Rain": "雨", "Freezing rain": "凍雨",
+        "Rain shower": "陣雨", "Heavy rain shower": "強陣雨",
         "Light snow": "小雪", "Moderate snow": "中雪", "Heavy snow": "大雪",
-        "Patchy snow possible": "阵雪", "Blizzard": "暴雪", "Windy": "大风", "Strong winds": "大风",
+        "Snow": "雪", "Snow shower": "陣雪",
+        "Blizzard": "暴雪",
+        "Thundery outbreaks possible": "可能有雷暴",
+        "Thunderstorm": "雷陣雨", "Thunderstorm with hail": "雷陣雨並伴有冰雹",
+        "Smoke": "煙", "Haze": "霾", "Smokey haze": "煙霧霾", "Smoky haze": "煙霧霾",
+        "Windy": "大風", "Strong winds": "強風",
+        "Fair to cloudy": "晴間多雲",
     },
     "ja": {
         "Sunny": "晴れ", "Clear": "晴れ", "Partly cloudy": "曇り時々晴れ",
-        "Cloudy": "曇り", "Overcast": "曇り", "Mist": "霧", "Fog": "濃霧",
+        "Cloudy": "曇り", "Overcast": "曇り", "Mist": "霧",
+        "Fog": "濃霧", "Freezing fog": "凍霧",
         "Light rain": "小雨", "Moderate rain": "雨", "Heavy rain": "大雨",
-        "Patchy rain possible": "にわか雨", "Light drizzle": "霧雨",
-        "Thundery outbreaks possible": "雷雨", "Light snow": "小雪",
-        "Moderate snow": "雪", "Heavy snow": "大雪", "Patchy snow possible": "にわか雪",
-        "Blizzard": "吹雪", "Windy": "強風", "Strong winds": "暴風",
+        "Light snow": "小雪", "Moderate snow": "雪", "Heavy snow": "大雪",
+        "Blizzard": "吹雪", "Thundery outbreaks possible": "雷雨",
+        "Smoke": "煙", "Haze": "靄", "Smokey haze": "煙霧", "Smoky haze": "煙霧",
+        "Windy": "強風", "Strong winds": "暴風",
+        "Rain": "雨", "Freezing rain": "凍雨",
+        "Rain shower": "にわか雨", "Heavy rain shower": "強いにわか雨",
+        "Snow": "雪", "Snow shower": "にわか雪",
+        "Thunderstorm": "雷雨", "Thunderstorm with hail": "雷雨・雹を伴う",
+        "Fair to cloudy": "晴れ時々曇り",
     },
     "ko": {
         "Sunny": "맑음", "Clear": "맑음", "Partly cloudy": "구름 조금",
-        "Cloudy": "흐림", "Overcast": "흐림", "Mist": "안개", "Fog": "짙은 안개",
+        "Cloudy": "흐림", "Overcast": "흐림", "Mist": "안개",
+        "Fog": "짙은 안개",
         "Light rain": "약한 비", "Moderate rain": "비", "Heavy rain": "강한 비",
-        "Patchy rain possible": "소나기", "Light drizzle": "이슬비",
-        "Thundery outbreaks possible": "뇌우", "Light snow": "약한 눈",
-        "Moderate snow": "눈", "Heavy snow": "강한 눈", "Patchy snow possible": "소낙눈",
-        "Blizzard": "눈보라", "Windy": "강풍", "Strong winds": "폭풍",
+        "Light snow": "약한 눈", "Moderate snow": "눈", "Heavy snow": "강한 눈",
+        "Blizzard": "눈보라",
+        "Thundery outbreaks possible": "뇌우",
+        "Smoke": "연기", "Haze": "안개", "Smokey haze": "연무", "Smoky haze": "연무",
+        "Windy": "강풍", "Strong winds": "폭풍",
+        "Rain": "비", "Freezing rain": "진눈깨비",
+        "Rain shower": "소나기", "Heavy rain shower": "강한 소나기",
+        "Snow": "눈", "Snow shower": "소낙눈",
+        "Thunderstorm": "뇌우", "Thunderstorm with hail": "우박 동반 뇌우",
+        "Fair to cloudy": "구름 조금",
     },
     "es": {
         "Sunny": "Soleado", "Clear": "Despejado", "Partly cloudy": "Parcialmente nublado",
-        "Cloudy": "Nublado", "Overcast": "Cubierto", "Mist": "Bruma", "Fog": "Niebla",
-        "Light rain": "Lluvia ligera", "Moderate rain": "Lluvia moderada",
-        "Heavy rain": "Lluvia fuerte", "Patchy rain possible": "Lluvia dispersa",
-        "Light drizzle": "Llovizna", "Thundery outbreaks possible": "Tormenta eléctrica",
-        "Light snow": "Nieve ligera", "Moderate snow": "Nieve moderada",
-        "Heavy snow": "Nieve fuerte", "Patchy snow possible": "Nieve dispersa",
-        "Blizzard": "Ventisca", "Windy": "Ventoso", "Strong winds": "Vientos fuertes",
+        "Cloudy": "Nublado", "Overcast": "Cubierto", "Mist": "Bruma",
+        "Fog": "Niebla",
+        "Light rain": "Lluvia ligera", "Moderate rain": "Lluvia moderada", "Heavy rain": "Lluvia fuerte",
+        "Light snow": "Nieve ligera", "Moderate snow": "Nieve moderada", "Heavy snow": "Nieve fuerte",
+        "Blizzard": "Ventisca",
+        "Thundery outbreaks possible": "Tormenta eléctrica",
+        "Smoke": "Humo", "Haze": "Neblina", "Smokey haze": "Neblina de humo", "Smoky haze": "Neblina de humo",
+        "Windy": "Ventoso", "Strong winds": "Vientos fuertes",
+        "Rain": "Lluvia", "Freezing rain": "Lluvia helada",
+        "Rain shower": "Chubasco", "Heavy rain shower": "Chubasco fuerte",
+        "Snow": "Nieve", "Snow shower": "Chubasco de nieve",
+        "Thunderstorm": "Tormenta", "Thunderstorm with hail": "Tormenta con granizo",
+        "Fair to cloudy": "Parcialmente soleado",
     },
     "fr": {
         "Sunny": "Ensoleillé", "Clear": "Dégagé", "Partly cloudy": "Partiellement nuageux",
-        "Cloudy": "Nuageux", "Overcast": "Couvert", "Mist": "Brume", "Fog": "Brouillard",
-        "Light rain": "Pluie légère", "Moderate rain": "Pluie modérée",
-        "Heavy rain": "Pluie forte", "Patchy rain possible": "Averses éparses",
-        "Light drizzle": "Bruine", "Thundery outbreaks possible": "Orages possibles",
-        "Light snow": "Neige légère", "Moderate snow": "Neige modérée",
-        "Heavy snow": "Neige forte", "Patchy snow possible": "Averses de neige",
-        "Blizzard": "Blizzard", "Windy": "Venteux", "Strong winds": "Vents forts",
+        "Cloudy": "Nuageux", "Overcast": "Couvert", "Mist": "Brume",
+        "Fog": "Brouillard",
+        "Light rain": "Pluie légère", "Moderate rain": "Pluie modérée", "Heavy rain": "Pluie forte",
+        "Light snow": "Neige légère", "Moderate snow": "Neige modérée", "Heavy snow": "Neige forte",
+        "Blizzard": "Blizzard",
+        "Thundery outbreaks possible": "Orages possibles",
+        "Smoke": "Fumée", "Haze": "Brume sèche", "Smokey haze": "Brume de fumée", "Smoky haze": "Brume de fumée",
+        "Windy": "Venteux", "Strong winds": "Vents forts",
+        "Rain": "Pluie", "Freezing rain": "Pluie verglaçante",
+        "Rain shower": "Averse", "Heavy rain shower": "Forte averse",
+        "Snow": "Neige", "Snow shower": "Averse de neige",
+        "Thunderstorm": "Orage", "Thunderstorm with hail": "Orage de grêle",
+        "Fair to cloudy": "Assez ensoleillé",
     },
     "de": {
         "Sunny": "Sonnig", "Clear": "Klar", "Partly cloudy": "Teilweise bewölkt",
-        "Cloudy": "Bewölkt", "Overcast": "Bedeckt", "Mist": "Dunst", "Fog": "Nebel",
-        "Light rain": "Leichter Regen", "Moderate rain": "Mäßiger Regen",
-        "Heavy rain": "Starker Regen", "Patchy rain possible": "Vereinzelter Regen",
-        "Light drizzle": "Nieselregen", "Thundery outbreaks possible": "Gewitter möglich",
-        "Light snow": "Leichter Schnee", "Moderate snow": "Mäßiger Schnee",
-        "Heavy snow": "Starker Schnee", "Patchy snow possible": "Vereinzelter Schnee",
-        "Blizzard": "Schneesturm", "Windy": "Windig", "Strong winds": "Starke Winde",
-    },
-    "zh_TW": {
-        "Sunny": "晴", "Clear": "晴", "Partly cloudy": "多雲", "Cloudy": "陰",
-        "Overcast": "陰", "Mist": "霧", "Fog": "濃霧", "Light rain": "小雨",
-        "Moderate rain": "中雨", "Heavy rain": "大雨", "Patchy rain possible": "陣雨",
-        "Light drizzle": "毛毛雨", "Thundery outbreaks possible": "雷陣雨",
-        "Light snow": "小雪", "Moderate snow": "中雪", "Heavy snow": "大雪",
-        "Patchy snow possible": "陣雪", "Blizzard": "暴雪", "Windy": "大風", "Strong winds": "強風",
+        "Cloudy": "Bewölkt", "Overcast": "Bedeckt", "Mist": "Dunst",
+        "Fog": "Nebel",
+        "Light rain": "Leichter Regen", "Moderate rain": "Mäßiger Regen", "Heavy rain": "Starker Regen",
+        "Light snow": "Leichter Schnee", "Moderate snow": "Mäßiger Schnee", "Heavy snow": "Starker Schnee",
+        "Blizzard": "Schneesturm",
+        "Thundery outbreaks possible": "Gewitter möglich",
+        "Smoke": "Rauch", "Haze": "Dunst", "Smokey haze": "Rauchdunst", "Smoky haze": "Rauchdunst",
+        "Windy": "Windig", "Strong winds": "Starke Winde",
+        "Rain": "Regen", "Freezing rain": "Gefrierender Regen",
+        "Rain shower": "Regenschauer", "Heavy rain shower": "Starker Regenschauer",
+        "Snow": "Schnee", "Snow shower": "Schneeschauer",
+        "Thunderstorm": "Gewitter", "Thunderstorm with hail": "Gewitter mit Hagel",
+        "Fair to cloudy": "Heiter bis bewölkt",
     },
 }
+
+# 未覆盖的英文描述保留原文（translate_weather_text 末尾已处理）
+
+
+# ---- 中文→英文反向索引（用于高德/和风/Open-Meteo 的中文天气翻译） ----
+_CN_TO_EN = {}
+for _en_key, _cn_val in _WEATHER_TRANSLATIONS.get("zh", {}).items():
+    if _cn_val:
+        _CN_TO_EN[_cn_val] = _en_key
+
+# 手动补充 Open-Meteo _WEATHERCODE_MAP 中的特殊格式
+_CN_TO_EN["毛毛雨/细雨"] = "Light drizzle"
+_CN_TO_EN["冻雨"] = "Freezing rain"
+_CN_TO_EN["雷阵雨并伴有冰雹"] = "Thunderstorm with hail"
+_CN_TO_EN["强阵雨"] = "Heavy rain shower"
+
+
+def translate_weather_text_cn(weather_cn: str, language_code: str = None) -> str:
+    """
+    将中文天气描述翻译为目标语言（高德/和风/Open-Meteo 等中文 API）
+    :param weather_cn: 中文天气描述（如 "晴"、"多云"、"小雨"）
+    :param language_code: 目标语言代码，None 则使用系统语言
+    :return: 翻译后的天气描述
+    """
+    if not weather_cn:
+        return weather_cn
+
+    # 取第一个天气（如 "晴转多云" -> "晴"）
+    first = weather_cn.split('转')[0] if '转' in weather_cn else weather_cn
+
+    # 中文→英文→目标语言
+    en_key = _CN_TO_EN.get(first)
+    if en_key:
+        return translate_weather_text(en_key, language_code)
+    # 中文反查失败（如和风天气对国际城市返回英文 "Shower rain"），走英文翻译
+    return translate_weather_text(first, language_code)
 
 
 def translate_weather_text(weather_en: str, language_code: str = None) -> str:
@@ -205,13 +383,40 @@ def translate_weather_text(weather_en: str, language_code: str = None) -> str:
         return weather_en
 
     if language_code is None:
-        from PyQt6.QtCore import QLocale
-        language_code = QLocale.system().name()
+        from PyQt6.QtCore import QSettings
+        language_code = QSettings("MyDesktopApp", "WeatherSettings").value("language", "")
+        if not language_code:
+            from PyQt6.QtCore import QLocale
+            language_code = QLocale.system().name()
 
-    lang_key = language_code.split("_")[0] if "_" in language_code else language_code
-
-    translations = _WEATHER_TRANSLATIONS.get(lang_key)
+    # Try full code first (e.g. "zh_TW"), then fall back to prefix (e.g. "zh")
+    translations = _WEATHER_TRANSLATIONS.get(language_code)
+    if translations is None:
+        lang_key = language_code.split("_")[0] if "_" in language_code else language_code
+        translations = _WEATHER_TRANSLATIONS.get(lang_key)
     if not translations:
         return weather_en
 
-    return translations.get(weather_en, weather_en)
+    # 精确匹配优先，回退到忽略大小写匹配
+    result = translations.get(weather_en)
+    if result is not None:
+        return result
+    # 大小写不敏感回退
+    weather_lower = weather_en.lower()
+    for key, value in translations.items():
+        if key.lower() == weather_lower:
+            return value
+    # 通过英文表规范化（处理 "Shower rain" → "Rain shower" 等别名）
+    en_translations = _WEATHER_TRANSLATIONS.get("en", {})
+    canonical = en_translations.get(weather_en)
+    if canonical is None:
+        for key, value in en_translations.items():
+            if key.lower() == weather_lower:
+                canonical = value
+                break
+    if canonical and canonical != weather_en:
+        # 用规范化后的键重试目标语言
+        result = translations.get(canonical)
+        if result is not None:
+            return result
+    return weather_en

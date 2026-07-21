@@ -1,233 +1,516 @@
-# 🖥️ DesktopWidget（珍爱桌面小工具）
-
-> [English](README.md) | [简体中文](README_CN.md)
-
-**DesktopWidget（珍爱桌面小工具）** 是一个基于 PyQt6 开发的轻量级 Windows 桌面组件，专注于实时系统监控和桌面信息展示。
-
-集成系统性能监控、网络监控、天气信息、日期信息以及主题自定义功能，为桌面提供简洁直观的信息展示。
-
-
 <p align="center">
-  <img src="https://img.shields.io/badge/版本-v1.3.1-blue" alt="Version"/>
-  <img src="https://img.shields.io/badge/Python-3.12+-blue" alt="Python"/>
-  <img src="https://img.shields.io/badge/PyQt6-GUI-green" alt="PyQt6"/>
-  <img src="https://img.shields.io/badge/license-MIT-green" alt="License"/>
+  <img src="screenshots/logo.png" alt="DesktopWidget Logo" width="120">
 </p>
 
+<h1 align="center">🖥️ DesktopWidget</h1>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/🌍-支持8种语言-blue" alt="Languages"/>
-  <img src="https://img.shields.io/badge/简体中文-✅-green"/>
-  <img src="https://img.shields.io/badge/繁體中文-✅-green"/>
-  <img src="https://img.shields.io/badge/English-✅-green"/>
-  <img src="https://img.shields.io/badge/Español-✅-green"/>
-  <img src="https://img.shields.io/badge/日本語-✅-green"/>
-  <img src="https://img.shields.io/badge/Deutsch-✅-green"/>
-  <img src="https://img.shields.io/badge/Français-✅-green"/>
-  <img src="https://img.shields.io/badge/한국어-✅-green"/>
+一个现代化、轻量级、高度可定制的 Windows 桌面小组件。
 </p>
 
+<p align="center">
+基于 PyQt6 · 天气 · 系统监控 · 主题系统 · 自动更新 · 8 种语言
+</p>
 
-**当前版本：v1.3.1**
+<p align="center">
+  <a href="README.md"><strong>🇺🇸 English</strong></a> |
+  <a href="README_CN.md"><strong>🇨🇳 简体中文</strong></a>
+</p>
 
-![预览图](screenshots/preview.gif)
+<!-- 项目徽章 -->
+<p align="center">
+  <img src="https://img.shields.io/badge/平台-Windows%2010%20%7C%2011-blue" alt="Windows">
+  <img src="https://img.shields.io/badge/Python-3.12-yellow" alt="Python">
+  <img src="https://img.shields.io/badge/GUI-PyQt6-success" alt="PyQt6">
+  <img src="https://img.shields.io/badge/许可证-MIT-orange" alt="MIT License">
+</p>
 
+<!-- 语言徽章 -->
+<p align="center">
+  <img src="https://img.shields.io/badge/🌍-8%20种语言-4A90E2" alt="8 Languages">
+</p>
+
+<p align="center">
+  <img src="https://img.shields.io/badge/English-✓-success" alt="English">
+  <img src="https://img.shields.io/badge/简体中文-✓-success" alt="简体中文">
+  <img src="https://img.shields.io/badge/繁體中文-✓-success" alt="繁體中文">
+  <img src="https://img.shields.io/badge/日本語-✓-success" alt="日本語">
+  <br>
+  <img src="https://img.shields.io/badge/한국어-✓-success" alt="한국어">
+  <img src="https://img.shields.io/badge/Deutsch-✓-success" alt="Deutsch">
+  <img src="https://img.shields.io/badge/Français-✓-success" alt="Français">
+  <img src="https://img.shields.io/badge/Español-✓-success" alt="Español">
+</p>
+
+> **当前版本：** **v1.3.1** · **发布日期：2026-07-20**
+
+<p align="center">
+  <img src="screenshots/preview.gif" alt="DesktopWidget Preview">
+</p>
 
 ---
 
-# ✨ 主要功能
+# ✨ 项目简介
 
+DesktopWidget 是一款面向 Windows 的一体化桌面小组件应用，旨在让用户能够快速获取桌面信息，同时保持桌面的简洁与美观。
 
-## 🖥️ 系统监控
+它集成了指针时钟、实时天气、系统性能监控、网络速度监控、农历日期、节气信息、自定义主题、公告管理以及自动更新等功能，为用户提供轻量、高效且可定制的桌面体验。
 
-- 实时 CPU 占用率监控
-- GPU 使用率监控
-- 内存占用监控
-- 网络上传/下载速度监控
-- 屏幕刷新率显示
-- IP 地址显示
+DesktopWidget 基于 **PyQt6** 开发，注重性能、自定义能力和易用性，适合日常使用，也适合喜欢折腾和个性化桌面的用户。
 
+---
 
-## 🕐 时间日期信息
+# 🚀 下载
 
-- 指针时钟，秒针平滑转动
-- 公历日期显示
-- 农历日期显示
-- 二十四节气计算
-- 下一个节气倒计时
+| 平台 | 下载 |
+| :--- | :--- |
+| **GitHub** | https://github.com/Cherish95279/DesktopWidget/releases |
+| **Gitee** | https://gitee.com/Cherish95279/DesktopWidget/releases |
 
+## 支持系统
 
-## 🌤️ 天气信息
+- Windows 10
+- Windows 11
 
-- 实时天气显示
+## 安装包
+
+```text
+DesktopWidget-v1.3.1-win64-Cherish-Setup.exe
+```
+
+---
+
+# 📜 更新日志
+
+DesktopWidget 持续维护更新。
+
+完整版本历史和详细更新内容请查看：
+
+➡️ **[CHANGELOG_CN.md](CHANGELOG_CN.md)**
+
+---
+
+---
+
+# ⭐ 为什么选择 DesktopWidget？
+
+DesktopWidget 致力于为 Windows 用户提供一个美观、实用且高度可定制的桌面体验。
+
+## 轻量高效
+
+基于 Python 和 PyQt6 开发，在提供丰富功能的同时保持简洁和高效。
+
+无需复杂配置，即可在桌面实时查看重要信息。
+
+## 高度可定制
+
+支持自定义：
+
+- 布局
+- 主题
+- 字体
+- 字号
+- 文字颜色
+- 背景颜色
+- 透明度
+
+打造属于自己的个性化桌面。
+
+## 全球天气支持
+
+支持多个天气服务提供商：
+
+- 高德天气
+- Open-Meteo
+- 和风天气
+- Weather API
+- 自定义天气接口
+
+支持全球城市搜索和灵活的 API 配置。
+
+## 多语言界面
+
+完整用户界面支持 8 种语言：
+
+- English
+- 简体中文
+- 繁體中文
+- 日本語
+- 한국어
+- Deutsch
+- Français
+- Español
+
+让 DesktopWidget 可以服务全球用户。
+
+## 开源自由
+
+项目采用 MIT License 开源协议。
+
+允许用户：
+
+- 学习源码
+- 修改项目
+- 二次开发
+- 创建衍生作品
+
+---
+
+# ✨ 功能特点
+
+## 🕐 桌面信息
+
+### 指针时钟
+
+- 模拟经典石英钟效果
+- 秒针平滑转动
+- 简洁美观的桌面显示
+
+### 农历与节气
+
+- 显示农历日期
+- 自动计算下一个节气
+- 显示节气倒计时
+
+### 自定义布局
+
+- 支持 8 个信息槽位
+- 自由排列显示内容
+- 修改后立即生效，无需重启
+
+---
+
+## 🌤 天气系统
+
+DesktopWidget 提供灵活的天气系统，支持多个天气服务。
+
+支持的天气服务：
+
+- 高德天气
+- Open-Meteo
+- 和风天气
+- Weather API
+- 自定义天气接口
+
+功能包括：
+
 - 全球城市搜索
-- 多天气服务支持
-- 自定义 API 配置
-- 可调整刷新频率
+- 多语言地点搜索
+- 基于经纬度的天气查询
+- 用户自定义 API Key
+- 自定义天气 URL
+- 可调整刷新间隔
 
+其中 Open-Meteo 无需 API Key 即可使用；
 
-## 🎨 个性化设置
+高级用户可以配置专业天气服务，以获得更多功能。
 
-- 多主题支持
-- 默认主题与竹林主题
-- 信息槽位自由排列
-- 背景颜色调整
-- 窗口透明度控制
-- 字体自定义
-- 设置实时生效
+---
 
+## 📊 系统监控
 
-## ⚙️ 系统功能
+实时显示系统运行状态：
+
+- CPU 使用率
+- GPU 使用率
+- 内存占用
+- 网络上传速度
+- 网络下载速度
+
+所有监控项目均支持自动刷新。
+
+---
+
+## 🎨 主题与外观
+
+DesktopWidget 提供丰富的外观自定义功能。
+
+内置主题：
+
+- 默认主题
+- 竹林主题
+
+支持调整：
+
+- 背景颜色
+- 透明度
+- 主题强度
+- 字体
+- 字号
+- 文字颜色
+
+主题修改实时生效。
+
+---
+
+## ⚙ 系统功能
+
+DesktopWidget 提供多种实用系统功能：
 
 - 系统托盘支持
-- 开机自动启动
-- 自动更新检测
-- 远程公告系统
-- GitHub Discussions 反馈渠道
-
+- 最小化到托盘
+- 托盘显示/隐藏窗口
+- Windows 开机启动
+- 自动检测更新
+- 远程公告通知
 
 ---
 
-# 📷 预览截图
+# 🌍 本地化支持
 
+DesktopWidget 提供完整的多语言界面支持。
 
-## 主界面
+当前支持语言：
 
+| 语言 | 状态 |
+| --- | --- |
+| English | ✅ |
+| 简体中文 | ✅ |
+| 繁體中文 | ✅ |
+| 日本語 | ✅ |
+| 한국어 | ✅ |
+| Deutsch | ✅ |
+| Français | ✅ |
+| Español | ✅ |
+
+所有用户可见界面文字均已完成本地化。
+
+---
+
+# 🖼 软件截图
+
+## 主窗口
 
 ### 默认主题
 
-![默认主题](screenshots/main_default.png)
-
+<img src="screenshots/main_default.png" alt="默认主题" width="900">
 
 ### 竹林主题
 
-![竹林主题](screenshots/main_bamboo.png)
-
-
-## 设置界面
-
-
-### 常规设置
-
-![常规设置](screenshots/settings_general.png)
-
-
-### 显示项目设置
-
-![显示项目设置](screenshots/settings_widgets.png)
-
-
-### 主题设置
-
-![主题设置](screenshots/settings_theme.png)
-
-
-### 天气设置
-
-![天气设置](screenshots/settings_weather.png)
-
-
-## 其他
-
-
-### 系统托盘菜单
-
-![托盘菜单](screenshots/tray_menu.png)
-
-
-### 更新界面
-
-![更新界面](screenshots/update.png)
-
-
+<img src="screenshots/main_bamboo.png" alt="竹林主题" width="900">
 
 ---
 
-# 🚀 快速开始
+## 设置界面
 
+### 常规设置
 
-## 下载安装包（推荐）
+<img src="screenshots/settings_general.png" alt="常规设置" width="700">
 
+### 显示项目
 
-下载最新版本：
+<img src="screenshots/settings_widgets.png" alt="显示项目" width="700">
 
-| 平台 | 下载地址 |
+### 主题设置
+
+<img src="screenshots/settings_theme.png" alt="主题设置" width="700">
+
+### 天气设置
+
+<img src="screenshots/settings_weather.png" alt="天气设置" width="700">
+
+---
+
+## 系统托盘
+
+<img src="screenshots/tray_menu.png" alt="系统托盘" width="700">
+
+---
+
+## 更新系统
+
+<img src="screenshots/update.png" alt="更新系统" width="700">
+
+---
+
+---
+
+# 🏗️ 项目架构
+
+DesktopWidget 基于 Python 和 PyQt6 构建，采用模块化架构设计。
+
+## 技术栈
+
+| 技术 | 用途 |
 | --- | --- |
-| GitHub | [Releases](https://github.com/Cherish95279/DesktopWidget/releases) |
-| Gitee | [Releases](https://gitee.com/Cherish95279/DesktopWidget/releases) |
+| Python 3.12 | 核心开发语言 |
+| PyQt6 | 图形界面框架 |
+| psutil | CPU / 内存 / 网络监控 |
+| GPUtil | GPU 监控 |
+| requests | 网络请求 |
+| zhdate | 农历日期转换 |
+| Pillow | 图像处理 |
+| PyInstaller | 程序打包 |
+| Inno Setup | Windows 安装包制作 |
 
+---
 
+## 项目结构
 
-## 从源码运行
+项目采用模块化设计：
 
+```text
+DesktopWidget/
+│
+├── src/
+│   ├── widgets/              # 核心组件
+│   ├── settings_pages/       # 设置页面
+│   ├── mixins/               # 功能扩展模块
+│   ├── notice/               # 公告系统
+│   └── i18n/                 # 国际化系统
+│
+├── screenshots/              # 截图与预览资源
+├── icons/                    # 应用图标
+├── skins/                    # 主题资源
+├── tools/                    # 构建与发布工具
+│
+├── widget.py                 # 程序入口
+├── LICENSE                   # MIT 开源协议
+└── README.md
+```
 
-### 环境要求
+模块化结构使 DesktopWidget 更容易维护、扩展和二次开发。
+
+---
+
+# 🛠️ 开发说明
+
+## 环境要求
 
 - Windows 10 / Windows 11
 - Python 3.12+
 
+---
 
-### 安装依赖
+## 从源码运行
+
+克隆仓库：
+
+```bash
+git clone https://github.com/Cherish95279/DesktopWidget.git
+
+cd DesktopWidget
+```
+
+创建虚拟环境：
+
+```bash
+python -m venv .venv
+```
+
+安装依赖：
 
 ```bash
 pip install PyQt6 psutil requests zhdate GPUtil Pillow
-运行
+```
+
+运行：
+
+```bash
 python widget.py
-🛠️ 技术栈
-技术	用途
-Python 3.12	编程语言
-PyQt6	GUI 框架
-psutil	系统性能监控
-GPUtil	GPU 监控
-zhdate	农历转换
-requests	网络请求
-Pillow	图像处理
-PyInstaller	EXE 打包
-Inno Setup	安装程序制作
-📦 一键打包
+```
 
-激活虚拟环境：
+---
 
-.venv\Scripts\activate
+## 构建发布版本
 
-执行：
+DesktopWidget 使用：
 
-python build.py v1.3.1
+- **PyInstaller** 生成可执行文件
+- **Inno Setup** 制作 Windows 安装程序
 
-脚本自动完成：
+官方发布安装包：
 
-版本号更新
-旧文件归档
-PyInstaller 打包
-Inno Setup 安装程序生成
-🌍 多语言支持
+```text
+DesktopWidget-v1.3.1-win64-Cherish-Setup.exe
+```
 
-DesktopWidget 支持 8 种语言：
+---
 
-语言	代码
-简体中文	zh_CN
-繁體中文	zh_TW
-English	en
-Español	es
-日本語	ja
-Deutsch	de
-Français	fr
-한국어	ko
+# 🗺️ 开发路线图
 
-语言设置保存在 QSettings 中。
+## 已完成 ✅
 
-切换语言后需要重启程序生效。
+- [x] 指针时钟系统
+- [x] 天气系统
+- [x] 多天气服务支持
+- [x] 全球城市搜索
+- [x] 主题自定义系统
+- [x] 自定义布局系统
+- [x] CPU / GPU / 内存监控
+- [x] 网络速度监控
+- [x] 公告系统
+- [x] 自动更新系统
+- [x] 8 种语言支持
+- [x] GitHub / Gitee 发布支持
 
-📄 许可证
+---
 
-MIT License
+## 未来计划 🚧
 
-🙏 致谢
-天气数据由相关天气服务提供
-农历转换基于 zhdate
-感谢 fkp123 的支持
-📝 更新日志
+- [ ] GitHub Actions 自动构建与发布
+- [ ] 更多主题资源
+- [ ] 进一步优化性能
+- [ ] 更多可定制桌面组件
 
-详见：
+---
 
-CHANGELOG.md
+# 🤝 参与贡献
+
+欢迎参与 DesktopWidget 的改进。
+
+你可以通过以下方式贡献：
+
+- 提交 Bug
+- 提出新功能建议
+- 改进翻译
+- 提交代码优化
+
+DesktopWidget 同时欢迎学习源码、修改项目以及二次开发。
+
+如有反馈和建议，请使用 GitHub Issues 或 Discussions。
+
+---
+
+# 📄 开源协议
+
+DesktopWidget 使用 **MIT License** 开源协议。
+
+你可以自由：
+
+- 学习源码
+- 修改项目
+- 创建衍生项目
+- 用于个人或商业用途
+
+完整协议：
+
+[LICENSE](LICENSE)
+
+---
+
+# 💖 支持开发
+
+如果 DesktopWidget 对你有所帮助，并希望支持项目持续开发，可以通过 PayPal 支持。
+
+PayPal：
+
+```text
+fengquankun@outlook.com
+```
+
+感谢你的支持。
+
+---
+
+# 👤 作者
+
+作者：
+
+**Cherish95279**
+
+GitHub：
+
+https://github.com/Cherish95279
+
+---
