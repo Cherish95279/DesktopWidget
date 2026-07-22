@@ -42,7 +42,7 @@
   <img src="https://img.shields.io/badge/Español-✓-success" alt="Español">
 </p>
 
-> **当前版本：** **v1.3.1** · **发布日期：2026-07-20**
+> **当前版本：** **v1.3.2** · **发布日期：2026-07-22**
 
 <p align="center">
   <img src="screenshots/preview.gif" alt="DesktopWidget Preview">
@@ -75,7 +75,7 @@ DesktopWidget 基于 **PyQt6** 开发，注重性能、自定义能力和易用�
 ## 安装包
 
 ```text
-DesktopWidget-v1.3.1-win64-Cherish-Setup.exe
+DesktopWidget-v1.3.2-windows-x64-Setup.exe
 ```
 
 ---

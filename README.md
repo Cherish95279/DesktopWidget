@@ -42,7 +42,7 @@ Built with PyQt6 · Weather · System Monitor · Themes · Auto Update · 8 Lang
   <img src="https://img.shields.io/badge/Español-✓-success" alt="Spanish">
 </p>
 
-> **Latest Release:** **v1.3.1** · **Released:** 2026-07-20
+> **Latest Release:** **v1.3.2** · **Released:** 2026-07-22
 
 <p align="center">
   <img src="screenshots/preview.gif" alt="DesktopWidget Preview">
@@ -75,7 +75,7 @@ Built with **PyQt6**, DesktopWidget focuses on performance, customization, and e
 ### Installer
 
 ```text
-DesktopWidget-v1.3.0-win64-Cherish-Setup.exe
+DesktopWidget-v1.3.2-windows-x64-Setup.exe
 ```
 
 ---

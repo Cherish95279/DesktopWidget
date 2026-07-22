@@ -7,6 +7,27 @@ All notable changes to DesktopWidget are documented in this file.
 
 ---
 
+# 🚀 v1.3.2 (2026-07-20) Release Notes
+
+## 🌍 Localization and Region Display Improvements
+
+- Fixed an issue where weather location search results were displayed in only one language.
+- Improved weather location display logic to show region names according to the current language setting.
+- Chinese names are now displayed by default for Greater China regions without requiring manual language switching.
+- Improved consistency across all 8 supported languages.
+
+## 📅 Lunar Calendar and Solar Terms Improvements
+
+- Separated lunar calendar and solar terms into independent display items.
+- Lunar calendar and solar terms can now be added separately to the display item pool and freely arranged.
+
+## 🐛 Bug Fixes
+
+- Fixed an issue where weather location names in the main window were displayed using the API default language.
+- Fixed other known logic issues and improved overall stability.
+
+---
+
 # 🚀 v1.3.1 (2026-07-20)
 
 ## 🌤️ Weather System Improvements
