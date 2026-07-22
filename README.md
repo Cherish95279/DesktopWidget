@@ -443,15 +443,27 @@ See the full license:
 
 # 💖 Support Development
 
-If you find DesktopWidget useful and would like to support continued development, you can support the project through PayPal.
+DesktopWidget is free and open source.
 
-PayPal:
+If you find this project useful, you can support its continued development through PayPal.
 
-```text
-fengquankun@outlook.com
-```
+<a href="https://paypal.me/Cherish95279">
+  <img src="https://img.shields.io/badge/PayPal-Support%20Development-blue?logo=paypal" alt="PayPal Support"/>
+</a>
 
-Thank you for your support.
+<br>
+
+### PayPal QR Code
+
+<img src="icons/PayPal.png" width="200" alt="PayPal QR Code">
+
+Or use PayPal.Me:
+
+<a href="https://paypal.me/Cherish95279"> <img src="https://img.shields.io/badge/PayPal-Support%20Development-blue?logo=paypal" alt="PayPal Support"/> </a>
+
+Your support helps maintain and improve DesktopWidget.
+
+Thank you! ❤️
 
 ---
 

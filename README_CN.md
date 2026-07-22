@@ -491,15 +491,33 @@ DesktopWidget 使用 **MIT License** 开源协议。
 
 # 💖 支持开发
 
-如果 DesktopWidget 对你有所帮助，并希望支持项目持续开发，可以通过 PayPal 支持。
+DesktopWidget 是一个免费开源项目。
 
-PayPal：
+如果这个项目对你有所帮助，欢迎支持持续开发。
 
-```text
-fengquankun@outlook.com
-```
+## 支持方式
 
-感谢你的支持。
+### 支付宝
+
+<img src="icons/Alipay.png" width="200">
+
+---
+
+### 微信支付
+
+<img src="icons/WeChatpay.png" width="200">
+
+---
+
+### PayPal
+
+<img src="icons/PayPal.png" width="200">
+
+也可以通过 PayPal.Me 支持：
+
+https://paypal.me/Cherish95279
+
+感谢你的支持！
 
 ---
 
