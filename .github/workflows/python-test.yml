@@ -22,6 +22,7 @@ jobs:
         uses: actions/setup-python@v5
         with:
           python-version: "3.12"
+          cache: "pip"
 
       - name: Show Python version
         run: |
@@ -29,7 +30,7 @@ jobs:
 
       - name: Install dependencies
         run: |
-          pip install PyQt6 psutil requests zhdate GPUtil Pillow
+          pip install -r requirements.txt
 
       - name: Check Python syntax
         run: |

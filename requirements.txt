@@ -1,0 +1,8 @@
+PyQt6==6.11.0
+psutil==7.2.2
+requests==2.34.2
+Pillow==12.2.0
+GPUtil==1.4.0
+zhdate==0.1
+astral==3.2
+nvidia-ml-py3==7.352.0
