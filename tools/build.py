@@ -12,6 +12,11 @@ import subprocess
 import shutil
 from datetime import datetime
 
+# 强制 UTF-8 输出，兼容 GitHub Actions Windows Runner
+if sys.platform == "win32":
+    sys.stdout.reconfigure(encoding="utf-8")
+    sys.stderr.reconfigure(encoding="utf-8")
+
 # 颜色输出（可选）
 try:
     from colorama import init, Fore, Style
