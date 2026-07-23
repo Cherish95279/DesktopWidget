@@ -5,6 +5,10 @@ on:
     branches:
       - main
 
+  pull_request:
+    branches:
+      - main
+
 jobs:
   test:
 
@@ -19,10 +23,14 @@ jobs:
         with:
           python-version: "3.12"
 
+      - name: Show Python version
+        run: |
+          python --version
+
       - name: Install dependencies
         run: |
           pip install PyQt6 psutil requests zhdate GPUtil Pillow
 
       - name: Check Python syntax
         run: |
-          python -m compileall .
+          python -m compileall widget.py src tools

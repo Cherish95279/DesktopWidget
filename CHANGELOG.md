@@ -7,7 +7,7 @@ All notable changes to DesktopWidget are documented in this file.
 
 ---
 
-# 🚀 v1.3.2 (2026-07-20) Release Notes
+# 🚀 v1.3.2 (2026-07-22) 
 
 ## 🌍 Localization and Region Display Improvements
 
