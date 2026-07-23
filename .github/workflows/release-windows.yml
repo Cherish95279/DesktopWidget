@@ -1,0 +1,51 @@
+name: Build Windows Release
+
+on:
+  push:
+    tags:
+      - "v*.*.*"
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+
+    runs-on: windows-latest
+
+    steps:
+
+      # 拉取代码
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+
+      # 配置 Python
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+
+      # 安装 Python 依赖
+      - name: Install dependencies
+        run: |
+          pip install -r requirements.txt
+
+
+      # 安装 Inno Setup
+      - name: Install Inno Setup
+        run: |
+          choco install innosetup --no-progress -y
+
+
+      # 执行打包
+      - name: Build DesktopWidget
+        run: |
+          python tools/build.py ${{ github.ref_name }}
+
+
+      # 查看输出
+      - name: List build output
+        run: |
+          dir dist
