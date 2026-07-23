@@ -32,7 +32,7 @@ VersionInfoCompany=Cherish
 VersionInfoTextVersion=1.3.3
 
 [Languages]
-Name: "chinesesimplified"; MessagesFile: "compiler:Languages\ChineseSimplified.isl"
+Name: "chinesesimplified"; MessagesFile: "installer\ChineseSimplified.isl"
 
 [Files]
 Source: "dist\DesktopWidget\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs
