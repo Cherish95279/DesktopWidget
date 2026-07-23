@@ -45,17 +45,19 @@ jobs:
         run: |
           python tools/build.py ${{ github.ref_name }}
 
+
+          # 查看输出
+      - name: List build output
+        run: |
+          dir dist
+
       - name: Create Release
         uses: softprops/action-gh-release@v2
         with:
           draft: true
           files: |
-            dist/DesktopWidget-v*-win64-Cherish-Setup.exe
+            dist/DesktopWidget-v*-windows-x64-Setup.exe
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
 
-      # 查看输出
-      - name: List build output
-        run: |
-          dir dist

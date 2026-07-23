@@ -214,9 +214,8 @@ def update_version(version):
         content
     )
 
-
     content = re.sub(
-        r'DesktopWidget-v\d+\.\d+\.\d+-win64-Cherish-Setup',
+        r'DesktopWidget-v\d+\.\d+\.\d+-windows-x64-Setup',
         f'DesktopWidget-v{clean_version}-windows-x64-Setup',
         content
     )
@@ -482,6 +481,8 @@ def main():
 
     print_info(
         f"输出文件: dist\\DesktopWidget-v{clean_version}-windows-x64-Setup.exe"
+
+        
     )
 
 
