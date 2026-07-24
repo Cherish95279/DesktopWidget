@@ -246,6 +246,10 @@ class TrayIcon(QSystemTrayIcon):
         self.setIcon(self._default_icon)
         self._update_tooltip()
 
+        # 同时停止主窗口气泡闪烁
+        if hasattr(self.parent_window, 'notice_bubble') and self.parent_window.notice_bubble:
+            self.parent_window.notice_bubble.hide_bubble()
+
         if hasattr(self.parent_window, '_notice_window') and self.parent_window._notice_window is not None:
             window = self.parent_window._notice_window
             window.show()

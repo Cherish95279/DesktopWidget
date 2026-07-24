@@ -222,12 +222,7 @@ class GeneralPage(QWidget):
         # 2. 打开公告窗口（原有逻辑不变）
         main_window = self._get_main_window()
         if main_window and hasattr(main_window, '_open_notice_window'):
-            main_window._open_notice_window()
-    def _on_mode_changed(self, index):
-        main_window = self._get_main_window()
-        if main_window and hasattr(main_window, '_open_notice_window'):
-            main_window._open_notice_window()
-
+            main_window._acknowledge_notice()
     def _on_mode_changed(self, index):
         if self._updating:
             return

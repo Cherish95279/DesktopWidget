@@ -139,6 +139,10 @@ class MainWindow(QWidget):
         self.has_update = False
         self.latest_version_info = {}
         QTimer.singleShot(3000, self.check_for_updates_auto)
+        # 每4小时自动检查一次更新
+        self._update_timer = QTimer()
+        self._update_timer.timeout.connect(self.check_for_updates_auto)
+        self._update_timer.start(4 * 60 * 60 * 1000)
 
         # 应用主题缓存
         self.update_theme_cache()
@@ -274,6 +278,21 @@ class MainWindow(QWidget):
             self.move(x, y)
 
     def _on_bubble_clicked(self):
+        self._acknowledge_notice()
+
+    def _acknowledge_notice(self):
+        """统一处理公告确认：停止所有闪烁，打开公告窗口"""
+        # 停止气泡闪烁
+        if hasattr(self, 'notice_bubble') and self.notice_bubble:
+            self.notice_bubble.hide_bubble()
+        # 停止托盘闪烁
+        if hasattr(self, 'tray') and self.tray:
+            self.tray._stop_flash()
+            self.tray._green_dot_visible = False
+            self.tray._notice_opened = True
+            QTimer.singleShot(10, lambda: self.tray.setIcon(self.tray._default_icon))
+            self.tray._update_tooltip()
+        # 打开公告窗口
         self._open_notice_window()
 
     def _open_notice_window(self):

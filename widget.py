@@ -63,7 +63,7 @@ def main():
 
     # 延迟启动公告检查
     def start_notice():
-        notice_manager.start(interval_minutes=60)
+        notice_manager.start(interval_minutes=30)
         print("✅ 公告轮询已启动")
 
     QTimer.singleShot(500, start_notice)

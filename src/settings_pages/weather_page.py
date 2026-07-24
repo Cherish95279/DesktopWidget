@@ -579,12 +579,9 @@ class WeatherPage(QWidget):
         QTimer.singleShot(0, self._safe_region_changed)
 
     def _safe_region_changed(self):
-        """安全地发射区域变更信号（延迟到下一事件循环）"""
-        try:
-            self.region_changed.emit()
-            self._refresh_main_window_weather()
-        except Exception:
-            pass
+        """地区变更后刷新天气线程"""
+        print("[Region] 地区已变更，强制刷新天气线程")
+        self._refresh_main_window_weather()
 
     def _toggle_key_visibility(self):
         """切换 API Key 的显示/隐藏状态"""
@@ -809,7 +806,6 @@ class WeatherPage(QWidget):
         if self._loading:
             return
         if self._selected_display:
-            self.region_changed.emit()
             self._refresh_main_window_weather()
 
     def _refresh_main_window_weather(self):
@@ -849,14 +845,14 @@ class WeatherPage(QWidget):
                     break
 
         if main_window and hasattr(main_window, 'start_weather_thread'):
-            print("🔄 强制刷新天气线程")
+            print("[Region] 找到主窗口，强制刷新天气线程")
             main_window.start_weather_thread(force_restart=True)
             # 重新连接设置页的天气信号（新线程需重新绑定）
             self._connect_weather_signal()
             if hasattr(main_window, 'update'):
                 main_window.update()
         else:
-            print("⚠️ 未找到主窗口，无法刷新天气")
+            print("[Region] ⚠️ 未找到主窗口，无法刷新天气线程")
 
     # ---------- 加载设置 ----------
     def load_regions(self):

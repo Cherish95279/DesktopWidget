@@ -388,6 +388,7 @@ class WeatherThread(QThread):
                             cond = cur.get("condition", {})
                             weather_en = cond.get("text", "Unknown")
                             weather_translated = translate_weather_text(weather_en)
+                            print(f"[WeatherAPI] raw='{weather_en}' -> translated='{weather_translated}'")
                             wd = cur.get("wind_dir", "")
                             wk = cur.get("wind_kph", 0)
                             wind_text = f"{wd}{wk}km/h" if wd else ""
