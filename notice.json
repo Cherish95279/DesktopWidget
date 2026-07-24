@@ -1,9 +1,9 @@
 {
-  "id": "notice_20260724_134240",
+  "id": "notice_20260724_142422",
   "enabled": true,
-  "title": "更加醒目的未读公告提醒",
-  "content": "锄禾日当午，汗滴禾下土",
-  "link": "",
-  "timestamp": "2026-07-24 13:42",
+  "title": "7/24刚刚发布了1.3.3",
+  "content": "由于本软件需要更加通用易懂，安装包移除了一些个人标志，如果你无法更新到1.3.3，请点击以下链接下载",
+  "link": "https://github.com/Cherish95279/DesktopWidget/releases",
+  "timestamp": "2026-07-24 14:24",
   "show_date": true
 }
