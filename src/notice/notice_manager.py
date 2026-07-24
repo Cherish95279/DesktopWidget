@@ -17,35 +17,42 @@ class NoticeChecker(QThread):
     def __init__(self, url: str):
         super().__init__()
         self.url = url
+        if "gitee" in url:
+            self.label = "Gitee"
+        elif "github" in url.lower() or "raw.githubusercontent" in url:
+            self.label = "GitHub"
+        else:
+            self.label = "Unknown"
 
     def run(self):
         try:
-            print(f"[Check] 开始检查公告: {self.url}")
+            print(f"[Check:{self.label}] 检查公告 {self.label}")
             resp = requests.get(self.url, timeout=5, verify=certifi.where())
             if resp.status_code != 200:
-                print(f"[ERROR] 公告请求失败，状态码: {resp.status_code}")
+                print(f"[Check:{self.label}] 请求失败 HTTP {resp.status_code}")
                 self.check_failed.emit(f"HTTP {resp.status_code}")
                 return
 
             data = resp.json()
-            print(f"📄 解析到公告数据: {data}")
+            print(f"[Check:{self.label}] 解析到公告数据: {data}")
             notice = Notice.from_dict(data)
 
             if not notice.is_valid():
-                print("[WARN] 公告数据无效")
+                print(f"[Check:{self.label}] 公告数据无效")
                 self.notice_empty.emit()
                 return
 
+            print(f"[Check:{self.label}] 检查成功")
             self.notice_received.emit(notice)
 
         except requests.exceptions.Timeout:
-            print("⏱️ 公告请求超时")
+            print(f"[Check:{self.label}] 请求超时")
             self.check_failed.emit("超时")
         except requests.exceptions.ConnectionError:
-            print("[Network] 网络连接失败")
+            print(f"[Check:{self.label}] 网络连接失败")
             self.check_failed.emit("网络连接失败")
         except Exception as e:
-            print(f"[ERROR] 公告检查异常: {e}")
+            print(f"[Check:{self.label}] 检查异常: {e}")
             traceback.print_exc()
             self.check_failed.emit(str(e))
 
@@ -298,8 +305,12 @@ class NoticeManager:
         # 如果已经处理过有效结果，忽略失败
         if self._check_handled:
             return
+        # 检查是否所有源都失败了
+        active = [c for c in self._checkers if c.isRunning()]
+        if not active:
+            # 所有源都已结束且无有效结果，才报总体失败
+            print(f"[ERROR] 所有公告源均检查失败")
         try:
-            print(f"[ERROR] 公告检查失败: {error_msg}")
             for cb in self._callbacks["on_check_failed"]:
                 try:
                     cb()

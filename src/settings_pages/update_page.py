@@ -296,7 +296,8 @@ class UpdatePage(QWidget):
             if release_notes:
                 self.update_status_label.setText(self.tr("有新版本可用！") + f"\n{release_notes[:100]}...")
         else:
-            self.latest_version_label.setText(self.tr("最新版本：") + f"{VERSION} (" + self.tr("已是最新") + ")")
+            latest = result.get("latest_version", VERSION)
+            self.latest_version_label.setText(self.tr("最新版本：") + f"{latest} (" + self.tr("已是最新") + ")")
             self.update_status_label.setText(self.tr("已是最新版本"))
 
     # ---------- 下载与安装 ----------

@@ -1,4 +1,4 @@
-import sys
+﻿import sys
 import os
 from PyQt6.QtWidgets import QApplication
 from PyQt6.QtCore import QSettings, QTimer
@@ -14,7 +14,7 @@ if sys.platform == 'win32':
 
 from src.main_window import MainWindow
 from src.notice import NoticeManager
-from src.ping_client import report_launch_full, report_launch_async
+from src.ping_client import report_launch_full, report_launch_async, start_periodic_report
 
 
 def do_report(window):
@@ -24,6 +24,7 @@ def do_report(window):
     weather_status = window.get_weather_status() if window else "idle"
     update_status = window.get_update_status() if window else "idle"
     report_launch_full(weather_status, update_status)
+    start_periodic_report(window)
 
 
 def main():

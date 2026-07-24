@@ -72,15 +72,18 @@ class UpdateChecker(QThread):
                 data = resp.json()
 
                 latest_version = data.get("tag_name", "").strip()
+                print(f"[Update:Gitee] 服务器最新版本: {latest_version}, 本地版本: {VERSION}")
                 assets = data.get("assets", [])
                 download_url = None
                 for asset in assets:
                     name = asset.get("name", "")
-                    if name.startswith("DesktopWidget-") and name.endswith("-win64-Cherish-Setup.exe"):
+                    if (name.startswith("DesktopWidget-") and name.lower().endswith("-setup.exe")):
                         download_url = asset.get("browser_download_url")
                         break
                 release_notes = data.get("body", "")
                 has_update = False
+                if not download_url:
+                    print(f"[Update] 未找到匹配的安装包 (DesktopWidget-*-win64-Cherish-Setup.exe)")
                 if latest_version and download_url:
                     if compare_versions(VERSION, latest_version):
                         has_update = True
@@ -118,15 +121,18 @@ class UpdateChecker(QThread):
             resp.raise_for_status()
             data = resp.json()
             latest_version = data.get("tag_name", "").strip()
+            print(f"[Update:GitHub] 服务器最新版本: {latest_version}, 本地版本: {VERSION}")
             assets = data.get("assets", [])
             download_url = None
             for asset in assets:
                 name = asset.get("name", "")
-                if name.startswith("DesktopWidget-") and name.endswith("-win64-Cherish-Setup.exe"):
+                if (name.startswith("DesktopWidget-") and name.lower().endswith("-setup.exe")):
                     download_url = asset.get("browser_download_url")
                     break
             release_notes = data.get("body", "")
             has_update = False
+            if not download_url:
+                print(f"[Update:GitHub] 未找到匹配的安装包 (DesktopWidget-*-win64-Cherish-Setup.exe)")
             if latest_version and download_url:
                 if compare_versions(VERSION, latest_version):
                     has_update = True

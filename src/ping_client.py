@@ -1,4 +1,4 @@
-# -*- coding: utf-8 -*-
+﻿# -*- coding: utf-8 -*-
 """
 匿名设备统计客户端
 用于在程序启动时上报以下信息到手机服务器：
@@ -82,7 +82,7 @@ def report_launch():
 
         # 构建 URL（不含天气和更新状态，由调用方补充）
         url = (
-            f"http://192.168.0.122:8080/ping"
+            f"https://cherish9527.cc.cd/ping"
             f"?uuid={uuid_val}"
             f"&version={version}"
             f"&os={os_info}"
@@ -90,7 +90,8 @@ def report_launch():
             f"&theme={theme}"
         )
         # 发送 GET 请求，超时 3 秒
-        with urllib.request.urlopen(url, timeout=3) as response:
+        req = urllib.request.Request(url, headers={"User-Agent": "DesktopWidget/1.0"})
+        with urllib.request.urlopen(req, timeout=3) as response:
             response.read()
     except Exception:
         # 静默失败，不影响主程序
@@ -120,7 +121,7 @@ def report_launch_full(
         theme_encoded = urllib.parse.quote(theme)
 
         url = (
-            f"http://192.168.0.122:8080/ping"
+            f"https://cherish9527.cc.cd/ping"
             f"?uuid={uuid_val}"
             f"&version={version}"
             f"&os={os_encoded}"
@@ -129,7 +130,8 @@ def report_launch_full(
             f"&weather={weather_status}"
             f"&update={update_status}"
         )
-        with urllib.request.urlopen(url, timeout=3) as response:
+        req = urllib.request.Request(url, headers={"User-Agent": "DesktopWidget/1.0"})
+        with urllib.request.urlopen(req, timeout=3) as response:
             response.read()
     except Exception:
         # 静默失败
@@ -139,3 +141,16 @@ def report_launch_full(
 def report_launch_async():
     """异步上报（在 Qt 事件循环中延迟执行，不阻塞 UI）"""
     QTimer.singleShot(100, report_launch)
+
+def start_periodic_report(main_window):
+    def _do_report():
+        try:
+            ws = main_window.get_weather_status() if main_window else "idle"
+            us = main_window.get_update_status() if main_window else "idle"
+            report_launch_full(ws, us)
+        except Exception:
+            pass
+    timer = QTimer()
+    timer.setInterval(30 * 60 * 1000)
+    timer.timeout.connect(_do_report)
+    timer.start()
