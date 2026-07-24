@@ -76,3 +76,7 @@ DesktopWidget-v*.exe
 
 # 主题/皮肤临时文件
 skins/*/desktop*.psd
+
+# Debug scripts
+_fetch_*.py
+_fix_*.py
