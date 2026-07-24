@@ -281,6 +281,14 @@ class UpdatePage(QWidget):
             return
 
         if result.get("has_update", False):
+            # 通知托盘图标闪烁
+            try:
+                for w in QApplication.topLevelWidgets():
+                    if w.__class__.__name__ == "MainWindow" and hasattr(w, 'tray'):
+                        w.tray.start_update_flash()
+                        break
+            except Exception:
+                pass
             latest_version = result['latest_version']
             self.latest_version_label.setText(self.tr("最新版本：") + latest_version)
 

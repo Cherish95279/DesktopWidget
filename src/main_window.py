@@ -369,6 +369,9 @@ class MainWindow(QWidget):
             self.has_update = True
             self.latest_version_info = result
             self.update_check_status = "success"
+            # 通知托盘图标闪烁
+            if hasattr(self, 'tray') and self.tray:
+                self.tray.start_update_flash()
         else:
             self.has_update = False
             self.update_check_status = "no_update"

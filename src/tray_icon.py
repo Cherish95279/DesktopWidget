@@ -15,6 +15,7 @@ class TrayIcon(QSystemTrayIcon):
         self._default_icon.addFile(resource_path("icons/tray_24.png"), QSize(24, 24))
         self._default_icon.addFile(resource_path("icons/tray_16.png"), QSize(16, 16))
         self.setIcon(self._default_icon)
+
         self.setToolTip(self.tr("珍爱桌面小工具"))
 
         # 公告相关状态
@@ -23,6 +24,11 @@ class TrayIcon(QSystemTrayIcon):
         self._has_notice = False
         self._green_dot_visible = False
         self._notice_opened = False
+
+        # 更新通知状态
+        self._has_update = False
+        self._update_flash_timer = None
+        self._update_flash_count = 0
 
         # 窗口模式相关
         self._window_mode = "float"  # bottom / float / top
@@ -102,9 +108,9 @@ class TrayIcon(QSystemTrayIcon):
             painter = QPainter(pixmap)
             painter.setRenderHint(QPainter.RenderHint.Antialiasing)
 
-            dot_size = 6
-            dot_x = 24 - dot_size - 2
-            dot_y = 24 - dot_size - 2
+            dot_size = 10
+            dot_x = 18 - dot_size // 2
+            dot_y = 19 - dot_size // 2
             painter.setBrush(QColor(0, 200, 0))
             painter.setPen(Qt.PenStyle.NoPen)
             painter.drawEllipse(dot_x, dot_y, dot_size, dot_size)
@@ -114,6 +120,27 @@ class TrayIcon(QSystemTrayIcon):
             print("[OK] 绿色小点已绘制")
         except Exception as e:
             print(f"[WARN] 绘制绿点失败: {e}")
+
+    def _draw_red_dot(self):
+        """在默认图标上绘制红色圆点（更新通知）"""
+        try:
+            pixmap = self._default_icon.pixmap(QSize(24, 24))
+            if pixmap.isNull():
+                pixmap = QPixmap(24, 24)
+                pixmap.fill(Qt.GlobalColor.transparent)
+            painter = QPainter(pixmap)
+            painter.setRenderHint(QPainter.RenderHint.Antialiasing)
+            dot_size = 10
+            dot_x = 18 - dot_size // 2
+            dot_y = 6 - dot_size // 2
+            painter.setBrush(QColor(0xFF, 0x3B, 0x30))
+            painter.setPen(Qt.PenStyle.NoPen)
+            painter.drawEllipse(dot_x, dot_y, dot_size, dot_size)
+            painter.end()
+            return QIcon(pixmap)
+        except Exception as e:
+            print(f"[WARN] 绘制红点失败: {e}")
+            return self._default_icon
 
     def _update_tooltip(self):
         if self._has_notice:
@@ -234,6 +261,39 @@ class TrayIcon(QSystemTrayIcon):
                 self.toggle_window()
         elif reason == QSystemTrayIcon.ActivationReason.DoubleClick:
             self.toggle_window()
+
+    # ===== 更新通知闪烁 =====
+    def start_update_flash(self):
+        """开始更新通知闪烁（红点 ↔ 默认图标，700ms）"""
+        if self._update_flash_timer is not None:
+            return
+        # 停止公告闪烁
+        self._stop_flash()
+        self._green_dot_visible = False
+        self._has_update = True
+        self._update_flash_count = 0
+        self._update_flash_timer = QTimer()
+        self._update_flash_timer.timeout.connect(self._update_flash_icon)
+        self._update_flash_timer.start(700)
+        print("[Update] 托盘更新通知闪烁已启动")
+
+    def _update_flash_icon(self):
+        self._update_flash_count += 1
+        if self._update_flash_count % 2 == 1:
+            self.setIcon(self._draw_red_dot())
+        else:
+            self.setIcon(self._default_icon)
+
+    def stop_update_flash(self):
+        """停止更新通知闪烁，恢复默认图标"""
+        if self._update_flash_timer is not None:
+            self._update_flash_timer.stop()
+            self._update_flash_timer = None
+        self._has_update = False
+        self._update_flash_count = 0
+        self.setIcon(self._default_icon)
+        self._update_tooltip()
+        print("[Update] 托盘更新通知闪烁已停止")
 
     def _open_notice_window(self):
         manager = NoticeManager.get_instance()

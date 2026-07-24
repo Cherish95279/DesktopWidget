@@ -7,6 +7,29 @@ All notable changes to DesktopWidget are documented in this file.
 
 ---
 
+# 🚀 v1.3.3 (2026-07-24)
+
+## 🔔 Notification and Update Reminder Improvements
+
+- Added a more noticeable arrival notification indicator.
+- Added a more noticeable update release reminder indicator.
+- Both indicators are now displayed as small red and green dots on the system tray icon for quick recognition.
+
+## 🌍 Localization Improvements
+
+- Fixed an issue where weather information and the main interface language could become inconsistent in extremely rare cases.
+- Fixed the default language display logic during application startup.
+- Improved language initialization and display consistency.
+
+## 🐛 Bug Fixes
+
+- Fixed other minor logic issues.
+- Improved overall application stability.
+
+---
+
+---
+
 # 🚀 v1.3.2 (2026-07-22) 
 
 ## 🌍 Localization and Region Display Improvements

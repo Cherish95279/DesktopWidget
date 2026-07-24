@@ -314,7 +314,8 @@ class TranslatorManager:
                 pass  # language_changed signal removed (QObject inheritance was causing stack overflow)
 
             settings = QSettings("MyDesktopApp", "WeatherSettings")
-            settings.setValue("language", lang_code)
+            if emit_signal:
+                settings.setValue("language", lang_code)
             settings.sync()
         finally:
             self._loading = False
