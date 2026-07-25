@@ -75,4 +75,4 @@ Update checks may transmit the current application version to determine whether 
 
 For questions regarding this Privacy Policy, please contact:
 
-your-email@example.com
+fengquankun@outlook.com
