@@ -42,7 +42,14 @@ Built with PyQt6 · Weather · System Monitor · Themes · Auto Update · 8 Lang
   <img src="https://img.shields.io/badge/Español-✓-success" alt="Spanish">
 </p>
 
-> **Latest Release:** **v1.3.3** · **Released:** 2026-07-24
+>## 🚀 Download
+
+[![Latest Release](https://img.shields.io/github/v/release/Cherish95279/DesktopWidget?label=Latest%20Release&logo=github)](https://github.com/Cherish95279/DesktopWidget/releases/latest)
+
+[![Gitee Release](https://img.shields.io/badge/Gitee-Latest%20Release-C71D23?logo=gitee)](https://gitee.com/Cherish95279/DesktopWidget/releases)
+
+Released:
+[![Release Date](https://img.shields.io/github/release-date/Cherish95279/DesktopWidget?label=&logo=github)](https://github.com/Cherish95279/DesktopWidget/releases/latest)
 
 <p align="center">
   <img src="screenshots/preview.gif" alt="DesktopWidget Preview">
@@ -62,21 +69,26 @@ Built with **PyQt6**, DesktopWidget focuses on performance, customization, and e
 
 ## 🚀 Download
 
-| Platform | Download |
-| :--- | :--- |
-| **GitHub** | https://github.com/Cherish95279/DesktopWidget/releases |
-| **Gitee** | https://gitee.com/Cherish95279/DesktopWidget/releases |
+### ⬇️ Latest Release
+
+[![GitHub Release](https://img.shields.io/github/v/release/Cherish95279/DesktopWidget?label=Latest%20Release&logo=github)](https://github.com/Cherish95279/DesktopWidget/releases/latest)
+
+[![Gitee Release](https://img.shields.io/badge/Gitee-Latest%20Release-C71D23?logo=gitee)](https://gitee.com/Cherish95279/DesktopWidget/releases)
+
 
 ### Supported Systems
 
 - Windows 10
 - Windows 11
+- Windows x64
+
 
 ### Installer
 
-```text
-DesktopWidget-v1.3.3-windows-x64-Setup.exe
-```
+Download the latest Windows installer:
+
+`DesktopWidget-windows-x64-Setup.exe`
+
 
 ---
 

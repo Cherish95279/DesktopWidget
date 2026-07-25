@@ -42,7 +42,9 @@
   <img src="https://img.shields.io/badge/Español-✓-success" alt="Español">
 </p>
 
-> **当前版本：** **v1.3.3** · **发布日期：2026-07-24**
+>[![最新版本](https://img.shields.io/github/v/release/Cherish95279/DesktopWidget?label=最新版本&logo=github)](https://github.com/Cherish95279/DesktopWidget/releases/latest)
+
+[![发布日期](https://img.shields.io/github/release-date/Cherish95279/DesktopWidget?label=发布于&logo=github)](https://github.com/Cherish95279/DesktopWidget/releases/latest)
 
 <p align="center">
   <img src="screenshots/preview.gif" alt="DesktopWidget Preview">
@@ -60,23 +62,25 @@ DesktopWidget 基于 **PyQt6** 开发，注重性能、自定义能力和易用�
 
 ---
 
-# 🚀 下载
+## 🚀 下载
 
-| 平台 | 下载 |
-| :--- | :--- |
-| **GitHub** | https://github.com/Cherish95279/DesktopWidget/releases |
-| **Gitee** | https://gitee.com/Cherish95279/DesktopWidget/releases |
+[![最新版本](https://img.shields.io/github/v/release/Cherish95279/DesktopWidget?label=最新版本&logo=github)](https://github.com/Cherish95279/DesktopWidget/releases/latest)
 
-## 支持系统
+[![Gitee 下载](https://img.shields.io/badge/Gitee-最新版本-C71D23?logo=gitee)](https://gitee.com/Cherish95279/DesktopWidget/releases)
+
+[![发布日期](https://img.shields.io/github/release-date/Cherish95279/DesktopWidget?label=发布于&logo=github)](https://github.com/Cherish95279/DesktopWidget/releases/latest)
+
+
+### 支持系统
 
 - Windows 10
 - Windows 11
+- Windows x64
 
-## 安装包
 
-```text
-DesktopWidget-v1.3.3-windows-x64-Setup.exe
-```
+### 安装程序
+
+下载最新版本的 Windows x64 安装程序即可。
 
 ---
 
