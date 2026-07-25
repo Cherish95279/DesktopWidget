@@ -1,9 +1,9 @@
 {
-  "id": "notice_20260724_142422",
+  "id": "notice_20260725_201217",
   "enabled": true,
   "title": "7/24刚刚发布了1.3.3",
-  "content": "由于本软件需要更加通用易懂，安装包移除了一些个人标志，如果你无法更新到1.3.3，请点击以下链接下载",
+  "content": "由于本软件需要更加通用易懂，\n安装包文件名移除了一些个人标志，\n如果你无法更新到1.3.3，\n请点击以下查看详情按钮进行下载",
   "link": "https://github.com/Cherish95279/DesktopWidget/releases",
-  "timestamp": "2026-07-24 14:24",
+  "timestamp": "2026-07-25 20:12",
   "show_date": true
 }
