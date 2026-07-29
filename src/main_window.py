@@ -441,6 +441,7 @@ class MainWindow(QWidget):
                         new_lat, new_lng, city = get_ip_location()
                         settings.setValue("_ip_attempted", True)
                         if new_lat and new_lng:
+                            settings.setValue("_ip_attempted", True)
                             settings.setValue("selected_latitude", str(new_lat))
                             settings.setValue("selected_longitude", str(new_lng))
                             if city:

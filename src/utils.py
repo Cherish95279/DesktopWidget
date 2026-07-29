@@ -119,7 +119,13 @@ def get_ip_location():
     import requests
     try:
         url = "http://ip-api.com/json/?lang=zh-CN&fields=status,country,city,lat,lon"
-        resp = requests.get(url, timeout=3)
+        resp = requests.get(url, timeout=5)
+        if resp.status_code != 200:
+            # Fallback: try ipapi.co
+            resp = requests.get("https://ipapi.co/json/", timeout=5)
+            resp.raise_for_status()
+            data = resp.json()
+            return (data.get("latitude"), data.get("longitude"), data.get("city"))
         if resp.status_code == 200:
             data = resp.json()
             if data.get("status") == "success":
