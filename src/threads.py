@@ -175,7 +175,7 @@ class WeatherThread(QThread):
     def run(self):
         while not self._stopped:
             settings = QSettings("MyDesktopApp", "WeatherSettings")
-            service = settings.value("weather_service", "")
+            service = settings.value("weather_service", "open_meteo")
 
             # Open-Meteo 不需要 API Key
             if service != "open_meteo":
@@ -191,7 +191,7 @@ class WeatherThread(QThread):
                 if api_url_now and "open-meteo" in api_url_now.lower():
                     service = "open_meteo"
                 else:
-                    service = "gaode"
+                    service = "open_meteo"
 
             # ---- 获取城市名和经纬度 ----
             lat = settings.value("selected_latitude", "")
@@ -670,3 +670,4 @@ class NetSpeedThread(QThread):
             self.last_bytes = current
             self.last_time = now
             self.sleep(1)
+

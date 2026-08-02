@@ -34,11 +34,16 @@ def get_os_info():
     release = platform.release()    # 10 / 11 / 22.04 等
     return f"{system} {release}"
 
-
 def get_autostart_status():
     """获取开机自启状态"""
     try:
-        from .autostart import get_autostart_status as _get_status
+        from src.autostart import get_autostart_status as _get_status
+    except ImportError:
+        try:
+            from .autostart import get_autostart_status as _get_status
+        except ImportError:
+            return False
+    try:
         return _get_status()
     except Exception:
         return False
@@ -98,6 +103,45 @@ def report_launch():
         pass
 
 
+
+def get_language():
+    """获取当前语言设置"""
+    try:
+        settings = QSettings("MyDesktopApp", "WeatherSettings")
+        return settings.value("language", "") or "auto"
+    except Exception:
+        return "unknown"
+
+
+def get_screen_resolution():
+    """获取主屏幕分辨率"""
+    try:
+        from PyQt6.QtWidgets import QApplication
+        from PyQt6.QtGui import QScreen
+        app = QApplication.instance()
+        if app:
+            screen = app.primaryScreen()
+            if screen:
+                size = screen.size()
+                return f"{size.width()}x{size.height()}"
+    except Exception:
+        pass
+    return "unknown"
+
+
+def get_slot_config():
+    """获取8个槽位的配置（逗号分隔）"""
+    try:
+        settings = QSettings("MyDesktopApp", "WeatherSettings")
+        slots = []
+        for i in range(1, 9):
+            key = f"slot_{i}"
+            val = settings.value(key, "")
+            slots.append(val if val else "empty")
+        return ",".join(slots)
+    except Exception:
+        return "unknown"
+
 def report_launch_full(
     weather_status: str = "idle",
     update_status: str = "idle"
@@ -119,6 +163,9 @@ def report_launch_full(
         import urllib.parse
         os_encoded = urllib.parse.quote(os_info)
         theme_encoded = urllib.parse.quote(theme)
+        lang_encoded = urllib.parse.quote(get_language())
+        res_encoded = urllib.parse.quote(get_screen_resolution())
+        slot_encoded = urllib.parse.quote(get_slot_config())
 
         url = (
             f"https://cherish9527.cc.cd/ping"
@@ -129,6 +176,9 @@ def report_launch_full(
             f"&theme={theme_encoded}"
             f"&weather={weather_status}"
             f"&update={update_status}"
+            f"&lang={lang_encoded}"
+            f"&screen={res_encoded}"
+            f"&slots={slot_encoded}"
         )
         req = urllib.request.Request(url, headers={"User-Agent": "DesktopWidget/1.0"})
         with urllib.request.urlopen(req, timeout=3) as response:
@@ -154,3 +204,7 @@ def start_periodic_report(main_window):
     timer.setInterval(30 * 60 * 1000)
     timer.timeout.connect(_do_report)
     timer.start()
+
+
+
+
