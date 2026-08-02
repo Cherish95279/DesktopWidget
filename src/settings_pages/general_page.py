@@ -26,11 +26,11 @@ class GeneralPage(QWidget):
         main_layout.setContentsMargins(15, 20, 15, 15)
         main_layout.setSpacing(15)
 
-        # 绗?琛岋細寮€鏈鸿嚜鍚姩 + 鏌ョ湅鍏憡
+        # 绗?琛岋細寮€鏈鸿嚜鍚姩 + ????
         row1 = QHBoxLayout()
         row1.setSpacing(10)
 
-        self.autostart_btn = QPushButton("猬?" + self.tr("寮€鏈烘椂鑷姩鍚姩"))
+        self.autostart_btn = QPushButton("⬜ " + self.tr("开机时自动启动"))
         self.autostart_btn.setFlat(True)
         self.autostart_btn.setStyleSheet("""
             QPushButton {
@@ -51,7 +51,7 @@ class GeneralPage(QWidget):
 
         row1.addStretch()
 
-        self.notice_btn = QPushButton("馃摙 " + self.tr("鏌ョ湅鍏憡"))
+        self.notice_btn = QPushButton("📢 " + self.tr("查看公告"))
         self.notice_btn.setFixedSize(120, 28)
         self.notice_btn.setStyleSheet(self._btn_style())
         self.notice_btn.clicked.connect(self._on_notice_clicked)
@@ -59,8 +59,8 @@ class GeneralPage(QWidget):
 
         main_layout.addLayout(row1)
 
-        # 瀛椾綋璁剧疆
-        font_label = QLabel(self.tr("瀛椾綋璁剧疆"))
+        # ????
+        font_label = QLabel(self.tr("字体设置"))
         font_label.setStyleSheet("font-weight: bold; font-size: 13px;")
         main_layout.addWidget(font_label)
 
@@ -82,7 +82,7 @@ class GeneralPage(QWidget):
         self.font_size_combo.currentTextChanged.connect(self._on_font_size_changed)
         row3.addWidget(self.font_size_combo)
 
-        self.font_color_btn = QPushButton(self.tr("瀛椾綋棰滆壊"))
+        self.font_color_btn = QPushButton(self.tr("字体颜色"))
         self.font_color_btn.setFixedSize(80, 28)
         self.font_color_btn.setStyleSheet(self._btn_style())
         self.font_color_btn.clicked.connect(self._on_font_color_clicked)
@@ -91,31 +91,31 @@ class GeneralPage(QWidget):
         row3.addStretch()
         main_layout.addLayout(row3)
 
-        # 绐楀彛妯″紡 + 璇█璁剧疆
+        # ???? + ????
         grid = QGridLayout()
         grid.setColumnStretch(0, 1)
         grid.setColumnStretch(1, 2)
         grid.setHorizontalSpacing(20)
         grid.setVerticalSpacing(6)
 
-        # 绐楀彛妯″紡
-        mode_label = QLabel(self.tr("绐楀彛妯″紡"))
+        # ????
+        mode_label = QLabel(self.tr("窗口模式"))
         mode_label.setStyleSheet("font-weight: bold; font-size: 13px;")
         grid.addWidget(mode_label, 0, 0, Qt.AlignmentFlag.AlignLeft)
 
         self.mode_combo = QComboBox()
         self.mode_combo.setFixedHeight(28)
         self.mode_combo.addItems([
-            self.tr("鎮诞妯″紡"),
-            self.tr("缃簳"),
-            self.tr("鎬绘槸缃《")
+            self.tr("悬浮模式"),
+            self.tr("置底"),
+            self.tr("总是置顶")
         ])
         self.mode_combo.setStyleSheet(self._combo_style())
         self.mode_combo.currentIndexChanged.connect(self._on_mode_changed)
         grid.addWidget(self.mode_combo, 1, 0, Qt.AlignmentFlag.AlignLeft)
 
-        # 璇█璁剧疆锛堜笅鎷夋閫夐」宸茬敤 tr() 鍖呰９锛?
-        lang_label = QLabel(self.tr("璇█璁剧疆"))
+        # ????锛堜笅鎷夋閫夐」宸茬敤 tr() 鍖呰９锛?
+        lang_label = QLabel(self.tr("语言设置"))
         lang_label.setStyleSheet("font-weight: bold; font-size: 13px;")
         grid.addWidget(lang_label, 0, 1, Qt.AlignmentFlag.AlignLeft)
 
@@ -138,13 +138,13 @@ class GeneralPage(QWidget):
 
         main_layout.addLayout(grid)
 
-        # 鎭㈠榛樿鎸夐挳
+        # ????鎸夐挳
         main_layout.addStretch()
 
         btn_row = QHBoxLayout()
         btn_row.addStretch()
 
-        self.restore_btn = QPushButton(self.tr("鎭㈠榛樿"))
+        self.restore_btn = QPushButton(self.tr("恢复默认"))
         self.restore_btn.setFixedSize(90, 28)
         self.restore_btn.setStyleSheet(self._btn_style())
         self.restore_btn.clicked.connect(self.restore_default)
@@ -211,9 +211,9 @@ class GeneralPage(QWidget):
 
     def _update_autostart_button(self):
         if self.autostart_checked:
-            self.autostart_btn.setText("鉁?" + self.tr("寮€鏈烘椂鑷姩鍚姩"))
+            self.autostart_btn.setText("✅ " + self.tr("开机时自动启动"))
         else:
-            self.autostart_btn.setText("猬?" + self.tr("寮€鏈烘椂鑷姩鍚姩"))
+            self.autostart_btn.setText("⬜ " + self.tr("开机时自动启动"))
 
     def _on_notice_clicked(self):
         # 1. 瑙﹀彂杩滅▼鍒锋柊
@@ -257,7 +257,7 @@ class GeneralPage(QWidget):
     def _on_font_color_clicked(self):
         settings = QSettings("MyDesktopApp", "WeatherSettings")
         current_color = settings.value("font_color", "#1c344d")
-        color = QColorDialog.getColor(QColor(current_color), self, self.tr("閫夋嫨鏂囧瓧棰滆壊"))
+        color = QColorDialog.getColor(QColor(current_color), self, self.tr("选择文字颜色"))
         if color.isValid():
             settings.setValue("font_color", color.name())
             settings.sync()
@@ -271,12 +271,12 @@ class GeneralPage(QWidget):
         lang_code = self.lang_codes[index]
         TranslatorManager().switch_language(lang_code)
 
-        # 閲嶅惎鎻愮ず
+        # 閲嶅惎??
         msg = QMessageBox(self)
-        msg.setWindowTitle(self.tr("鎻愮ず"))
-        msg.setText(self.tr("璇█璁剧疆宸叉洿鏀癸紝闇€瑕侀噸鏂板惎鍔ㄧ▼搴忔墠鑳界敓鏁堛€傛槸鍚︾珛鍗抽噸鍚紵"))
-        yes_btn = msg.addButton(self.tr("?"), QMessageBox.ButtonRole.YesRole)
-        no_btn = msg.addButton(self.tr("?"), QMessageBox.ButtonRole.NoRole)
+        msg.setWindowTitle(self.tr("提示"))
+        msg.setText(self.tr("语言设置已更改，需要重新启动程序才能生效。是否立即重启？"))
+        yes_btn = msg.addButton(self.tr("是"), QMessageBox.ButtonRole.YesRole)
+        no_btn = msg.addButton(self.tr("否"), QMessageBox.ButtonRole.NoRole)
         msg.setDefaultButton(yes_btn)
         msg.exec()
         if msg.clickedButton() == yes_btn:
@@ -376,7 +376,7 @@ class GeneralPage(QWidget):
                 return widget
         return None
 
-    # ---------- 鎭㈠榛樿 ----------
+    # ---------- ???? ----------
     def restore_default(self):
         self._updating = True
         try:
@@ -386,7 +386,7 @@ class GeneralPage(QWidget):
             settings.remove("font_family")
             settings.remove("font_size")
             settings.remove("font_color")
-            # settings.remove("language")  # 娉ㄩ噴鎺夛細鎭㈠榛樿鏃朵笉閲嶇疆璇█璁剧疆
+            # settings.remove("language")  # 娉ㄩ噴鎺夛細????鏃朵笉閲嶇疆????
             settings.sync()
 
             self.autostart_checked = False

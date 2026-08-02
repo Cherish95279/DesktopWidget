@@ -66,6 +66,9 @@ class MainWindow(QWidget):
 
         # ===== 加载图片（通过主题管理器） =====
         self._load_images()
+        self.hand_px = 199
+        self.hand_py = 143
+        self._apply_hand_pivot()
 
         # ===== 缓存处理后的背景图 =====
         self._cached_bg = None
@@ -207,24 +210,33 @@ class MainWindow(QWidget):
         hour_path = self.theme_manager.get_theme_path("Hour_Hand.png")
         minute_path = self.theme_manager.get_theme_path("Minute_Hand.png")
         second_path = self.theme_manager.get_theme_path("Second_Hand.png")
-        dot_path = self.theme_manager.get_theme_path("center_dot.png")
 
         self.bg = QPixmap(bg_path) if bg_path and os.path.exists(bg_path) else QPixmap()
         self.face = QPixmap(face_path) if face_path and os.path.exists(face_path) else QPixmap()
         self.hour = QPixmap(hour_path) if hour_path and os.path.exists(hour_path) else QPixmap()
         self.minute = QPixmap(minute_path) if minute_path and os.path.exists(minute_path) else QPixmap()
         self.second = QPixmap(second_path) if second_path and os.path.exists(second_path) else QPixmap()
-        self.center_dot = QPixmap(dot_path) if dot_path and os.path.exists(dot_path) else QPixmap()
 
         # 如果 face 为空，用 bg 替代
         if self.face.isNull():
             self.face = self.bg
 
         # 检查关键图片是否存在
-        if any(p.isNull() for p in [self.bg, self.hour, self.minute, self.second, self.center_dot]):
+        if any(p.isNull() for p in [self.bg, self.hour, self.minute, self.second]):
             print(" 部分图片加载失败，请检查主题文件")
 
     # ===== 重新加载图片（切换主题时调用） =====
+    def _apply_hand_pivot(self):
+        """根据当前主题设置指针旋转枢轴偏移量"""
+        theme_folder = self.theme_manager.get_theme_folder()
+        if theme_folder == "skins_01":
+            self.hand_px = 200
+            self.hand_py = 143
+        else:
+            # default 主题
+            self.hand_px = 199
+            self.hand_py = 143
+
     def reload_images(self):
         """重新加载当前主题的所有图片（主题切换时调用）"""
         self._load_images()
@@ -695,17 +707,10 @@ class MainWindow(QWidget):
         cx = CENTER_X
         cy = CENTER_Y
         now = self.now
-        self.draw_hand(painter, self.hour, cx, cy, (now.hour % 12) * 30 + now.minute * 0.5)
-        self.draw_hand(painter, self.minute, cx, cy, now.minute * 6 + now.second * 0.1)
-        self.draw_hand(painter, self.second, cx, cy, now.second * 6)
+        self.draw_hand(painter, self.hour, cx, cy, self.hand_px, self.hand_py, (now.hour % 12) * 30 + now.minute * 0.5)
+        self.draw_hand(painter, self.minute, cx, cy, self.hand_px, self.hand_py, now.minute * 6 + now.second * 0.1)
+        self.draw_hand(painter, self.second, cx, cy, self.hand_px, self.hand_py, now.second * 6)
 
-        dot_size = 18
-        scaled_dot = self.center_dot.scaled(
-            dot_size, dot_size,
-            Qt.AspectRatioMode.KeepAspectRatio,
-            Qt.TransformationMode.SmoothTransformation
-        )
-        painter.drawPixmap(cx - dot_size // 2, cy - dot_size // 2, scaled_dot)
 
         # 绘制文字信息
         settings = QSettings("MyDesktopApp", "WeatherSettings")
@@ -824,11 +829,11 @@ class MainWindow(QWidget):
                                      Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter,
                                      text)
 
-    def draw_hand(self, painter, pixmap, cx, cy, angle):
+    def draw_hand(self, painter, pixmap, cx, cy, px, py, angle):
         painter.save()
         painter.translate(cx, cy)
         painter.rotate(angle)
-        painter.drawPixmap(-pixmap.width()//2, -pixmap.height()//2, pixmap)
+        painter.drawPixmap(-px, -py, pixmap)
         painter.restore()
 
     def mousePressEvent(self, e):

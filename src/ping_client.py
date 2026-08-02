@@ -206,5 +206,3 @@ def start_periodic_report(main_window):
     timer.start()
 
 
-
-
