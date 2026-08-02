@@ -80,12 +80,12 @@
             <translation>설치되지 않음</translation>
         </message>
             <message>
-            <location filename="main_window.py" line="0"/>
+            <location filename="main_window.py" line="0" />
             <source>距</source>
             <translation>까지 </translation>
         </message>
         <message>
-            <location filename="main_window.py" line="0"/>
+            <location filename="main_window.py" line="0" />
             <source>天</source>
             <translation>일</translation>
         </message>
@@ -411,7 +411,7 @@
             <translation>기본값 복원</translation>
         </message>
             <message>
-            <location filename="settings_pages/display_page.py" line="0"/>
+            <location filename="settings_pages/display_page.py" line="0" />
             <source>节气</source>
             <translation>절기</translation>
         </message>
@@ -419,252 +419,252 @@
             <context>
         <name>WeatherPage</name>
         <message>
-            <location filename="settings_pages/weather_page.py" line="0"/>
+            <location filename="settings_pages/weather_page.py" line="0" />
             <source>输入太短</source>
             <translation>입력이 너무 짧습니다</translation>
         </message>
         <message>
-            <location filename="settings_pages/weather_page.py" line="0"/>
+            <location filename="settings_pages/weather_page.py" line="0" />
             <source>未找到匹配地点</source>
             <translation>일치하는 장소를 찾을 수 없습니다</translation>
         </message>
         <message>
-            <location filename="settings_pages/weather_page.py" line="0"/>
+            <location filename="settings_pages/weather_page.py" line="0" />
             <source>搜索超时</source>
             <translation>검색 시간 초과</translation>
         </message>
         <message>
-            <location filename="settings_pages/weather_page.py" line="0"/>
+            <location filename="settings_pages/weather_page.py" line="0" />
             <source>网络连接失败</source>
             <translation>네트워크 연결 실패</translation>
         </message>
         <message>
-            <location filename="settings_pages/weather_page.py" line="0"/>
+            <location filename="settings_pages/weather_page.py" line="0" />
             <source>搜索异常</source>
             <translation>검색 오류</translation>
         </message>
         <message>
-            <location filename="settings_pages/weather_page.py" line="0"/>
+            <location filename="settings_pages/weather_page.py" line="0" />
             <source>高德</source>
             <translation>Gaode</translation>
         </message>
         <message>
-            <location filename="settings_pages/weather_page.py" line="0"/>
+            <location filename="settings_pages/weather_page.py" line="0" />
             <source>Open-Meteo</source>
             <translation>Open-Meteo</translation>
         </message>
         <message>
-            <location filename="settings_pages/weather_page.py" line="0"/>
+            <location filename="settings_pages/weather_page.py" line="0" />
             <source>和风天气</source>
             <translation>HeFeng Weather</translation>
         </message>
         <message>
-            <location filename="settings_pages/weather_page.py" line="0"/>
+            <location filename="settings_pages/weather_page.py" line="0" />
             <source>WeatherAPI</source>
             <translation>WeatherAPI</translation>
         </message>
         <message>
-            <location filename="settings_pages/weather_page.py" line="0"/>
+            <location filename="settings_pages/weather_page.py" line="0" />
             <source>自定义</source>
             <translation>사용자 정의</translation>
         </message>
         <message>
-            <location filename="settings_pages/weather_page.py" line="0"/>
+            <location filename="settings_pages/weather_page.py" line="0" />
             <source>请输入高德 API Key</source>
             <translation>Gaode API 키 입력</translation>
         </message>
         <message>
-            <location filename="settings_pages/weather_page.py" line="0"/>
+            <location filename="settings_pages/weather_page.py" line="0" />
             <source>无需 API Key（可留空）</source>
             <translation>API 키 불필요 (비워둠)</translation>
         </message>
         <message>
-            <location filename="settings_pages/weather_page.py" line="0"/>
+            <location filename="settings_pages/weather_page.py" line="0" />
             <source>请输入和风天气 API Key</source>
             <translation>HeFeng Weather API 키 입력</translation>
         </message>
         <message>
-            <location filename="settings_pages/weather_page.py" line="0"/>
+            <location filename="settings_pages/weather_page.py" line="0" />
             <source>请输入 WeatherAPI Key</source>
             <translation>WeatherAPI 키 입력</translation>
         </message>
         <message>
-            <location filename="settings_pages/weather_page.py" line="0"/>
+            <location filename="settings_pages/weather_page.py" line="0" />
             <source>请输入 API Key</source>
             <translation>API 키 입력</translation>
         </message>
         <message>
-            <location filename="settings_pages/weather_page.py" line="0"/>
+            <location filename="settings_pages/weather_page.py" line="0" />
             <source>输入你的个人和风Host</source>
             <translation>개인 HeFeng Host 입력</translation>
         </message>
         <message>
-            <location filename="settings_pages/weather_page.py" line="0"/>
+            <location filename="settings_pages/weather_page.py" line="0" />
             <source>请输入 API 地址</source>
             <translation>API 주소 입력</translation>
         </message>
         <message>
-            <location filename="settings_pages/weather_page.py" line="0"/>
+            <location filename="settings_pages/weather_page.py" line="0" />
             <source>请输入 API 密钥</source>
             <translation>API 키 입력</translation>
         </message>
         <message>
-            <location filename="settings_pages/weather_page.py" line="0"/>
+            <location filename="settings_pages/weather_page.py" line="0" />
             <source>API 地址</source>
             <translation>API 주소</translation>
         </message>
         <message>
-            <location filename="settings_pages/weather_page.py" line="0"/>
+            <location filename="settings_pages/weather_page.py" line="0" />
             <source>API 密钥</source>
             <translation>API 키</translation>
         </message>
         <message>
-            <location filename="settings_pages/weather_page.py" line="0"/>
+            <location filename="settings_pages/weather_page.py" line="0" />
             <source>状态</source>
             <translation>상태</translation>
         </message>
         <message>
-            <location filename="settings_pages/weather_page.py" line="0"/>
+            <location filename="settings_pages/weather_page.py" line="0" />
             <source>状态：待配置</source>
             <translation>상태: 설정 필요</translation>
         </message>
         <message>
-            <location filename="settings_pages/weather_page.py" line="0"/>
+            <location filename="settings_pages/weather_page.py" line="0" />
             <source>每</source>
             <translation>매</translation>
         </message>
         <message>
-            <location filename="settings_pages/weather_page.py" line="0"/>
+            <location filename="settings_pages/weather_page.py" line="0" />
             <source> 分钟</source>
             <translation> 분</translation>
         </message>
         <message>
-            <location filename="settings_pages/weather_page.py" line="0"/>
+            <location filename="settings_pages/weather_page.py" line="0" />
             <source>刷新天气</source>
             <translation>날씨 새로고침</translation>
         </message>
         <message>
-            <location filename="settings_pages/weather_page.py" line="0"/>
+            <location filename="settings_pages/weather_page.py" line="0" />
             <source>天气显示地区</source>
             <translation>날씨 표시 지역</translation>
         </message>
         <message>
-            <location filename="settings_pages/weather_page.py" line="0"/>
+            <location filename="settings_pages/weather_page.py" line="0" />
             <source>输入城市名称（如 北京、New York）</source>
             <translation>도시 이름 입력 (예: 서울, New York)</translation>
         </message>
         <message>
-            <location filename="settings_pages/weather_page.py" line="0"/>
+            <location filename="settings_pages/weather_page.py" line="0" />
             <source>当前地区：未选择</source>
             <translation>현재 지역: 선택 안 됨</translation>
         </message>
         <message>
-            <location filename="settings_pages/weather_page.py" line="0"/>
+            <location filename="settings_pages/weather_page.py" line="0" />
             <source>当前地区</source>
             <translation>현재 지역</translation>
         </message>
         <message>
-            <location filename="settings_pages/weather_page.py" line="0"/>
+            <location filename="settings_pages/weather_page.py" line="0" />
             <source>搜索中...</source>
             <translation>검색 중...</translation>
         </message>
         <message>
-            <location filename="settings_pages/weather_page.py" line="0"/>
+            <location filename="settings_pages/weather_page.py" line="0" />
             <source>已找到</source>
             <translation>찾음</translation>
         </message>
         <message>
-            <location filename="settings_pages/weather_page.py" line="0"/>
+            <location filename="settings_pages/weather_page.py" line="0" />
             <source>个结果</source>
             <translation>개 결과</translation>
         </message>
         <message>
-            <location filename="settings_pages/weather_page.py" line="0"/>
+            <location filename="settings_pages/weather_page.py" line="0" />
             <source>已选择</source>
             <translation>선택됨</translation>
         </message>
         <message>
-            <location filename="settings_pages/weather_page.py" line="0"/>
+            <location filename="settings_pages/weather_page.py" line="0" />
             <source>正在连接</source>
             <translation>연결 중</translation>
         </message>
         <message>
-            <location filename="settings_pages/weather_page.py" line="0"/>
+            <location filename="settings_pages/weather_page.py" line="0" />
             <source>连接超时</source>
             <translation>연결 시간 초과</translation>
         </message>
         <message>
-            <location filename="settings_pages/weather_page.py" line="0"/>
+            <location filename="settings_pages/weather_page.py" line="0" />
             <source>待配置</source>
             <translation>설정 필요</translation>
         </message>
         <message>
-            <location filename="settings_pages/weather_page.py" line="0"/>
+            <location filename="settings_pages/weather_page.py" line="0" />
             <source>已连接</source>
             <translation>연결됨</translation>
         </message>
         <message>
-            <location filename="settings_pages/weather_page.py" line="0"/>
+            <location filename="settings_pages/weather_page.py" line="0" />
             <source>说明：填入</source>
             <translation>설명: </translation>
         </message>
         <message>
-            <location filename="settings_pages/weather_page.py" line="0"/>
+            <location filename="settings_pages/weather_page.py" line="0" />
             <source>高德API Key</source>
             <translation>Gaode API 키</translation>
         </message>
         <message>
-            <location filename="settings_pages/weather_page.py" line="0"/>
+            <location filename="settings_pages/weather_page.py" line="0" />
             <source>，仅支持中国</source>
             <translation>, 중국만 지원</translation>
         </message>
         <message>
-            <location filename="settings_pages/weather_page.py" line="0"/>
+            <location filename="settings_pages/weather_page.py" line="0" />
             <source>说明：无需密钥，支持全球天气</source>
             <translation>설명: 키 불필요, 전 세계 날씨 지원</translation>
         </message>
         <message>
-            <location filename="settings_pages/weather_page.py" line="0"/>
+            <location filename="settings_pages/weather_page.py" line="0" />
             <source>说明：填入和风</source>
             <translation>설명: HeFeng </translation>
         </message>
         <message>
-            <location filename="settings_pages/weather_page.py" line="0"/>
+            <location filename="settings_pages/weather_page.py" line="0" />
             <source>Host &amp;amp; API Key</source>
             <translation>Host &amp;amp; API 키</translation>
         </message>
         <message>
-            <location filename="settings_pages/weather_page.py" line="0"/>
+            <location filename="settings_pages/weather_page.py" line="0" />
             <source>，查看全球天气</source>
             <translation> 전 세계 날씨 확인</translation>
         </message>
         <message>
-            <location filename="settings_pages/weather_page.py" line="0"/>
+            <location filename="settings_pages/weather_page.py" line="0" />
             <source>WeatherAPI Key</source>
             <translation>WeatherAPI 키</translation>
         </message>
         <message>
-            <location filename="settings_pages/weather_page.py" line="0"/>
+            <location filename="settings_pages/weather_page.py" line="0" />
             <source>说明：填入自定义API地址与Key</source>
             <translation>설명: 사용자 정의 API 주소 및 키 입력</translation>
         </message>
         <message>
-            <location filename="settings_pages/weather_page.py" line="0"/>
+            <location filename="settings_pages/weather_page.py" line="0" />
             <source>说明：请选择服务并填写对应信息</source>
             <translation>설명: 서비스를 선택하고 정보를 입력하세요</translation>
         </message>
     
         <message>
-            <location filename="settings_pages/weather_page.py" line="0"/>
+            <location filename="settings_pages/weather_page.py" line="0" />
             <source>显示密钥</source>
             <translation>키 표시</translation>
         </message>
         <message>
-            <location filename="settings_pages/weather_page.py" line="0"/>
+            <location filename="settings_pages/weather_page.py" line="0" />
             <source>隐藏密钥</source>
             <translation>키 숨기기</translation>
         </message>        <message>
-            <location filename="settings_pages/weather_page.py" line="0"/>
+            <location filename="settings_pages/weather_page.py" line="0" />
             <source>搜索城市名称</source>
             <translation>도시 이름 검색</translation>
         </message>
@@ -712,17 +712,17 @@
         </message>
     
         <message>
-            <location filename="../settings_pages/theme_page.py" line="0"/>
+            <location filename="../settings_pages/theme_page.py" line="0" />
             <source>取消</source>
             <translation>취소</translation>
         </message>
         <message>
-            <location filename="settings_pages/theme_page.py" line="0"/>
+            <location filename="settings_pages/theme_page.py" line="0" />
             <source>不透明度</source>
             <translation>불투명도</translation>
         </message>
         <message>
-            <location filename="settings_pages/theme_page.py" line="0"/>
+            <location filename="settings_pages/theme_page.py" line="0" />
             <source>着色强度</source>
             <translation>채색 강도</translation>
         </message>
@@ -873,47 +873,47 @@
             <translation>새 버전을 지금 설치할까요?</translation>
         </message>
             <message>
-            <location filename="settings_pages/update_page.py" line="0"/>
+            <location filename="settings_pages/update_page.py" line="0" />
             <source>当前版本：</source>
             <translation>현재 버전: </translation>
         </message>
         <message>
-            <location filename="settings_pages/update_page.py" line="0"/>
+            <location filename="settings_pages/update_page.py" line="0" />
             <source>正在检查...</source>
             <translation>확인 중...</translation>
         </message>
         <message>
-            <location filename="settings_pages/update_page.py" line="0"/>
+            <location filename="settings_pages/update_page.py" line="0" />
             <source>下载更新</source>
             <translation>업데이트 다운로드</translation>
         </message>
         <message>
-            <location filename="settings_pages/update_page.py" line="0"/>
+            <location filename="settings_pages/update_page.py" line="0" />
             <source>Token 已保存</source>
             <translation>토큰 저장됨</translation>
         </message>
         <message>
-            <location filename="settings_pages/update_page.py" line="0"/>
+            <location filename="settings_pages/update_page.py" line="0" />
             <source>Token 已清除</source>
             <translation>토큰 삭제됨</translation>
         </message>
         <message>
-            <location filename="settings_pages/update_page.py" line="0"/>
+            <location filename="settings_pages/update_page.py" line="0" />
             <source>最新版本：请点击检查更新</source>
             <translation>최신 버전: 업데이트 확인을 클릭</translation>
         </message>
         <message>
-            <location filename="settings_pages/update_page.py" line="0"/>
+            <location filename="settings_pages/update_page.py" line="0" />
             <source>已切换到</source>
             <translation>전환됨: </translation>
         </message>
         <message>
-            <location filename="settings_pages/update_page.py" line="0"/>
+            <location filename="settings_pages/update_page.py" line="0" />
             <source>源，请点击检查更新</source>
             <translation> 소스, 업데이트 확인 클릭</translation>
         </message>
         <message>
-            <location filename="settings_pages/update_page.py" line="0"/>
+            <location filename="settings_pages/update_page.py" line="0" />
             <source>检查失败：</source>
             <translation>확인 실패: </translation>
         </message>
@@ -1216,7 +1216,7 @@ DesktopWidget을 계속 개선하겠습니다!
             <source>切换主题: %1</source>
             <translation>테마 전환: %1</translation>
         </message>
-    </context>
+    <message><source>赛博风</source><translation>사이버 스타일</translation></message></context>
     <context>
         <name>Constants</name>
         <message>

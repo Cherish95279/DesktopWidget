@@ -60,6 +60,7 @@ class ThemeManager:
         name_map = {
             "default": QCoreApplication.translate("ThemeManager", "默认主题"),
             "skins_01": QCoreApplication.translate("ThemeManager", "竹林"),
+            "skins_02": QCoreApplication.translate("ThemeManager", "赛博风"),
         }
         return name_map.get(folder_name, folder_name)
 

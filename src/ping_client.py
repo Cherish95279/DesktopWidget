@@ -50,11 +50,17 @@ def get_autostart_status():
 
 
 def get_current_theme():
-    """获取当前主题名称"""
+    """获取当前主题名称（始终返回简体中文，不受语言影响）"""
     try:
         from .theme_manager import get_theme_manager
         manager = get_theme_manager()
-        return manager.get_current_theme()
+        folder = manager.get_theme_folder()
+        theme_map = {
+            "default": "默认主题",
+            "skins_01": "竹林",
+            "skins_02": "赛博风",
+        }
+        return theme_map.get(folder, folder)
     except Exception:
         return "未知"
 
@@ -95,6 +101,7 @@ def report_launch():
             f"&theme={theme}"
         )
         # 发送 GET 请求，超时 3 秒
+        print(f"[PING] URL: {url}")
         req = urllib.request.Request(url, headers={"User-Agent": "DesktopWidget/1.0"})
         with urllib.request.urlopen(req, timeout=3) as response:
             response.read()

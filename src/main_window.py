@@ -232,6 +232,9 @@ class MainWindow(QWidget):
         if theme_folder == "skins_01":
             self.hand_px = 200
             self.hand_py = 143
+        elif theme_folder == "skins_02":
+            self.hand_px = 199
+            self.hand_py = 143
         else:
             # default 主题
             self.hand_px = 199
@@ -244,6 +247,9 @@ class MainWindow(QWidget):
         self._cached_bg = None
         self.update_theme_cache(force=True)
         self.update()
+        # 切换主题时立即上报
+        from src.ping_client import report_launch_full
+        report_launch_full("idle", "theme_switched")
 
     # ---------- 主题缓存 ----------
     def update_theme_cache(self, force=False):
