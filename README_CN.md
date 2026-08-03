@@ -42,7 +42,9 @@
   <img src="https://img.shields.io/badge/Español-✓-success" alt="Español">
 </p>
 
->[![最新版本](https://img.shields.io/github/v/release/Cherish95279/DesktopWidget?label=最新版本&logo=github)](https://github.com/Cherish95279/DesktopWidget/releases/latest)
+>>[![Microsoft Store](https://img.shields.io/badge/Microsoft%20Store-下载-blue?logo=microsoft)](https://apps.microsoft.com/detail/9P6GSZ8NNW52)
+
+[![最新版本](https://img.shields.io/github/v/release/Cherish95279/DesktopWidget?label=最新版本&logo=github)](https://github.com/Cherish95279/DesktopWidget/releases/latest)
 
 [![发布日期](https://img.shields.io/github/release-date/Cherish95279/DesktopWidget?label=发布于&logo=github)](https://github.com/Cherish95279/DesktopWidget/releases/latest)
 
@@ -64,6 +66,12 @@ DesktopWidget 基于 **PyQt6** 开发，注重性能、自定义能力和易用�
 
 ## 🚀 下载
 
+### Microsoft Store（推荐）
+
+DesktopWidget 已正式发布到 Microsoft Store：
+
+https://apps.microsoft.com/detail/9P6GSZ8NNW52
+
 [![最新版本](https://img.shields.io/github/v/release/Cherish95279/DesktopWidget?label=最新版本&logo=github)](https://github.com/Cherish95279/DesktopWidget/releases/latest)
 
 [![Gitee 下载](https://img.shields.io/badge/Gitee-最新版本-C71D23?logo=gitee)](https://gitee.com/Cherish95279/DesktopWidget/releases)
@@ -80,7 +88,9 @@ DesktopWidget 基于 **PyQt6** 开发，注重性能、自定义能力和易用�
 
 ### 安装程序
 
-下载最新版本的 Windows x64 安装程序即可。
+推荐通过 Microsoft Store 获取最新版本。
+
+也可以下载 GitHub / Gitee Release 中提供的 Windows x64 安装程序。
 
 ---
 
@@ -426,7 +436,7 @@ DesktopWidget 使用：
 官方发布安装包：
 
 ```text
-DesktopWidget-v1.3.1-win64-Cherish-Setup.exe
+DesktopWidget-windows-x64-Setup.exe
 ```
 
 ---
@@ -435,18 +445,19 @@ DesktopWidget-v1.3.1-win64-Cherish-Setup.exe
 
 ## 已完成 ✅
 
-- [x] 指针时钟系统
-- [x] 天气系统
-- [x] 多天气服务支持
-- [x] 全球城市搜索
-- [x] 主题自定义系统
-- [x] 自定义布局系统
-- [x] CPU / GPU / 内存监控
-- [x] 网络速度监控
-- [x] 公告系统
-- [x] 自动更新系统
-- [x] 8 种语言支持
-- [x] GitHub / Gitee 发布支持
+- ✅ 指针时钟系统
+- ✅ 天气系统
+- ✅ 多天气服务支持
+- ✅全球城市搜索
+- ✅ 主题自定义系统
+- ✅自定义布局系统
+- ✅CPU / GPU / 内存监控
+- ✅网络速度监控
+- ✅公告系统
+- ✅自动更新系统
+- ✅8 种语言支持
+- ✅GitHub / Gitee 发布支持
+- ✅GitHub / Gitee 发布支持
 
 ---
 
@@ -473,6 +484,22 @@ DesktopWidget-v1.3.1-win64-Cherish-Setup.exe
 DesktopWidget 同时欢迎学习源码、修改项目以及二次开发。
 
 如有反馈和建议，请使用 GitHub Issues 或 Discussions。
+
+---
+
+# 🔒 隐私说明
+
+DesktopWidget 尊重用户隐私。
+
+软件不会收集用户个人信息。
+
+如果用户开启匿名统计功能，仅会上传用于版本分析和功能改进的匿名数据，例如：
+
+- 软件版本
+- 操作系统信息
+- 配置状态
+
+所有统计数据均为匿名数据，不包含姓名、邮箱、文件或个人内容。
 
 ---
 

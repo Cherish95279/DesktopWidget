@@ -7,6 +7,34 @@ All notable changes to DesktopWidget are documented in this file.
 
 ---
 
+# 🚀 v1.3.6 (2026-08-03)
+
+## 🏪 Microsoft Store Release
+
+- DesktopWidget is officially released on the Microsoft Store.
+- Added an official Microsoft Store distribution channel for easier access to the latest version.
+- Supports Microsoft Store update mechanisms, providing a more convenient and reliable installation and update experience.
+
+## 🎨 Interface & Visual Experience Improvements
+
+- Improved pointer rotation effects for smoother animations and a better visual experience.
+- Added a new Cyber theme, bringing a futuristic visual style to the desktop widget.
+- Added desktop display icon support, improving usability and application recognition.
+
+## ⚙️ Startup & Runtime Improvements
+
+- Optimized Windows startup behavior to improve application launch stability.
+- Improved the startup process and reduced potential issues during initialization.
+
+## 🐛 Stability Improvements
+
+- Fixed various minor issues.
+- Improved overall application stability and user experience.
+
+---
+
+---
+
 # 🚀 v1.3.3 (2026-07-24)
 
 ## 🔔 Notification and Update Reminder Improvements
