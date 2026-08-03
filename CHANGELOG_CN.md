@@ -9,6 +9,11 @@ DesktopWidget 的所有版本更新记录都将在此文件中维护。
 
 # 🚀 v1.3.6 (2026-08-03)
 
+## 🏪 Microsoft Store 发布
+
+- DesktopWidget 正式发布至 Microsoft Store。
+- 新增官方商店下载渠道，用户可以通过 Microsoft Store 获取最新版本。
+- 支持 Microsoft Store 更新机制，提供更加便捷的安装与升级体验。
 
 ## 🎨 界面与视觉体验优化
 
