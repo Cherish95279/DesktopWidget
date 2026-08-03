@@ -42,7 +42,9 @@
   <img src="https://img.shields.io/badge/Español-✓-success" alt="Español">
 </p>
 
->>[![Microsoft Store](https://img.shields.io/badge/Microsoft%20Store-下载-blue?logo=microsoft)](https://apps.microsoft.com/detail/9P6GSZ8NNW52)
+>## 🚀 下载
+
+[![Microsoft Store](https://img.shields.io/badge/Microsoft%20Store-下载-blue?logo=microsoft)](https://apps.microsoft.com/detail/9P6GSZ8NNW52)
 
 [![最新版本](https://img.shields.io/github/v/release/Cherish95279/DesktopWidget?label=最新版本&logo=github)](https://github.com/Cherish95279/DesktopWidget/releases/latest)
 
