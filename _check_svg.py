@@ -1,1 +1,0 @@
-import sys;sys.stdout.reconfigure(encoding='utf-8');v=open(r'D:\PythonProjects\DesktopWidget\src\main_window.py','r',encoding='utf-8').read();print('_load_hand method:', '_load_hand(self, svg_path, png_path)' in v);print('QSvgRenderer:', 'QSvgRenderer' in v);print('_load_hand_aa exists:', '_load_hand_aa' in v);i=v.find('def _load_images');print(v[i:i+350])
