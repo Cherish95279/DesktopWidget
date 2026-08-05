@@ -39,6 +39,7 @@ Thumbs.db
 *.exe
 *.msi
 *.dmg
+*.msix
 
 # 项目特定文件
 python build.py v*
@@ -51,6 +52,8 @@ _archived_builds/
 *.manifest
 *.pkg
 *.toc
+_[^_]*
+fix_svg*.p
 localpycs/
 
 # 测试和覆盖率
