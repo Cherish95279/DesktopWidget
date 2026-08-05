@@ -207,15 +207,11 @@ class MainWindow(QWidget):
         """通过主题管理器加载当前主题的所有图片"""
         bg_path = self.theme_manager.get_theme_path("bg.png")
         face_path = self.theme_manager.get_theme_path("face.png")
-        hour_path = self.theme_manager.get_theme_path("Hour_Hand.png")
-        minute_path = self.theme_manager.get_theme_path("Minute_Hand.png")
-        second_path = self.theme_manager.get_theme_path("Second_Hand.png")
-
         self.bg = QPixmap(bg_path) if bg_path and os.path.exists(bg_path) else QPixmap()
         self.face = QPixmap(face_path) if face_path and os.path.exists(face_path) else QPixmap()
-        self.hour = QPixmap(hour_path) if hour_path and os.path.exists(hour_path) else QPixmap()
-        self.minute = QPixmap(minute_path) if minute_path and os.path.exists(minute_path) else QPixmap()
-        self.second = QPixmap(second_path) if second_path and os.path.exists(second_path) else QPixmap()
+        self.hour = self._load_hand("Hour_Hand")
+        self.minute = self._load_hand("Minute_Hand")
+        self.second = self._load_hand("Second_Hand")
 
         # 如果 face 为空，用 bg 替代
         if self.face.isNull():
@@ -226,23 +222,42 @@ class MainWindow(QWidget):
             print(" 部分图片加载失败，请检查主题文件")
 
     # ===== 重新加载图片（切换主题时调用） =====
+    def _load_hand(self, name):
+        theme_info = self.theme_manager.get_theme_info()
+        base = theme_info.get("path", "") if theme_info else ""
+        if not base:
+            return QPixmap()
+
+        svg_path = os.path.join(base, f"{name}.svg")
+        if os.path.isfile(svg_path):
+            try:
+                from PyQt6.QtSvg import QSvgRenderer
+
+                renderer = QSvgRenderer(svg_path)
+                if renderer.isValid():
+                    pixmap = QPixmap(400, 297)
+                    pixmap.fill(Qt.GlobalColor.transparent)
+                    svg_painter = QPainter(pixmap)
+                    renderer.render(svg_painter, QRectF(pixmap.rect()))
+                    svg_painter.end()
+                    return pixmap
+            except (ImportError, OSError):
+                pass
+
+        png_path = os.path.join(base, f"{name}.png")
+        if os.path.isfile(png_path):
+            return QPixmap(png_path)
+        return QPixmap()
+
     def _apply_hand_pivot(self):
         """根据当前主题设置指针旋转枢轴偏移量"""
-        theme_folder = self.theme_manager.get_theme_folder()
-        if theme_folder == "skins_01":
-            self.hand_px = 200
-            self.hand_py = 143
-        elif theme_folder == "skins_02":
-            self.hand_px = 199
-            self.hand_py = 143
-        else:
-            # default 主题
-            self.hand_px = 199
-            self.hand_py = 143
+        self.hand_px = 199
+        self.hand_py = 143
 
     def reload_images(self):
         """重新加载当前主题的所有图片（主题切换时调用）"""
         self._load_images()
+        self._apply_hand_pivot()
         # 强制重建背景缓存
         self._cached_bg = None
         self.update_theme_cache(force=True)

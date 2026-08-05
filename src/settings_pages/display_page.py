@@ -202,13 +202,23 @@ class DisplayPage(QWidget):
         for key, value in self.layout_data.items():
             settings.setValue(key, str(value))
 
-        parent = self.parent()
-        if parent and hasattr(parent, 'parent'):
-            main_window = parent.parent()
-            if main_window and hasattr(main_window, 'update'):
+        from PyQt6.QtWidgets import QApplication
+        main_window = None
+        dlg = self.parent()
+        if dlg and hasattr(dlg, '_main_window'):
+            main_window = dlg._main_window
+        if not main_window:
+            for w in QApplication.topLevelWidgets():
+                if w.__class__.__name__ == 'MainWindow':
+                    main_window = w
+                    break
+        if main_window:
+            if hasattr(main_window, '_refresh_draw_cache'):
+                main_window._refresh_draw_cache()
+            if hasattr(main_window, 'update'):
                 main_window.update()
 
-            if new_has_weather != old_has_weather:
+        if new_has_weather != old_has_weather:
                 if main_window and hasattr(main_window, 'start_weather_thread'):
                     main_window.start_weather_thread()
 

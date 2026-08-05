@@ -44,6 +44,8 @@ Built with PyQt6 · Weather · System Monitor · Themes · Auto Update · 8 Lang
 
 >## 🚀 Download
 
+[![Microsoft Store](https://img.shields.io/badge/Microsoft%20Store-Install-blue?logo=microsoft)](https://apps.microsoft.com/detail/9P6GSZ8NNW52?hl=zh-hans-cn&gl=CN&ocid=pdpshare)
+
 [![Latest Release](https://img.shields.io/github/v/release/Cherish95279/DesktopWidget?label=Latest%20Release&logo=github)](https://github.com/Cherish95279/DesktopWidget/releases/latest)
 
 [![Gitee Release](https://img.shields.io/badge/Gitee-Latest%20Release-C71D23?logo=gitee)](https://gitee.com/Cherish95279/DesktopWidget/releases)
@@ -69,6 +71,12 @@ Built with **PyQt6**, DesktopWidget focuses on performance, customization, and e
 
 ## 🚀 Download
 
+### 🏪 Microsoft Store (Recommended)
+
+Install DesktopWidget directly from Microsoft Store:
+
+[![Microsoft Store](https://img.shields.io/badge/Microsoft%20Store-Install-blue?logo=microsoft)](https://apps.microsoft.com/detail/9P6GSZ8NNW52?hl=zh-hans-cn&gl=CN&ocid=pdpshare)
+
 ### ⬇️ Latest Release
 
 [![GitHub Release](https://img.shields.io/github/v/release/Cherish95279/DesktopWidget?label=Latest%20Release&logo=github)](https://github.com/Cherish95279/DesktopWidget/releases/latest)
@@ -85,9 +93,11 @@ Built with **PyQt6**, DesktopWidget focuses on performance, customization, and e
 
 ### Installer
 
-Download the latest Windows installer:
+Download the latest Windows release package:
 
-`DesktopWidget-windows-x64-Setup.exe`
+- Microsoft Store (Recommended)
+- GitHub Release
+- Gitee Release
 
 
 ---
@@ -386,7 +396,7 @@ DesktopWidget uses:
 The official release package:
 
 ```text
-DesktopWidget-v1.3.1-win64-Setup.exe
+Latest DesktopWidget release package
 ```
 
 ---
@@ -395,18 +405,20 @@ DesktopWidget-v1.3.1-win64-Setup.exe
 
 ## Completed ✅
 
-- [x] Analog clock system
-- [x] Weather system
-- [x] Multiple weather providers
-- [x] Global city search
-- [x] Theme customization system
-- [x] Custom layout system
-- [x] CPU / GPU / Memory monitoring
-- [x] Network speed monitoring
-- [x] Announcement system
-- [x] Automatic update system
-- [x] 8-language localization
-- [x] GitHub / Gitee release support
+- ✅ Analog clock system
+- ✅ Weather system
+- ✅ Multiple weather providers
+- ✅ Global city search
+- ✅ Theme customization system
+- ✅ Custom layout system
+- ✅ CPU / GPU / Memory monitoring
+- ✅ Network speed monitoring
+- ✅ Announcement system
+- ✅ Automatic update system
+- ✅ 8-language localization
+- ✅ GitHub / Gitee release support
+- ✅ Microsoft Store distribution
+- ✅ MSIX packaging
 
 ---
 
@@ -418,6 +430,36 @@ DesktopWidget-v1.3.1-win64-Setup.exe
 - [ ] More customizable desktop components
 
 ---
+
+---
+
+# 🔒 Privacy
+
+DesktopWidget respects user privacy.
+
+DesktopWidget does not require an account and does not collect personal information such as names, email addresses, personal files, passwords, or private content.
+
+To improve application stability and user experience, DesktopWidget may collect limited anonymous technical and usage statistics, such as:
+
+- Application version
+- Operating system information
+- Feature and configuration status
+- Anonymous usage statistics
+
+Some network information may be used to generate anonymous country/region statistics. IP addresses are not stored, and precise location information is not collected.
+
+Collected data is used only for:
+
+- Improving application stability
+- Fixing compatibility issues
+- Understanding feature usage
+- Improving user experience
+
+DesktopWidget does not sell or share user data for advertising purposes.
+
+For the complete privacy policy, please visit:
+
+https://github.com/your-username/DesktopWidget/blob/main/PRIVACY.md
 
 # 🤝 Contributing
 

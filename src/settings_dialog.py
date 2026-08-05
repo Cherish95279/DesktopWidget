@@ -166,7 +166,10 @@ class SettingsDialog(QWidget):
             btn.setChecked(i == index)
 
     def on_font_changed(self):
-        if self._main_window and hasattr(self._main_window, 'update'):
+        if self._main_window and hasattr(self._main_window, '_refresh_font_cache'):
+            self._main_window._refresh_font_cache()
+            self._main_window.update()
+        elif self._main_window and hasattr(self._main_window, 'update'):
             self._main_window.update()
 
     def on_theme_changed(self):
@@ -183,3 +186,7 @@ class SettingsDialog(QWidget):
     def closeEvent(self, event):
         self._exiting = True
         event.accept()
+        if self._main_window and hasattr(self._main_window, '_refresh_draw_cache'):
+            self._main_window._refresh_draw_cache()
+            self._main_window._refresh_font_cache()
+            self._main_window.update()

@@ -581,6 +581,13 @@ class WeatherPage(QWidget):
     def _safe_region_changed(self):
         """地区变更后刷新天气线程"""
         print("[Region] 地区已变更，强制刷新天气线程")
+        mw = self._get_main_window()
+        if mw:
+            qs = QSettings("MyDesktopApp", "WeatherSettings")
+            mw._cache_selected_county = qs.value("selected_county", "")
+            mw._cache_selected_city = qs.value("selected_city", "")
+            mw._cache_selected_province = qs.value("selected_province", "")
+            mw.update()
         self._refresh_main_window_weather()
 
     def _toggle_key_visibility(self):
@@ -896,7 +903,9 @@ class WeatherPage(QWidget):
         """???????????"""
         # ??1??? parent_dialog._main_window ??
         if self.parent_dialog and hasattr(self.parent_dialog, '_main_window'):
-            return self.parent_dialog._main_window
+            mw = self.parent_dialog._main_window
+            print(f"[DEBUG] _get_main_window 找到了: {mw}")
+            return mw
 
         # ??2??? parent() ?????
         obj = self.parent()
