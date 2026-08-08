@@ -1,9 +1,9 @@
 {
-  "id": "notice_20260729_155123",
+  "id": "notice_20260808_210431",
   "enabled": true,
-  "title": "Fix for Weather Display Issues 🌤️",
-  "content": "If the weather on your main window doesn’t refresh:\nOpen Settings → Weather Settings 🔧\nType your city name in the search box and tap the search result\nThe weather will immediately restore—no API Key required ✅\nThis issue will be automatically fixed in the next version. 🚀",
+  "title": "亲爱的朋友们",
+  "content": "亲爱的朋友们：\n花了不少时间给这个小工具做了一次大更新。从磁盘显示的优化，到运行时间的加入，再到最头疼的——让八种语言都能正确显示，切换语言不用重启。\n尤其折腾的是那些翻译文件。C盘在日语里该叫啥？磁盘总计韩语怎么说？运行时间法语太长怎么办？一个个查，一遍遍改，中间还闹出过显示\"??\"这样的乌龙。\n不过看到它现在能流畅地在不同语言下跑起来，还是值得的。\n感谢你们的支持和耐心。工具虽小，但每一行代码都是用心写的。",
   "link": "https://github.com/Cherish95279/DesktopWidget/releases",
-  "timestamp": "2026-07-29 15:51",
+  "timestamp": "2026-08-08 21:04",
   "show_date": true
 }
