@@ -271,16 +271,6 @@ class GeneralPage(QWidget):
         lang_code = self.lang_codes[index]
         TranslatorManager().switch_language(lang_code)
 
-        # 閲嶅惎??
-        msg = QMessageBox(self)
-        msg.setWindowTitle(self.tr("提示"))
-        msg.setText(self.tr("语言设置已更改，需要重新启动程序才能生效。是否立即重启？"))
-        yes_btn = msg.addButton(self.tr("是"), QMessageBox.ButtonRole.YesRole)
-        no_btn = msg.addButton(self.tr("否"), QMessageBox.ButtonRole.NoRole)
-        msg.setDefaultButton(yes_btn)
-        msg.exec()
-        if msg.clickedButton() == yes_btn:
-            self._restart_app()
 
     def _restart_app(self):
         if self._loading:

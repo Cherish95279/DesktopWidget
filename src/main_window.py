@@ -46,6 +46,7 @@ class MainWindow(QWidget):
     def __init__(self):
         super().__init__()
         TranslatorManager().init_translator(QApplication.instance())
+        TranslatorManager().on_language_changed(self._on_language_changed)
         self._init_i18n()
         self.setWindowFlags(
             Qt.WindowType.FramelessWindowHint |
@@ -86,6 +87,10 @@ class MainWindow(QWidget):
         self.local_ip = self.get_local_ip()
         self.server_ip = "扫描中..."
         self.weather = {"city": "--", "weather": "--", "temp": "--", "wind": ""}
+
+        self.disk_usage = {}
+        self.uptime = ""
+        self._uptime_seconds = 0
         self.down_speed = 0.0
         self.up_speed = 0.0
         self.fps = 0
@@ -182,6 +187,23 @@ class MainWindow(QWidget):
             if screen else "1920×1080"
         )
 
+    def _on_language_changed(self, lang_code):
+        """语言切换回调，重新计算翻译并刷新界面"""
+        self._refresh_i18n()
+        # 重建设置对话框（如果打开着）
+        if self.settings_dialog is not None:
+            try:
+                self.settings_dialog.rebuild_all_pages()
+            except Exception:
+                pass
+        self.tray._refresh_menu()
+        if self._notice_window is not None and self._notice_window.isVisible():
+            try:
+                self._notice_window.retranslate_ui()
+            except Exception:
+                pass
+        self.update()
+
 
     def _init_i18n(self):
         """预计算所有 paintEvent 中使用的翻译字符串"""
@@ -200,7 +222,34 @@ class MainWindow(QWidget):
             "days_until": t("MainWindow", "离"),
             "days_left": t("MainWindow", "还有"),
             "day_unit": t("MainWindow", "天"),
+            "disk_total": t("MainWindow", "磁盘总计"),
+            "run_prefix": t("MainWindow", "运行"),
+            "min_unit": t("MainWindow", "分钟"),
+            "hour_unit": t("MainWindow", "小时"),
+            "month_unit": t("MainWindow", "月"),
         }
+
+    def _refresh_i18n(self):
+        """重新计算翻译字符串（语言切换时调用）"""
+        t = TranslatorManager().translate
+        self._i18n["unknown_location"] = t("MainWindow", "未知地区")
+        self._i18n["memory"] = t("MainWindow", "内存")
+        self._i18n["set_api"] = t("MainWindow", "设置API")
+        self._i18n["loading"] = t("MainWindow", "加载中")
+        self._i18n["weekdays"] = [t("MainWindow", d) for d in ["一","二","三","四","五","六","日"]]
+        self._i18n["week"] = t("MainWindow", "星期")
+        self._i18n["lunar"] = t("MainWindow", "农历")
+        self._i18n["lunar_error"] = t("MainWindow", "农历错误")
+        self._i18n["not_installed"] = t("MainWindow", "未安装")
+        self._i18n["distance"] = t("MainWindow", "距")
+        self._i18n["days_until"] = t("MainWindow", "离")
+        self._i18n["days_left"] = t("MainWindow", "还有")
+        self._i18n["day_unit"] = t("MainWindow", "天")
+        self._i18n["disk_total"] = t("MainWindow", "磁盘总计")
+        self._i18n["run_prefix"] = t("MainWindow", "运行")
+        self._i18n["min_unit"] = t("MainWindow", "分钟")
+        self._i18n["hour_unit"] = t("MainWindow", "小时")
+        self._i18n["month_unit"] = t("MainWindow", "月")
 
     # ===== 加载图片（通过主题管理器） =====
     def _load_images(self):
@@ -209,9 +258,12 @@ class MainWindow(QWidget):
         face_path = self.theme_manager.get_theme_path("face.png")
         self.bg = QPixmap(bg_path) if bg_path and os.path.exists(bg_path) else QPixmap()
         self.face = QPixmap(face_path) if face_path and os.path.exists(face_path) else QPixmap()
-        self.hour = self._load_hand("Hour_Hand")
-        self.minute = self._load_hand("Minute_Hand")
-        self.second = self._load_hand("Second_Hand")
+        hour_path = self.theme_manager.get_theme_path("Hour_Hand.png")
+        minute_path = self.theme_manager.get_theme_path("Minute_Hand.png")
+        second_path = self.theme_manager.get_theme_path("Second_Hand.png")
+        self.hour = QPixmap(hour_path) if hour_path and os.path.exists(hour_path) else QPixmap()
+        self.minute = QPixmap(minute_path) if minute_path and os.path.exists(minute_path) else QPixmap()
+        self.second = QPixmap(second_path) if second_path and os.path.exists(second_path) else QPixmap()
 
         # 如果 face 为空，用 bg 替代
         if self.face.isNull():
@@ -220,34 +272,6 @@ class MainWindow(QWidget):
         # 检查关键图片是否存在
         if any(p.isNull() for p in [self.bg, self.hour, self.minute, self.second]):
             print(" 部分图片加载失败，请检查主题文件")
-
-    # ===== 重新加载图片（切换主题时调用） =====
-    def _load_hand(self, name):
-        theme_info = self.theme_manager.get_theme_info()
-        base = theme_info.get("path", "") if theme_info else ""
-        if not base:
-            return QPixmap()
-
-        svg_path = os.path.join(base, f"{name}.svg")
-        if os.path.isfile(svg_path):
-            try:
-                from PyQt6.QtSvg import QSvgRenderer
-
-                renderer = QSvgRenderer(svg_path)
-                if renderer.isValid():
-                    pixmap = QPixmap(400, 297)
-                    pixmap.fill(Qt.GlobalColor.transparent)
-                    svg_painter = QPainter(pixmap)
-                    renderer.render(svg_painter, QRectF(pixmap.rect()))
-                    svg_painter.end()
-                    return pixmap
-            except (ImportError, OSError):
-                pass
-
-        png_path = os.path.join(base, f"{name}.png")
-        if os.path.isfile(png_path):
-            return QPixmap(png_path)
-        return QPixmap()
 
     def _apply_hand_pivot(self):
         """根据当前主题设置指针旋转枢轴偏移量"""
@@ -673,29 +697,88 @@ class MainWindow(QWidget):
             else:
                 self.gpu = 0
 
+            # ?????
+            self._update_disk_usage()
+            self._update_uptime()
             self.update()
         except Exception:
             # 出错时 GPU 设为 0
             self.gpu = 0
             self.update()
 
+    def _update_disk_usage(self):
+        """?????????????????????0"""
+        import psutil
+        self.disk_usage = {}
+        total_used = 0
+        total_all = 0
+        for part in psutil.disk_partitions():
+            if (not part.opts.startswith("cdrom")
+                and not part.device.startswith("\\\\")
+                and part.fstype not in ("", "udf", "iso9660")):
+                try:
+                    usage = psutil.disk_usage(part.mountpoint)
+                    if usage.total > 0:
+                        letter = part.mountpoint.split(":")[0].rstrip("\\").upper()
+                        self.disk_usage[f"disk_{letter}"] = usage.percent
+                        total_used += usage.used
+                        total_all += usage.total
+                except (PermissionError, OSError):
+                    pass
+        if total_all > 0:
+            self.disk_usage["disk_total"] = int(total_used / total_all * 100)
+        else:
+            self.disk_usage["disk_total"] = 0
+        # ???????????????????? self.disk_usage.get(key, 0)
+
+    def _update_uptime(self):
+        """计算系统已运行时长"""
+        import time
+        boot_time = psutil.boot_time()
+        self._uptime_seconds = int(time.time() - boot_time)
+        total_minutes = self._uptime_seconds // 60
+        total_hours = total_minutes // 60
+        days = total_hours // 24
+        hours = total_hours % 24
+        minutes = total_minutes % 60
+
+        rp = self._i18n["run_prefix"]
+        mu_min = self._i18n["min_unit"]
+        mu_hour = self._i18n["hour_unit"]
+        mu_day = self._i18n["day_unit"]
+        mu_month = self._i18n["month_unit"]
+
+        if days >= 30:
+            months = days // 30
+            remaining_days = days % 30
+            self.uptime = f"{rp}{months}{mu_month}{remaining_days}{mu_day}"
+        elif days >= 1:
+            self.uptime = f"{rp}{days}{mu_day}"
+        elif total_hours < 3:
+            self.uptime = f"{rp}{total_minutes}{mu_min}"
+        else:
+            if minutes >= 30:
+                self.uptime = f"{rp}{hours}.5{mu_hour}"
+            else:
+                self.uptime = f"{rp}{hours}{mu_hour}"
+
     def update_clock(self):
         self.now = datetime.now()
         if LUNAR_AVAILABLE:
             try:
                 lunar = ZhDate.from_datetime(self.now)
-                self.lunar_text = f"{self._i18n["lunar"]} {self.now:%y/%m/%d}"
+                self.lunar_text = f"{self._i18n['lunar']} {self.now:%y/%m/%d}"
             except Exception:
-                self.lunar_text = self._i18n["lunar_error"]
+                self.lunar_text = self._i18n['lunar_error']
         else:
-            self.lunar_text = self._i18n["not_installed"]
+            self.lunar_text = self._i18n['not_installed']
 
         current, next_name, days = get_next_term_info(self.now.year, self.now.month, self.now.day)
         if current:
             self.term_display = translate_term(current)
         elif next_name is not None and days is not None:
             trans_name = translate_term(next_name)
-            self.term_display = f"{self._i18n["distance"]}{trans_name} {days}{self._i18n["day_unit"]}"
+            self.term_display = f"{self._i18n['distance']}{trans_name} {days}{self._i18n['day_unit']}"
         else:
             self.term_display = ""
         self.update()
@@ -764,7 +847,7 @@ class MainWindow(QWidget):
         else:
             display_city = self.weather.get('city', self._i18n['unknown_location'])
             if display_city == "--":
-                display_city = self._i18n["unknown_location"]
+                display_city = self._i18n['unknown_location']
 
         weather_icon = get_weather_icon(self.weather['weather'])
         weather_text = f"{weather_icon} {self.weather['weather']} {self.weather['temp']}℃"
@@ -773,7 +856,8 @@ class MainWindow(QWidget):
         gpu_text = f"GPU{int(self.gpu)}%"
         resolution_text = f"{self.screen_res}"
         refresh_rate_text = f"{self.fps}Hz"
-        memory_text = f"{self._i18n["memory"]}\n{int(self.mem)}%"
+        memory_text = f"{self._i18n['memory']}\n{int(self.mem)}%"
+        uptime_text = self.uptime
         term_text = self.term_display if self.term_display else ""
         date_text = f"{self.now.strftime('%Y/%m/%d')}\n  {self._i18n['week']}{self._i18n['weekdays'][self.now.weekday()]}"
         lunar_text = self.lunar_text
@@ -790,13 +874,23 @@ class MainWindow(QWidget):
             "date": date_text,
             "lunar": lunar_text,
             "term": term_text,
+            "uptime": uptime_text,
             "empty": "",
         }
+        # ???????????? content_text_map
+        for dk, dv in self.disk_usage.items():
+            if dk == "disk_total":
+                content_text_map[dk] = f"{int(dv)}%"
+            else:
+            
+                letter = dk.replace("disk_", "")
+                content_text_map[dk] = f"{letter}: {int(dv)}%"
 
         multiline_map = {
             "date": [self.now.strftime('%Y/%m/%d'), f"{self._i18n['week']}{self._i18n['weekdays'][self.now.weekday()]}"],
             "netspeed": [f"↓{self.down_speed:.1f}Mb/s", f"↑{self.up_speed:.1f}Mb/s"],
-            "memory": [self._i18n["memory"], f"{int(self.mem)}%"],
+            "memory": [self._i18n['memory'], f"{int(self.mem)}%"],
+            "disk_total": [self._i18n['disk_total'], f"{int(self.disk_usage.get('disk_total', 0))}%"],
         }
 
         slot_position_map = {
@@ -821,12 +915,12 @@ class MainWindow(QWidget):
                 if not self._api_configured:
                     painter.drawText(x, y + h // 2, w, h // 2,
                                      Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter,
-                                     self._i18n["set_api"])
+                                     self._i18n['set_api'])
                 elif self._loading_weather:
                     dots_text = "." * self._loading_dots
                     painter.drawText(x, y + h // 2, w, h // 2,
                                      Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter,
-                                     f"⌛ {self._i18n["loading"]}{dots_text}")
+                                     f"⌛ {self._i18n['loading']}{dots_text}")
                 else:
                     weather_icon = get_weather_icon(self.weather['weather'])
                     weather_text = f"{weather_icon} {self.weather['weather']} {self.weather['temp']}℃"

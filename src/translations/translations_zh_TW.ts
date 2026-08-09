@@ -89,7 +89,16 @@
             <source>天</source>
             <translation>天</translation>
         </message>
-</context>
+        <message><source>小时</source><translation>小時</translation></message>
+            <message><source>小时</source><translation>小時</translation></message>
+            <message><source>小时</source><translation>小時</translation></message>
+            <message><source>月</source><translation>月</translation></message>
+            <message><source>月</source><translation>月</translation></message>
+            <message><source>分钟</source><translation>分鐘</translation></message>
+            <message><source>分钟</source><translation>分鐘</translation></message>
+            <message><source>运行</source><translation>執行</translation></message>
+            <message><source>磁盘总计</source><translation>磁碟總計</translation></message>
+    </context>
     <context>
         <name>TrayIcon</name>
         <message>
@@ -415,7 +424,10 @@
             <source>节气</source>
             <translation>節氣</translation>
         </message>
-</context>
+        <message><source>运行时间</source><translation>執行時間</translation></message>
+            <message><source>\u78c1\u789c\u603b\u8ba1</source><translation>\u78c1\u789c\u7e3d\u8a08</translation></message>
+            <message><source>磁盘总计</source><translation>磁碟總計</translation></message>
+    </context>
             <context>
         <name>WeatherPage</name>
         <message>
@@ -1062,7 +1074,7 @@ WeChatpay.png</translation>
         </message>
         <message>
             <location filename="notice/notice_window.py" line="59" />
-            <source>加载中..</source>
+            <source>加载中...</source>
             <translation>載入中...</translation>
         </message>
         <message>
@@ -1125,6 +1137,18 @@ WeChatpay.png</translation>
             <source>确定要清空所有 %1 条消息吗？</source>
             <translation>確定要清空所有 %1 條訊息嗎？</translation>
         </message>
+            \n            \n            \n            \n            \n
+    
+    
+            <message><source>????</source><translation>????</translation></message>
+            <message><source>???????</source><translation>???????</translation></message>
+            <message><source>?</source><translation>?</translation></message>
+            <message><source>???</source><translation>???</translation></message>
+            <message><source>?????</source><translation>?????</translation></message>
+                    <message><source>打开链接</source><translation>打開連結</translation></message>
+            <message><source>Translate</source><translation>翻譯</translation></message>
+            <message><source>共</source><translation>共</translation></message>
+            <message><source>条消息</source><translation>則訊息</translation></message>
     </context>
     <context>
         <name>NoticeManager</name>
@@ -1234,5 +1258,25 @@ WeChatpay.png</translation>
             <source>浅蓝灰</source>
             <translation>淺藍灰</translation>
         </message>
-    </context>
+            <message><source>C盘</source><translation>C磁碟</translation></message>
+            <message><source>D盘</source><translation>D磁碟</translation></message>
+            <message><source>E盘</source><translation>E磁碟</translation></message>
+            <message><source>F盘</source><translation>F磁碟</translation></message>
+            <message><source>A盘</source><translation>A磁碟</translation></message>
+            <message><source>B盘</source><translation>B磁碟</translation></message>
+            <message><source>C盘</source><translation>C磁碟</translation></message>
+            <message><source>D盘</source><translation>D磁碟</translation></message>
+            <message><source>E盘</source><translation>E磁碟</translation></message>
+            <message><source>F盘</source><translation>F磁碟</translation></message>
+            <message><source>G盘</source><translation>G磁碟</translation></message>
+            <message><source>H盘</source><translation>H磁碟</translation></message>
+            <message><source>I盘</source><translation>I磁碟</translation></message>
+            <message><source>J盘</source><translation>J磁碟</translation></message>
+            <message><source>K盘</source><translation>K磁碟</translation></message>
+            <message><source>L盘</source><translation>L磁碟</translation></message>
+            <message><source>M盘</source><translation>M磁碟</translation></message>
+            <message><source>N盘</source><translation>N磁碟</translation></message>
+            <message><source>O盘</source><translation>O磁碟</translation></message>
+            <message><source>P盘</source><translation>P磁碟</translation></message>
+            </context>
 </TS>

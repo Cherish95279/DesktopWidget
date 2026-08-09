@@ -89,7 +89,16 @@
             <source>天</source>
             <translation>d</translation>
         </message>
-</context>
+        <message><source>小时</source><translation>h</translation></message>
+            <message><source>小时</source><translation>h</translation></message>
+            <message><source>小时</source><translation>h</translation></message>
+            <message><source>月</source><translation>m</translation></message>
+            <message><source>月</source><translation>m</translation></message>
+            <message><source>分钟</source><translation>min</translation></message>
+            <message><source>分钟</source><translation>min</translation></message>
+            <message><source>运行</source><translation>Ejecutar</translation></message>
+            <message><source>磁盘总计</source><translation>Disco Total</translation></message>
+    </context>
     <context>
         <name>TrayIcon</name>
         <message>
@@ -415,7 +424,10 @@
             <source>节气</source>
             <translation>Término solar</translation>
         </message>
-</context>
+        <message><source>运行时间</source><translation>Tiempo de actividad</translation></message>
+            <message><source>\u78c1\u789c\u603b\u8ba1</source><translation>Disco Total</translation></message>
+            <message><source>磁盘总计</source><translation>Disco Total</translation></message>
+    </context>
             <context>
         <name>WeatherPage</name>
         <message>
@@ -1062,7 +1074,7 @@ Cada contribución me motiva.
         </message>
         <message>
             <location filename="notice/notice_window.py" line="59" />
-            <source>加载中..</source>
+            <source>加载中...</source>
             <translation>Cargando..</translation>
         </message>
         <message>
@@ -1101,11 +1113,6 @@ Cada contribución me motiva.
             <translation>Confirmar eliminación</translation>
         </message>
         <message>
-            <location filename="notice/notice_window.py" line="179" />
-            <source>确定要删除 "%1" 吗？</source>
-            <translation>¿Eliminar "%1"?</translation>
-        </message>
-        <message>
             <location filename="notice/notice_window.py" line="204" />
             <source>提示</source>
             <translation>Aviso</translation>
@@ -1120,11 +1127,18 @@ Cada contribución me motiva.
             <source>确认清空</source>
             <translation>Confirmar</translation>
         </message>
-        <message>
-            <location filename="notice/notice_window.py" line="211" />
-            <source>确定要清空所有 %1 条消息吗？</source>
-            <translation>¿Limpiar todos los %1 mensajes?</translation>
-        </message>
+        \n            \n            \n            \n            \n
+    
+    
+            <message><source>????</source><translation>Sin anuncios</translation></message>
+            <message><source>???????</source><translation>Selecciona un mensaje</translation></message>
+            <message><source>?</source><translation>Total: </translation></message>
+            <message><source>???</source><translation> mensajes</translation></message>
+            <message><source>?????</source><translation>Anuncio no encontrado</translation></message>
+                    <message><source>打开链接</source><translation>Abrir enlace</translation></message>
+            <message><source>Translate</source><translation>Traducir</translation></message>
+            <message><source>共</source><translation>Total: </translation></message>
+            <message><source>条消息</source><translation> mensajes</translation></message>
     </context>
     <context>
         <name>NoticeManager</name>
@@ -1234,5 +1248,25 @@ Cada contribución me motiva.
             <source>浅蓝灰</source>
             <translation>Gris azulado</translation>
         </message>
-    </context>
+            <message><source>C盘</source><translation>Unidad C</translation></message>
+            <message><source>D盘</source><translation>Unidad D</translation></message>
+            <message><source>E盘</source><translation>Unidad E</translation></message>
+            <message><source>F盘</source><translation>Unidad F</translation></message>
+            <message><source>A盘</source><translation>Unidad A</translation></message>
+            <message><source>B盘</source><translation>Unidad B</translation></message>
+            <message><source>C盘</source><translation>Unidad C</translation></message>
+            <message><source>D盘</source><translation>Unidad D</translation></message>
+            <message><source>E盘</source><translation>Unidad E</translation></message>
+            <message><source>F盘</source><translation>Unidad F</translation></message>
+            <message><source>G盘</source><translation>Unidad G</translation></message>
+            <message><source>H盘</source><translation>Unidad H</translation></message>
+            <message><source>I盘</source><translation>Unidad I</translation></message>
+            <message><source>J盘</source><translation>Unidad J</translation></message>
+            <message><source>K盘</source><translation>Unidad K</translation></message>
+            <message><source>L盘</source><translation>Unidad L</translation></message>
+            <message><source>M盘</source><translation>Unidad M</translation></message>
+            <message><source>N盘</source><translation>Unidad N</translation></message>
+            <message><source>O盘</source><translation>Unidad O</translation></message>
+            <message><source>P盘</source><translation>Unidad P</translation></message>
+            </context>
 </TS>

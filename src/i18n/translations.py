@@ -183,6 +183,15 @@ class TranslatorManager:
         self._app: Optional[QApplication] = None
         self._loading: bool = False
         self._dict_translator = None
+        self._callbacks: list = []
+
+    def on_language_changed(self, callback) -> None:
+        if callback not in self._callbacks:
+            self._callbacks.append(callback)
+
+    def remove_language_callback(self, callback) -> None:
+        if callback in self._callbacks:
+            self._callbacks.remove(callback)
 
     def init_translator(self, app: QApplication) -> None:
         """Call once at application startup."""
@@ -310,13 +319,17 @@ class TranslatorManager:
             self._current_lang = lang_code
 
             # 仅在明确要求时发射信号（当前版本中此方法仅被 init_translator 调用，emit_signal=False�?
-            if emit_signal:
-                pass  # language_changed signal removed (QObject inheritance was causing stack overflow)
-
             settings = QSettings("MyDesktopApp", "WeatherSettings")
             if emit_signal:
                 settings.setValue("language", lang_code)
             settings.sync()
+
+            if emit_signal:
+                for cb in self._callbacks:
+                    try:
+                        cb(lang_code)
+                    except Exception:
+                        pass
         finally:
             self._loading = False
 

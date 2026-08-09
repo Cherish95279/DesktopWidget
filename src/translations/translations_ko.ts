@@ -89,7 +89,16 @@
             <source>天</source>
             <translation>일</translation>
         </message>
-</context>
+        <message><source>小时</source><translation>시간</translation></message>
+            <message><source>小时</source><translation>시간</translation></message>
+            <message><source>小时</source><translation>시간</translation></message>
+            <message><source>月</source><translation>개월</translation></message>
+            <message><source>月</source><translation>개월</translation></message>
+            <message><source>分钟</source><translation>분</translation></message>
+            <message><source>分钟</source><translation>분</translation></message>
+            <message><source>运行</source><translation>실행</translation></message>
+            <message><source>磁盘总计</source><translation>전체 디스크</translation></message>
+    </context>
     <context>
         <name>TrayIcon</name>
         <message>
@@ -415,7 +424,10 @@
             <source>节气</source>
             <translation>절기</translation>
         </message>
-</context>
+        <message><source>运行时间</source><translation>가동 시간</translation></message>
+            <message><source>\u78c1\u789c\u603b\u8ba1</source><translation>\ucca0\ud638 \ud750\ub984</translation></message>
+            <message><source>磁盘总计</source><translation>전체 디스크</translation></message>
+    </context>
             <context>
         <name>WeatherPage</name>
         <message>
@@ -1062,7 +1074,7 @@ DesktopWidget을 계속 개선하겠습니다!
         </message>
         <message>
             <location filename="notice/notice_window.py" line="59" />
-            <source>加载中..</source>
+            <source>加载中...</source>
             <translation>로딩 중..</translation>
         </message>
         <message>
@@ -1101,11 +1113,6 @@ DesktopWidget을 계속 개선하겠습니다!
             <translation>삭제 확인</translation>
         </message>
         <message>
-            <location filename="notice/notice_window.py" line="179" />
-            <source>确定要删除 "%1" 吗？</source>
-            <translation>"%1"을 삭제할까요?</translation>
-        </message>
-        <message>
             <location filename="notice/notice_window.py" line="204" />
             <source>提示</source>
             <translation>알림</translation>
@@ -1120,11 +1127,18 @@ DesktopWidget을 계속 개선하겠습니다!
             <source>确认清空</source>
             <translation>삭제 확인</translation>
         </message>
-        <message>
-            <location filename="notice/notice_window.py" line="211" />
-            <source>确定要清空所有 %1 条消息吗？</source>
-            <translation>모든 %1개 메시지를 삭제할까요?</translation>
-        </message>
+        \n            \n            \n            \n            \n
+    
+    
+            <message><source>????</source><translation>???? ??</translation></message>
+            <message><source>???????</source><translation>???? ?????</translation></message>
+            <message><source>?</source><translation>?: </translation></message>
+            <message><source>???</source><translation>?? ???</translation></message>
+            <message><source>?????</source><translation>????? ?? ? ????</translation></message>
+                    <message><source>打开链接</source><translation>링크 열기</translation></message>
+            <message><source>Translate</source><translation>번역</translation></message>
+            <message><source>共</source><translation>총: </translation></message>
+            <message><source>条消息</source><translation>개의 메시지</translation></message>
     </context>
     <context>
         <name>NoticeManager</name>
@@ -1234,5 +1248,25 @@ DesktopWidget을 계속 개선하겠습니다!
             <source>浅蓝灰</source>
             <translation>라이트 블루 그레이</translation>
         </message>
-    </context>
+            <message><source>C盘</source><translation>C 드라이브</translation></message>
+            <message><source>D盘</source><translation>D 드라이브</translation></message>
+            <message><source>E盘</source><translation>E 드라이브</translation></message>
+            <message><source>F盘</source><translation>F 드라이브</translation></message>
+            <message><source>A盘</source><translation>A 드라이브</translation></message>
+            <message><source>B盘</source><translation>B 드라이브</translation></message>
+            <message><source>C盘</source><translation>C 드라이브</translation></message>
+            <message><source>D盘</source><translation>D 드라이브</translation></message>
+            <message><source>E盘</source><translation>E 드라이브</translation></message>
+            <message><source>F盘</source><translation>F 드라이브</translation></message>
+            <message><source>G盘</source><translation>G 드라이브</translation></message>
+            <message><source>H盘</source><translation>H 드라이브</translation></message>
+            <message><source>I盘</source><translation>I 드라이브</translation></message>
+            <message><source>J盘</source><translation>J 드라이브</translation></message>
+            <message><source>K盘</source><translation>K 드라이브</translation></message>
+            <message><source>L盘</source><translation>L 드라이브</translation></message>
+            <message><source>M盘</source><translation>M 드라이브</translation></message>
+            <message><source>N盘</source><translation>N 드라이브</translation></message>
+            <message><source>O盘</source><translation>O 드라이브</translation></message>
+            <message><source>P盘</source><translation>P 드라이브</translation></message>
+            </context>
 </TS>

@@ -302,7 +302,7 @@ class UpdatePage(QWidget):
             self.download_url = download_url
 
             if release_notes:
-                self.update_status_label.setText(self.tr("有新版本可用！") + f"\n{release_notes[:100]}...")
+                self.update_status_label.setText(self.tr("有新版本可用！"))
         else:
             latest = result.get("latest_version", VERSION)
             self.latest_version_label.setText(self.tr("最新版本：") + latest)

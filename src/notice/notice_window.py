@@ -1,4 +1,5 @@
 from PyQt6.QtWidgets import *
+from PyQt6.QtWidgets import QTextBrowser
 from PyQt6.QtCore import *
 from PyQt6.QtGui import QIcon, QDesktopServices, QAction
 import traceback
@@ -11,7 +12,7 @@ class NoticeWindow(QDialog):
 
     def __init__(self, parent=None):
         super().__init__(parent)
-        self.setWindowTitle("💬 " + self.tr("公告"))
+        self.setWindowTitle(self.tr("公告"))
         self.setFixedSize(500, 380)
         self.setWindowFlags(
             Qt.WindowType.Window |
@@ -76,11 +77,22 @@ class NoticeWindow(QDialog):
         self._loaded = False
         QTimer.singleShot(50, self._load_messages)
 
+    def retranslate_ui(self):
+        """重新翻译所有界面文字"""
+        self.setWindowTitle(self.tr("公告"))
+        self.content_title.setText(self.tr("加载中..."))
+        self.placeholder_label.setText(self.tr("请选择一条消息"))
+        self.link_btn.setText(self.tr("打开链接"))
+        self.translate_btn.setText(self.tr("Translate"))
+        QTimer.singleShot(100, self._load_messages)
+
+
+
     def _show_loading_state(self):
         """显示加载中占位状态"""
         self.content_title.setText("⏳ " + self.tr("加载中..."))
         self.content_time.setText("")
-        self.content_body.setText(self.tr("正在加载公告，请稍候..."))
+        self.content_body.setPlainText(self.tr("正在加载公告，请稍候..."))
         self.placeholder_label.hide()
         self.link_btn.hide()
 
@@ -206,21 +218,23 @@ class NoticeWindow(QDialog):
         line.setStyleSheet("background-color: #e8e8e8; max-height: 1px;")
         content_layout.addWidget(line)
 
-        self.content_body = QLabel(self.tr("正在加载公告，请稍候..."))
+        self.content_body = QTextBrowser()
+        self.content_body.setPlainText(self.tr("正在加载公告，请稍候..."))
         self.content_body.setAlignment(Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignTop)
         self.content_body.setStyleSheet("""
             font-size: 13px;
             color: #333;
             line-height: 1.6;
+            border: none;
         """)
-        self.content_body.setWordWrap(True)
+        self.content_body.setOpenExternalLinks(True)
         content_layout.addWidget(self.content_body)
 
         content_layout.addStretch()
 
         btn_layout = QHBoxLayout()
         btn_layout.addStretch()
-        self.link_btn = QPushButton("📎 " + self.tr("查看详情"))
+        self.link_btn = QPushButton(self.tr("打开链接"))
         self.link_btn.setStyleSheet("""
             QPushButton {
                 padding: 6px 20px;
@@ -236,6 +250,25 @@ class NoticeWindow(QDialog):
         """)
         self.link_btn.clicked.connect(self._open_link)
         self.link_btn.hide()
+        
+        self.translate_btn = QPushButton(self.tr("Translate"))
+        self.translate_btn.setStyleSheet("""
+            QPushButton {
+                padding: 6px 20px;
+                font-size: 12px;
+                border: 1px solid #1677ff;
+                border-radius: 4px;
+                background: #1677ff;
+                color: white;
+            }
+            QPushButton:hover {
+                background: #4096ff;
+            }
+        """)
+        self.translate_btn.clicked.connect(self._translate_content)
+        self.translate_btn.hide()
+
+        btn_layout.addWidget(self.translate_btn)
         btn_layout.addWidget(self.link_btn)
         content_layout.addLayout(btn_layout)
 
@@ -250,6 +283,39 @@ class NoticeWindow(QDialog):
         scroll_area.setWidget(content_widget)
         right_layout.addWidget(scroll_area)
         main_layout.addWidget(right_panel)
+
+    def _translate_content(self):
+        """打开 Google Translate 翻译当前公告内容"""
+        from urllib.parse import quote
+        from PyQt6.QtCore import QUrl
+        from PyQt6.QtGui import QDesktopServices
+        
+        # 获取当前公告内容
+        body = self.content_body.toPlainText()
+        if not body:
+            return
+        
+        # 获取目标语言
+        from ..i18n.translations import TranslatorManager
+        lang = TranslatorManager().current_language()
+        
+        # Google Translate 语言代码映射
+        lang_map = {
+            "zh_CN": "zh-CN",
+            "zh_TW": "zh-TW",
+            "en": "en",
+            "ja": "ja",
+            "ko": "ko",
+            "es": "es",
+            "fr": "fr",
+            "de": "de",
+        }
+        target = lang_map.get(lang, "en")
+        
+        # 构建 URL
+        encoded = quote(body)
+        url = f"https://translate.google.com/?sl=auto&tl={target}&text={encoded}"
+        QDesktopServices.openUrl(QUrl(url))
 
     def _open_link(self):
         link = self.link_btn.property("link_url")
@@ -279,10 +345,11 @@ class NoticeWindow(QDialog):
                 if bottom_info:
                     bottom_info.setText(self.tr("共") + " 0 " + self.tr("条消息"))
                 self.content_title.setText(self.tr("暂无公告"))
-                self.content_body.setText("")
+                self.content_body.setPlainText("")
                 self.content_time.setText("")
                 self.placeholder_label.show()
                 self.link_btn.hide()
+                self.translate_btn.hide()
                 self._loaded = True
                 return
 
@@ -295,7 +362,7 @@ class NoticeWindow(QDialog):
                 count += 1
 
             if bottom_info:
-                bottom_info.setText(f"共 {count} 条消息")
+                bottom_info.setText(self.tr("共") + f" {count} " + self.tr("条消息"))
 
             if self.list_widget.count() > 0:
                 self.list_widget.setCurrentRow(0)
@@ -343,9 +410,10 @@ class NoticeWindow(QDialog):
                     break
             if not msg:
                 self.content_title.setText(self.tr("未找到公告"))
-                self.content_body.setText("")
+                self.content_body.setPlainText("")
                 self.content_time.setText("")
                 self.link_btn.hide()
+                self.translate_btn.hide()
                 return
 
             self._selected_id = notice_id
@@ -359,21 +427,23 @@ class NoticeWindow(QDialog):
                 self.content_time.setText("")
 
             body_text = msg.get("content", "") or "（无内容）"
-            self.content_body.setText(body_text)
+            self.content_body.setPlainText(body_text)
 
             link = msg.get("link")
             if link:
                 self.link_btn.setProperty("link_url", link)
                 self.link_btn.show()
+                self.translate_btn.show()
             else:
                 self.link_btn.hide()
+                self.translate_btn.hide()
 
             self.placeholder_label.hide()
         except Exception as e:
             print(f"❌ 显示公告内容异常: {e}")
             traceback.print_exc()
             self.content_title.setText(self.tr("显示错误"))
-            self.content_body.setText(f"无法显示公告内容: {e}")
+            self.content_body.setPlainText(f"无法显示公告内容: {e}")
 
     def _on_item_clicked(self, item):
         if not item:

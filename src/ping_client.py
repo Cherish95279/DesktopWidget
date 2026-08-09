@@ -112,14 +112,26 @@ def report_launch():
 
 
 def get_language():
-    """获取当前语言设置"""
+    """????????????????"""
     try:
         settings = QSettings("MyDesktopApp", "WeatherSettings")
-        return settings.value("language", "") or "auto"
+        lang_code = settings.value("language", "")
+        if not lang_code:
+            from .i18n.translations import TranslatorManager
+            lang_code = TranslatorManager().current_language()
+        lang_map = {
+            "zh_CN": "????",
+            "zh_TW": "????",
+            "en": "??",
+            "ja": "??",
+            "ko": "??",
+            "es": "????",
+            "fr": "??",
+            "de": "??",
+        }
+        return lang_map.get(lang_code, lang_code)
     except Exception:
-        return "unknown"
-
-
+        return "??"
 def get_screen_resolution():
     """获取主屏幕分辨率"""
     try:
@@ -137,18 +149,40 @@ def get_screen_resolution():
 
 
 def get_slot_config():
-    """获取8个槽位的配置（逗号分隔）"""
+    """??8?????????????????"""
     try:
         settings = QSettings("MyDesktopApp", "WeatherSettings")
+        slot_name_map = {
+            "ip": "IP",
+            "weather": "??",
+            "netspeed": "??",
+            "cpu": "CPU",
+            "gpu": "GPU",
+            "resolution": "???",
+            "refresh_rate": "???",
+            "memory": "??",
+            "date": "??",
+            "lunar": "??",
+            "term": "??",
+            "uptime": "????",
+            "disk_total": "????",
+        }
+        # Add disk_X mappings for A-P
+        import string
+        for letter in string.ascii_uppercase[:16]:
+            slot_name_map[f"disk_{letter}"] = f"{letter}?"
         slots = []
         for i in range(1, 9):
             key = f"slot_{i}"
             val = settings.value(key, "")
-            slots.append(val if val else "empty")
+            if val and val != "empty":
+                display = slot_name_map.get(val, val)
+                slots.append(display)
+            else:
+                slots.append("?")
         return ",".join(slots)
     except Exception:
         return "unknown"
-
 def report_launch_full(
     weather_status: str = "idle",
     update_status: str = "idle"

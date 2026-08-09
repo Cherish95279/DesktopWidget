@@ -7,6 +7,37 @@ All notable changes to DesktopWidget are documented in this file.
 
 ---
 
+# 🚀 v1.3.7 (2026-08-09)
+
+## 🕒 Clock Hand & Display Improvements
+
+- Improved the clock hand rotation center for more precise and natural movement.
+- Refined clock hand rendering details for a more consistent visual experience.
+
+## 💻 System Information Enhancements
+
+- Added disk capacity display to show storage usage information in real time.
+- Optimized disk capacity presentation for clearer system information display.
+- Added system uptime display to help users track how long the system has been running.
+
+## 🌐 Language Experience Improvements
+
+- Improved the language switching mechanism.
+- Language changes now take effect immediately without requiring an application restart.
+
+## 📢 Announcement Panel Enhancements
+
+- Added copy support for announcement content, making it easier to save or share information.
+- Added a translation button to the announcement panel.
+- The translation button opens Google Translate in the browser and automatically copies the announcement content. Users only need to click the translate button on the website to complete the translation.
+
+## 🐛 Stability Improvements
+
+- Fixed other minor issues.
+- Improved overall application stability and user experience.
+
+---
+
 # 🚀 v1.3.6 (2026-08-03)
 
 ## 🏪 Microsoft Store Release

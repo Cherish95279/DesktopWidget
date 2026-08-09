@@ -165,6 +165,31 @@ class SettingsDialog(QWidget):
         for i, btn in enumerate(self.cat_buttons):
             btn.setChecked(i == index)
 
+    def rebuild_all_pages(self):
+        """重建所有设置页面（语言切换时调用）"""
+        # 重新设置导航按钮文本
+        self.setWindowTitle(self.tr("设置"))
+        self.cat_labels = [self.tr("常规设置"), self.tr("显示项目"), self.tr("天气设置"),
+                          self.tr("主题"), self.tr("检查更新"), self.tr("捐赠"), self.tr("关于")]
+        for i, label in enumerate(self.cat_labels):
+            if i < len(self.cat_buttons):
+                self.cat_buttons[i].setText(label)
+        # 销毁并重建所有页面
+        for attr in ["general_page", "display_page", "weather_page",
+                     "theme_page", "update_page", "donation_page", "about_page"]:
+            page = getattr(self, attr, None)
+            if page is not None:
+                self.stacked.removeWidget(page)
+                page.deleteLater()
+                setattr(self, attr, None)
+        # 切换到当前页面（触发重新创建）
+        current_idx = 0
+        for i, btn in enumerate(self.cat_buttons):
+            if btn.isChecked():
+                current_idx = i
+                break
+        self.switch_page(current_idx)
+
     def on_font_changed(self):
         if self._main_window and hasattr(self._main_window, '_refresh_font_cache'):
             self._main_window._refresh_font_cache()

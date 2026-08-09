@@ -209,6 +209,10 @@ class TrayIcon(QSystemTrayIcon):
         self._apply_window_mode(mode)
 
     # ===== 菜单 =====
+    def _refresh_menu(self):
+        """重新构建托盘菜单（语言切换时调用）"""
+        self.setup_menu()
+
     def setup_menu(self):
         self.menu.clear()
 

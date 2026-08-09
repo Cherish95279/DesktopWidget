@@ -1,4 +1,4 @@
-﻿from PyQt6.QtWidgets import *
+from PyQt6.QtWidgets import *
 from PyQt6.QtCore import *
 from ..constants import DEFAULT_LAYOUT
 
@@ -40,8 +40,25 @@ class DisplayPage(QWidget):
             ("date", self.tr("公历")),
             ("lunar", self.tr("农历")),
             ("term", self.tr("节气")),
-            ("empty", self.tr("空")),
+            ("uptime", self.tr("运行时间")),
         ]
+        # 动态检测物理硬盘盘符
+        import psutil
+        self._detected_disk_keys = set()
+        for part in psutil.disk_partitions():
+            if (not part.opts.startswith("cdrom")
+                and not part.device.startswith("\\\\")
+                and part.fstype not in ("", "udf", "iso9660")):
+                try:
+                    usage = psutil.disk_usage(part.mountpoint)
+                    if usage.total > 0:
+                        letter = part.mountpoint.split(":")[0].rstrip("\\").upper()
+                        self.content_pool.append((f"disk_{letter}", QCoreApplication.translate("Constants", f"{letter}盘")))
+                        self._detected_disk_keys.add(f"disk_{letter}")
+                except (PermissionError, OSError):
+                    pass
+        self.content_pool.append(("disk_total", self.tr("磁盘总计")))
+        self.content_pool.append(("empty", self.tr("空")))
         self.all_values = [v for v, _ in self.content_pool]
 
         # 8个位置

@@ -89,7 +89,16 @@
             <source>天</source>
             <translation>j</translation>
         </message>
-</context>
+        <message><source>小时</source><translation>h</translation></message>
+            <message><source>小时</source><translation>h</translation></message>
+            <message><source>小时</source><translation>h</translation></message>
+            <message><source>月</source><translation>m</translation></message>
+            <message><source>月</source><translation>m</translation></message>
+            <message><source>分钟</source><translation>min</translation></message>
+            <message><source>分钟</source><translation>min</translation></message>
+            <message><source>运行</source><translation>⏱ </translation></message>
+            <message><source>磁盘总计</source><translation>Disque Total</translation></message>
+    </context>
     <context>
         <name>TrayIcon</name>
         <message>
@@ -415,7 +424,10 @@ Nouvelle annonce !</translation>
             <source>节气</source>
             <translation>Terme solaire</translation>
         </message>
-</context>
+        <message><source>运行时间</source><translation>Temps de fonctionnement</translation></message>
+            <message><source>\u78c1\u789c\u603b\u8ba1</source><translation>Disque Total</translation></message>
+            <message><source>磁盘总计</source><translation>Disque Total</translation></message>
+    </context>
             <context>
         <name>WeatherPage</name>
         <message>
@@ -1062,7 +1074,7 @@ Je continuerai d'améliorer DesktopWidget !
         </message>
         <message>
             <location filename="notice/notice_window.py" line="59" />
-            <source>加载中..</source>
+            <source>加载中...</source>
             <translation>Chargement..</translation>
         </message>
         <message>
@@ -1101,11 +1113,6 @@ Je continuerai d'améliorer DesktopWidget !
             <translation>Confirmer suppression</translation>
         </message>
         <message>
-            <location filename="notice/notice_window.py" line="179" />
-            <source>确定要删除 "%1" 吗？</source>
-            <translation>Supprimer "%1" ?</translation>
-        </message>
-        <message>
             <location filename="notice/notice_window.py" line="204" />
             <source>提示</source>
             <translation>Info</translation>
@@ -1120,11 +1127,18 @@ Je continuerai d'améliorer DesktopWidget !
             <source>确认清空</source>
             <translation>Confirmer suppression</translation>
         </message>
-        <message>
-            <location filename="notice/notice_window.py" line="211" />
-            <source>确定要清空所有 %1 条消息吗？</source>
-            <translation>Supprimer tous les %1 messages ?</translation>
-        </message>
+        \n            \n            \n            \n            \n
+    
+    
+            <message><source>????</source><translation>Aucune annonce</translation></message>
+            <message><source>???????</source><translation>S?lectionnez un message</translation></message>
+            <message><source>?</source><translation>Total: </translation></message>
+            <message><source>???</source><translation> messages</translation></message>
+            <message><source>?????</source><translation>Annonce introuvable</translation></message>
+                    <message><source>打开链接</source><translation>Ouvrir le lien</translation></message>
+            <message><source>Translate</source><translation>Traduire</translation></message>
+            <message><source>共</source><translation>Total: </translation></message>
+            <message><source>条消息</source><translation> messages</translation></message>
     </context>
     <context>
         <name>NoticeManager</name>
@@ -1234,5 +1248,25 @@ Je continuerai d'améliorer DesktopWidget !
             <source>浅蓝灰</source>
             <translation>Gris bleu clair</translation>
         </message>
-    </context>
+            <message><source>C盘</source><translation>Lecteur C</translation></message>
+            <message><source>D盘</source><translation>Lecteur D</translation></message>
+            <message><source>E盘</source><translation>Lecteur E</translation></message>
+            <message><source>F盘</source><translation>Lecteur F</translation></message>
+            <message><source>A盘</source><translation>Lecteur A</translation></message>
+            <message><source>B盘</source><translation>Lecteur B</translation></message>
+            <message><source>C盘</source><translation>Lecteur C</translation></message>
+            <message><source>D盘</source><translation>Lecteur D</translation></message>
+            <message><source>E盘</source><translation>Lecteur E</translation></message>
+            <message><source>F盘</source><translation>Lecteur F</translation></message>
+            <message><source>G盘</source><translation>Lecteur G</translation></message>
+            <message><source>H盘</source><translation>Lecteur H</translation></message>
+            <message><source>I盘</source><translation>Lecteur I</translation></message>
+            <message><source>J盘</source><translation>Lecteur J</translation></message>
+            <message><source>K盘</source><translation>Lecteur K</translation></message>
+            <message><source>L盘</source><translation>Lecteur L</translation></message>
+            <message><source>M盘</source><translation>Lecteur M</translation></message>
+            <message><source>N盘</source><translation>Lecteur N</translation></message>
+            <message><source>O盘</source><translation>Lecteur O</translation></message>
+            <message><source>P盘</source><translation>Lecteur P</translation></message>
+            </context>
 </TS>

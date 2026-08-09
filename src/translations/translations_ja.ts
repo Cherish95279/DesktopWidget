@@ -89,7 +89,16 @@
             <source>天</source>
             <translation>日</translation>
         </message>
-</context>
+        <message><source>小时</source><translation>時間</translation></message>
+            <message><source>小时</source><translation>時間</translation></message>
+            <message><source>小时</source><translation>時間</translation></message>
+            <message><source>月</source><translation>か月</translation></message>
+            <message><source>月</source><translation>か月</translation></message>
+            <message><source>分钟</source><translation>分</translation></message>
+            <message><source>分钟</source><translation>分</translation></message>
+            <message><source>运行</source><translation>実行</translation></message>
+            <message><source>磁盘总计</source><translation>ディスク合計</translation></message>
+    </context>
     <context>
         <name>TrayIcon</name>
         <message>
@@ -415,7 +424,10 @@
             <source>节气</source>
             <translation>節気</translation>
         </message>
-</context>
+        <message><source>运行时间</source><translation>稼働時間</translation></message>
+            <message><source>\u78c1\u789c\u603b\u8ba1</source><translation>\u78c1\u789c\u8a08</translation></message>
+            <message><source>磁盘总计</source><translation>ディスク合計</translation></message>
+    </context>
             <context>
         <name>WeatherPage</name>
         <message>
@@ -1062,7 +1074,7 @@ DesktopWidgetをさらに改善します！
         </message>
         <message>
             <location filename="notice/notice_window.py" line="59" />
-            <source>加载中..</source>
+            <source>加载中...</source>
             <translation>読み込み中..</translation>
         </message>
         <message>
@@ -1125,6 +1137,18 @@ DesktopWidgetをさらに改善します！
             <source>确定要清空所有 %1 条消息吗？</source>
             <translation>すべての %1 件のメッセージを削除しますか？</translation>
         </message>
+            \n            \n            \n            \n            \n
+    
+    
+            <message><source>????</source><translation>??????????</translation></message>
+            <message><source>???????</source><translation>????????</translation></message>
+            <message><source>?</source><translation>??: </translation></message>
+            <message><source>???</source><translation>???????</translation></message>
+            <message><source>?????</source><translation>????????????</translation></message>
+                    <message><source>打开链接</source><translation>リンクを開く</translation></message>
+            <message><source>Translate</source><translation>翻訳</translation></message>
+            <message><source>共</source><translation>合計: </translation></message>
+            <message><source>条消息</source><translation>件のメッセージ</translation></message>
     </context>
     <context>
         <name>NoticeManager</name>
@@ -1234,5 +1258,25 @@ DesktopWidgetをさらに改善します！
             <source>浅蓝灰</source>
             <translation>ライトブルーグレー</translation>
         </message>
-    </context>
+            <message><source>C盘</source><translation>Cドライブ</translation></message>
+            <message><source>D盘</source><translation>Dドライブ</translation></message>
+            <message><source>E盘</source><translation>Eドライブ</translation></message>
+            <message><source>F盘</source><translation>Fドライブ</translation></message>
+            <message><source>A盘</source><translation>Aドライブ</translation></message>
+            <message><source>B盘</source><translation>Bドライブ</translation></message>
+            <message><source>C盘</source><translation>Cドライブ</translation></message>
+            <message><source>D盘</source><translation>Dドライブ</translation></message>
+            <message><source>E盘</source><translation>Eドライブ</translation></message>
+            <message><source>F盘</source><translation>Fドライブ</translation></message>
+            <message><source>G盘</source><translation>Gドライブ</translation></message>
+            <message><source>H盘</source><translation>Hドライブ</translation></message>
+            <message><source>I盘</source><translation>Iドライブ</translation></message>
+            <message><source>J盘</source><translation>Jドライブ</translation></message>
+            <message><source>K盘</source><translation>Kドライブ</translation></message>
+            <message><source>L盘</source><translation>Lドライブ</translation></message>
+            <message><source>M盘</source><translation>Mドライブ</translation></message>
+            <message><source>N盘</source><translation>Nドライブ</translation></message>
+            <message><source>O盘</source><translation>Oドライブ</translation></message>
+            <message><source>P盘</source><translation>Pドライブ</translation></message>
+            </context>
 </TS>
