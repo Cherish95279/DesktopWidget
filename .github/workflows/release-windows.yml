@@ -46,18 +46,29 @@ jobs:
           python tools/build.py ${{ github.ref_name }}
 
 
-          # 查看输出
+      # 查看输出
       - name: List build output
         run: |
           dir dist
 
+
+      # 创建绿色版 ZIP
+      - name: Create portable ZIP
+        shell: pwsh
+        run: |
+          Compress-Archive `
+            -Path dist/DesktopWidget `
+            -DestinationPath dist/DesktopWidget-${{ github.ref_name }}-windows-x64.zip
+
+
+      # 创建 Release 并上传文件
       - name: Create Release
         uses: softprops/action-gh-release@v2
         with:
           draft: true
           files: |
             dist/DesktopWidget-v*-windows-x64-Setup.exe
+            dist/DesktopWidget-v*-windows-x64.zip
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
 
