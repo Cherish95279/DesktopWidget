@@ -154,7 +154,7 @@ New announcement!</translation>
             <source>退出</source>
             <translation>Exit</translation>
         </message>
-    </context>
+    <message><source>显示信息条</source><translation>Show Info Bar</translation></message></context>
     <context>
         <name>SettingsDialog</name>
         <message>
@@ -428,7 +428,7 @@ New announcement!</translation>
         <message><source>运行时间</source><translation>Uptime</translation></message>
             <message><source>\u78c1\u789c\u603b\u8ba1</source><translation>Total Disk</translation></message>
             <message><source>磁盘总计</source><translation>Total Disk</translation></message>
-    </context>
+    <message><source>信息条显示</source><translation>Info Bar Display</translation></message></context>
             <context>
         <name>WeatherPage</name>
         <message>

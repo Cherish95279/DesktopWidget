@@ -43,7 +43,10 @@ def main():
         print_flush("用法: python tools/push.py \"提交信息\"")
         sys.exit(1)
 
-    msg = sys.argv[1]
+    msg = sys.argv[1].strip()
+    if not msg:
+        msg = "update"
+        print_flush("ℹ️ 提交信息为空，使用默认信息: update")
 
     root = os.getcwd()
     print_flush(f"ℹ️ 当前目录: {root}")

@@ -153,7 +153,7 @@ Nouvelle annonce !</translation>
             <source>退出</source>
             <translation>Quitter</translation>
         </message>
-    </context>
+    <message><source>显示信息条</source><translation>Afficher la barre d'informations</translation></message></context>
     <context>
         <name>SettingsDialog</name>
         <message>
@@ -427,7 +427,7 @@ Nouvelle annonce !</translation>
         <message><source>运行时间</source><translation>Temps de fonctionnement</translation></message>
             <message><source>\u78c1\u789c\u603b\u8ba1</source><translation>Disque Total</translation></message>
             <message><source>磁盘总计</source><translation>Disque Total</translation></message>
-    </context>
+    <message><source>信息条显示</source><translation>Affichage barre d'infos</translation></message></context>
             <context>
         <name>WeatherPage</name>
         <message>

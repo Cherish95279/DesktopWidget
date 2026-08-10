@@ -1,5 +1,5 @@
 #define MyAppName "DesktopWidget"
-#define MyAppVersion "1.3.4"
+#define MyAppVersion "1.3.7"
 #define MyAppPublisher "Cherish"
 #define MyAppExeName "DesktopWidget.exe"
 #define MyAppId "{{8E2B3C4D-5F6A-7B8C-9D0E-1F2A3B4C5D6E}}"
@@ -29,10 +29,17 @@ AppUpdatesURL=https://github.com/Cherish95279/DesktopWidget/releases
 VersionInfoDescription=珍爱桌面小工具安装程序
 VersionInfoCopyright=Copyright (C) 2026 Cherish
 VersionInfoCompany=Cherish
-VersionInfoTextVersion=1.3.4
+VersionInfoTextVersion=1.3.7
 
 [Languages]
 Name: "chinesesimplified"; MessagesFile: "installer\ChineseSimplified.isl"
+Name: "english"; MessagesFile: "installer\Default.isl"
+Name: "chinesetraditional"; MessagesFile: "installer\ChineseTraditional.isl"
+Name: "japanese"; MessagesFile: "installer\Japanese.isl"
+Name: "french"; MessagesFile: "installer\French.isl"
+Name: "spanish"; MessagesFile: "installer\Spanish.isl"
+Name: "korean"; MessagesFile: "installer\Korean.isl"
+Name: "german"; MessagesFile: "installer\German.isl"
 
 [Files]
 Source: "dist\DesktopWidget\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs

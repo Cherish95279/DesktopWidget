@@ -153,7 +153,7 @@
             <source>退出</source>
             <translation>종료</translation>
         </message>
-    </context>
+    <message><source>显示信息条</source><translation>정보 바 표시</translation></message></context>
     <context>
         <name>SettingsDialog</name>
         <message>
@@ -427,7 +427,7 @@
         <message><source>运行时间</source><translation>가동 시간</translation></message>
             <message><source>\u78c1\u789c\u603b\u8ba1</source><translation>\ucca0\ud638 \ud750\ub984</translation></message>
             <message><source>磁盘总计</source><translation>전체 디스크</translation></message>
-    </context>
+    <message><source>信息条显示</source><translation>정보 바 표시</translation></message></context>
             <context>
         <name>WeatherPage</name>
         <message>

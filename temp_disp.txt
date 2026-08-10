@@ -1,9 +1,9 @@
-from PyQt6.QtWidgets import *
+﻿from PyQt6.QtWidgets import *
 from PyQt6.QtCore import *
 from ..constants import DEFAULT_LAYOUT
 
 
-# ===== 统一下拉框样式（与 general_page 保持一致） =====
+# ===== ͳһ��������ʽ���� general_page ����һ�£� =====
 COMBO_STYLE = """
     QComboBox {
         border: 1px solid #ccc;
@@ -27,22 +27,22 @@ class DisplayPage(QWidget):
         super().__init__(parent)
         self.parent_dialog = parent
 
-        # 内容池定义
+        # ���ݳض���
         self.content_pool = [
             ("ip", self.tr("IP")),
-            ("weather", self.tr("天气")),
-            ("netspeed", self.tr("网速")),
+            ("weather", self.tr("����")),
+            ("netspeed", self.tr("����")),
             ("cpu", self.tr("CPU")),
             ("gpu", self.tr("GPU")),
-            ("resolution", self.tr("分辨率")),
-            ("refresh_rate", self.tr("刷新率")),
-            ("memory", self.tr("内存")),
-            ("date", self.tr("公历")),
-            ("lunar", self.tr("农历")),
-            ("term", self.tr("节气")),
-            ("uptime", self.tr("运行时间")),
+            ("resolution", self.tr("�ֱ���")),
+            ("refresh_rate", self.tr("ˢ����")),
+            ("memory", self.tr("�ڴ�")),
+            ("date", self.tr("����")),
+            ("lunar", self.tr("ũ��")),
+            ("term", self.tr("����")),
+            ("uptime", self.tr("����ʱ��")),
         ]
-        # 动态检测物理硬盘盘符
+        # ��̬�������Ӳ���̷�
         import psutil
         self._detected_disk_keys = set()
         for part in psutil.disk_partitions():
@@ -53,44 +53,28 @@ class DisplayPage(QWidget):
                     usage = psutil.disk_usage(part.mountpoint)
                     if usage.total > 0:
                         letter = part.mountpoint.split(":")[0].rstrip("\\").upper()
-                        self.content_pool.append((f"disk_{letter}", QCoreApplication.translate("Constants", f"{letter}盘")))
+                        self.content_pool.append((f"disk_{letter}", QCoreApplication.translate("Constants", f"{letter}��")))
                         self._detected_disk_keys.add(f"disk_{letter}")
                 except (PermissionError, OSError):
                     pass
-        self.content_pool.append(("disk_total", self.tr("磁盘总计")))
-        self.content_pool.append(("empty", self.tr("空")))
+        self.content_pool.append(("disk_total", self.tr("�����ܼ�")))
+        self.content_pool.append(("empty", self.tr("��")))
         self.all_values = [v for v, _ in self.content_pool]
 
-        # 信息条显示的筛选内容池（紧凑型数据，无empty）
-        self.taskbar_pool = [
-            ("netspeed", self.tr("网速")),
-            ("weather", self.tr("天气")),
-            ("cpu", self.tr("CPU")),
-            ("gpu", self.tr("GPU")),
-            ("memory", self.tr("内存")),
-            ("uptime", self.tr("运行时间")),
-        ]
-        # 已检测到的盘符（从content_pool继承）
-        for dk in sorted(self._detected_disk_keys):
-            letter = dk.replace("disk_", "")
-            label = QCoreApplication.translate("Constants", f"{letter}盘")
-            self.taskbar_pool.append((dk, label))
-        self.taskbar_pool.append(("disk_total", self.tr("磁盘总计")))
-
-        # 8个位置
+        # 8��λ��
         self.slot_defs = [
-            {"key": "slot_1", "name": self.tr("左一")},
-            {"key": "slot_2", "name": self.tr("左二")},
-            {"key": "slot_3", "name": self.tr("左三")},
-            {"key": "slot_4", "name": self.tr("左四")},
-            {"key": "slot_5", "name": self.tr("右一")},
-            {"key": "slot_6", "name": self.tr("右二")},
-            {"key": "slot_7", "name": self.tr("右三")},
-            {"key": "slot_8", "name": self.tr("右四")},
+            {"key": "slot_1", "name": self.tr("��һ")},
+            {"key": "slot_2", "name": self.tr("���")},
+            {"key": "slot_3", "name": self.tr("����")},
+            {"key": "slot_4", "name": self.tr("����")},
+            {"key": "slot_5", "name": self.tr("��һ")},
+            {"key": "slot_6", "name": self.tr("�Ҷ�")},
+            {"key": "slot_7", "name": self.tr("����")},
+            {"key": "slot_8", "name": self.tr("����")},
         ]
         self.slot_keys = [s["key"] for s in self.slot_defs]
 
-        # 数据层
+        # ���ݲ�
         self.default_layout = DEFAULT_LAYOUT.copy()
         self.layout_data = self.default_layout.copy()
         self.combos = []
@@ -100,7 +84,7 @@ class DisplayPage(QWidget):
         self.setup_ui()
         self.load_layout_settings()
 
-    # ---------- UI 构建 ----------
+    # ---------- UI ���� ----------
     def setup_ui(self):
         main_layout = QVBoxLayout(self)
         main_layout.setContentsMargins(15, 20, 15, 15)
@@ -116,45 +100,16 @@ class DisplayPage(QWidget):
             row.addStretch()
             main_layout.addLayout(row)
 
-        # 提示文字
-        info_label = QLabel(self.tr("修改下拉菜单立即生效，无需保存"))
-        info_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        info_label.setStyleSheet("color: #888; font-size: 12px; margin: 10px 0;")
-        # ===== 信息条显示（独立下拉框） =====
-        separator = QLabel("")
-        separator.setFixedHeight(1)
-        separator.setStyleSheet("background: #e0e0e0; margin: 5px 0;")
-        main_layout.addWidget(separator)
-
-        taskbar_row = QHBoxLayout()
-        taskbar_row.setSpacing(4)
-        taskbar_row.setContentsMargins(0, 5, 0, 5)
-        taskbar_label = QLabel(self.tr("信息条显示"))
-        taskbar_label.setStyleSheet("font-size: 12px; color: #333;")
-        taskbar_label.setFixedWidth(60)
-        taskbar_row.addWidget(taskbar_label)
-
-        self.taskbar_combo = QComboBox()
-        self.taskbar_combo.setMinimumWidth(140)
-        self.taskbar_combo.setFixedHeight(28)
-        self.taskbar_combo.setStyleSheet(COMBO_STYLE)
-        for val, text in self.taskbar_pool:
-            self.taskbar_combo.addItem(text, val)
-        self.taskbar_combo.currentIndexChanged.connect(self._on_taskbar_combo_changed)
-        taskbar_row.addWidget(self.taskbar_combo)
-        taskbar_row.addStretch()
-        main_layout.addLayout(taskbar_row)
-
-        # 提示文字
-        info_label = QLabel(self.tr("修改下拉菜单立即生效，无需保存"))
+        # ��ʾ����
+        info_label = QLabel(self.tr("�޸������˵�������Ч�����豣��"))
         info_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
         info_label.setStyleSheet("color: #888; font-size: 12px; margin: 10px 0;")
         main_layout.addWidget(info_label)
 
-        # 按钮行（恢复默认）
+        # ��ť�У��ָ�Ĭ�ϣ�
         btn_layout = QHBoxLayout()
         btn_layout.addStretch()
-        restore_btn = QPushButton(self.tr("恢复默认"))
+        restore_btn = QPushButton(self.tr("�ָ�Ĭ��"))
         restore_btn.setFixedSize(90, 28)
         restore_btn.setStyleSheet("""
             QPushButton {
@@ -188,7 +143,7 @@ class DisplayPage(QWidget):
         label.setFixedWidth(30)
         layout.addWidget(label)
 
-        # ===== 下拉框（统一风格） =====
+        # ===== ������ͳһ��� =====
         combo = QComboBox()
         combo.setMinimumWidth(100)
         combo.setFixedHeight(28)
@@ -200,7 +155,7 @@ class DisplayPage(QWidget):
 
         return container
 
-    # ---------- 核心数据同步 ----------
+    # ---------- ��������ͬ�� ----------
     def _apply_layout_to_ui(self):
         for combo in self.combos:
             combo.blockSignals(True)
@@ -247,7 +202,7 @@ class DisplayPage(QWidget):
             combo.clear()
             for val, text in available:
                 combo.addItem(text, val)
-            combo.addItem(self.tr(self.tr(self.tr(self.tr("空")))), "empty")
+            combo.addItem(self.tr(self.tr(self.tr(self.tr("��")))), "empty")
 
             combo.blockSignals(False)
 
@@ -286,7 +241,7 @@ class DisplayPage(QWidget):
 
         self._last_has_weather = new_has_weather
 
-    # ---------- 信号处理 ----------
+    # ---------- �źŴ��� ----------
     def _on_combo_changed(self):
         if self._loading:
             return
@@ -317,7 +272,7 @@ class DisplayPage(QWidget):
         self._sync_ui_to_data()
         self._apply_changes()
 
-    # ---------- 加载 / 恢复 ----------
+    # ---------- ���� / �ָ� ----------
     def load_layout_settings(self):
         settings = QSettings("MyDesktopApp", "WeatherSettings")
         self._loading = True
@@ -352,33 +307,8 @@ class DisplayPage(QWidget):
 
             self._last_has_weather = "weather" in self.layout_data.values()
 
-            # 加载信息条显示设置
-            self._load_taskbar_setting()
-
         finally:
             self._loading = False
-
-    # ---------- 信息条显示 ----------
-    def _load_taskbar_setting(self):
-        """加载信息条显示设置"""
-        settings = QSettings("MyDesktopApp", "WeatherSettings")
-        val = settings.value("taskbar_display", "netspeed")
-        idx = self.taskbar_combo.findData(val)
-        if idx >= 0:
-            self.taskbar_combo.blockSignals(True)
-            self.taskbar_combo.setCurrentIndex(idx)
-            self.taskbar_combo.blockSignals(False)
-
-    def _on_taskbar_combo_changed(self):
-        """信息条显示下拉框变更 → 立即保存"""
-        if self._loading:
-            return
-        val = self.taskbar_combo.currentData()
-        if val is None:
-            return
-        settings = QSettings("MyDesktopApp", "WeatherSettings")
-        settings.setValue("taskbar_display", val)
-        settings.sync()
 
     def restore_default(self):
         self._loading = True

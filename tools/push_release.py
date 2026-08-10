@@ -2,15 +2,13 @@
 # -*- coding: utf-8 -*-
 """
 一键发布脚本（仅打标签 + 创建 Release + 上传 exe）
-前提：代码已通过“推送”功能推送到远程仓库
-用法: python tools/push_release.py "发布说明" v1.2.6 "Release 标题" --remote github --token xxx
+前提：代码已通过"推送"功能推送到远程仓库
+用法: python tools/push_release.py "发布说明" v1.2.6 "Release 标题" --remote github --token xxx [--exe path/to/file.exe]
 """
 
 import os
 import sys
 import json
-import glob
-import subprocess
 import urllib.request
 import urllib.error
 import requests
@@ -29,7 +27,6 @@ def run_cmd(cmd):
     env["GIT_ASKPASS"] = "echo"
     result = subprocess.run(cmd, capture_output=True, text=True, env=env)
 
-    # 命令执行成功，所有输出（stdout 和 stderr）均为普通信息
     if result.returncode == 0:
         if result.stdout:
             for line in result.stdout.strip().split('\n'):
@@ -41,7 +38,6 @@ def run_cmd(cmd):
                     print_flush(f"  {line}")
         return result.returncode, result.stdout, result.stderr
 
-    # 命令执行失败，打印错误信息
     print_flush(f"  ❌ 命令执行失败（退出码: {result.returncode}）")
     if result.stdout:
         for line in result.stdout.strip().split('\n'):
@@ -52,24 +48,6 @@ def run_cmd(cmd):
             if line:
                 print_flush(f"  ❌ {line}")
     return result.returncode, result.stdout, result.stderr
-
-
-def find_exe_file(project_root, version):
-    dist_dir = os.path.join(project_root, "dist")
-    if not os.path.exists(dist_dir):
-        print_flush(f"⚠️ dist 目录不存在: {dist_dir}")
-        return None
-    pattern = f"DesktopWidget-v{version.lstrip('v')}-win64-Cherish-Setup.exe"
-    exe_path = os.path.join(dist_dir, pattern)
-    if os.path.exists(exe_path):
-        return exe_path
-    exe_files = glob.glob(os.path.join(dist_dir, "DesktopWidget-v*.exe"))
-    if exe_files:
-        exe_files.sort(key=os.path.getmtime, reverse=True)
-        print_flush(f"ℹ️ 使用最新的 exe 文件: {os.path.basename(exe_files[0])}")
-        return exe_files[0]
-    print_flush(f"⚠️ 未找到 exe 文件")
-    return None
 
 
 def upload_github_asset(repo, release_id, file_path, token):
@@ -171,7 +149,7 @@ def create_gitee_release(repo, tag, title, body, token):
 def main():
     if len(sys.argv) < 5:
         print_flush("❌ 参数不足！")
-        print_flush("用法: python tools/push_release.py \"发布说明\" v1.2.6 \"Release 标题\" --remote github --token xxx")
+        print_flush("用法: python tools/push_release.py \"发布说明\" v1.2.6 \"Release 标题\" --remote github --token xxx [--exe path/to/file.exe]")
         sys.exit(1)
 
     notes = sys.argv[1]
@@ -180,12 +158,15 @@ def main():
 
     remote = "github"
     token = None
+    exe_path = None
 
     for i, arg in enumerate(sys.argv):
         if arg == "--remote" and i + 1 < len(sys.argv):
             remote = sys.argv[i + 1]
         if arg == "--token" and i + 1 < len(sys.argv):
             token = sys.argv[i + 1]
+        if arg == "--exe" and i + 1 < len(sys.argv):
+            exe_path = sys.argv[i + 1]
 
     if not token:
         print_flush("❌ 未提供 Token！请使用 --token 参数")
@@ -209,14 +190,16 @@ def main():
     branch = branch.strip()
     print_flush(f"ℹ️ 当前分支: {branch}")
 
-    exe_path = find_exe_file(root, version)
     if exe_path:
-        print_flush(f"ℹ️ 找到 exe 文件: {os.path.basename(exe_path)}")
+        if os.path.exists(exe_path):
+            print_flush(f"ℹ️ exe 文件: {os.path.basename(exe_path)}")
+        else:
+            print_flush(f"⚠️ 指定的 exe 文件不存在: {exe_path}")
+            exe_path = None
     else:
-        print_flush(f"⚠️ 未找到 exe 文件")
+        print_flush(f"ℹ️ 未指定 exe 文件，跳过上传")
 
-    # 不再执行 git add / commit / push
-    # 直接打标签并推送
+    # 打标签
     tag_name = version
     print_flush(f"\n→ 打标签: {tag_name}...")
     code, stdout, stderr = run_cmd(["git", "tag", tag_name])
@@ -257,7 +240,7 @@ def main():
                 print_flush("\n" + "=" * 50)
                 print_flush("✅ 全部完成！")
                 print_flush("=" * 50)
-                print_flush(f"   - 发布说明: {notes}")
+                print_flush(f"   - Release notes: {notes}")
                 print_flush(f"   - 版本: {version}")
                 print_flush(f"   - Release 标题: {release_title}")
                 print_flush(f"   - 远程仓库: {remote_name} ({remote})")

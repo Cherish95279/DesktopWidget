@@ -153,7 +153,7 @@
             <source>退出</source>
             <translation>Salir</translation>
         </message>
-    </context>
+    <message><source>显示信息条</source><translation>Mostrar barra de información</translation></message></context>
     <context>
         <name>SettingsDialog</name>
         <message>
@@ -427,7 +427,7 @@
         <message><source>运行时间</source><translation>Tiempo de actividad</translation></message>
             <message><source>\u78c1\u789c\u603b\u8ba1</source><translation>Disco Total</translation></message>
             <message><source>磁盘总计</source><translation>Disco Total</translation></message>
-    </context>
+    <message><source>信息条显示</source><translation>Pantalla de barra de información</translation></message></context>
             <context>
         <name>WeatherPage</name>
         <message>

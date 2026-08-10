@@ -153,7 +153,7 @@
             <source>退出</source>
             <translation>退出</translation>
         </message>
-    </context>
+    <message><source>显示信息条</source><translation>顯示資訊條</translation></message></context>
     <context>
         <name>SettingsDialog</name>
         <message>
@@ -427,7 +427,7 @@
         <message><source>运行时间</source><translation>執行時間</translation></message>
             <message><source>\u78c1\u789c\u603b\u8ba1</source><translation>\u78c1\u789c\u7e3d\u8a08</translation></message>
             <message><source>磁盘总计</source><translation>磁碟總計</translation></message>
-    </context>
+    <message><source>信息条显示</source><translation>資訊條顯示</translation></message></context>
             <context>
         <name>WeatherPage</name>
         <message>

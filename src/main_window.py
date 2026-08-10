@@ -21,6 +21,7 @@ from .updater import UpdateChecker
 from .theme_manager import get_theme_manager
 from .i18n.translations import TranslatorManager
 from .widgets.notice_bubble import NoticeBubble
+from .taskbar_widget import TaskbarWidget
 
 # GPU支持：使用ctypes直接调用NVML
 _GPU_AVAILABLE = True  # 假设存在，加载失败时置0
@@ -142,6 +143,12 @@ class MainWindow(QWidget):
         self.notice_bubble.set_on_click(self._on_bubble_clicked)
         self.notice_bubble.raise_()
 
+        # 任务栏显示窗口（默认隐藏）
+        self.taskbar_widget = TaskbarWidget(self, tray_menu=self.tray.menu if self.tray else None)
+        taskbar_visible = QSettings("MyDesktopApp", "WeatherSettings").value("taskbar_visible", False, type=bool)
+        if taskbar_visible:
+            self.taskbar_widget.show()
+
         # 自动更新
         self.update_checker = None
         self.has_update = False
@@ -202,6 +209,8 @@ class MainWindow(QWidget):
                 self._notice_window.retranslate_ui()
             except Exception:
                 pass
+        if hasattr(self, 'taskbar_widget') and self.taskbar_widget:
+            self.taskbar_widget.retranslate_ui()
         self.update()
 
 
@@ -595,6 +604,15 @@ class MainWindow(QWidget):
         if not err_msg:            # 空字符串不打印
             return
         print(f" 天气错误: {err_msg}")
+
+    def toggle_taskbar_window(self, visible: bool):
+        """托盘右键菜单切换任务栏窗口显隐"""
+        if hasattr(self, 'taskbar_widget') and self.taskbar_widget:
+            if visible:
+                self.taskbar_widget.show()
+                self.taskbar_widget.update_position()
+            else:
+                self.taskbar_widget.hide()
 
     def closeEvent(self, event):
         if self._exiting:

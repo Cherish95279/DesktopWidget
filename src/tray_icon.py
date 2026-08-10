@@ -33,6 +33,10 @@ class TrayIcon(QSystemTrayIcon):
         # 窗口模式相关
         self._window_mode = "float"  # bottom / float / top
 
+        # 任务栏窗口相关
+        self._taskbar_visible = False
+        self._taskbar_action = None
+
         self.activated.connect(self.on_activated)
 
         self.menu = QMenu()
@@ -44,6 +48,9 @@ class TrayIcon(QSystemTrayIcon):
 
         # 恢复窗口模式状态
         self._load_window_mode()
+
+        # 恢复任务栏窗口状态
+        self._load_taskbar_visible()
 
     def _register_notice_callbacks(self):
         manager = NoticeManager.get_instance()
@@ -208,6 +215,26 @@ class TrayIcon(QSystemTrayIcon):
             return
         self._apply_window_mode(mode)
 
+    # ===== 任务栏窗口控制 =====
+    def _load_taskbar_visible(self):
+        """从 QSettings 加载任务栏窗口可见性"""
+        settings = QSettings("MyDesktopApp", "WeatherSettings")
+        self._taskbar_visible = settings.value("taskbar_visible", False, type=bool)
+
+    def _save_taskbar_visible(self, visible: bool):
+        """保存任务栏窗口可见性到 QSettings"""
+        settings = QSettings("MyDesktopApp", "WeatherSettings")
+        settings.setValue("taskbar_visible", visible)
+        settings.sync()
+
+    def _on_taskbar_toggled(self, checked: bool):
+        """任务栏窗口显示/隐藏切换"""
+        self._taskbar_visible = checked
+        self._save_taskbar_visible(checked)
+        if hasattr(self.parent_window, 'toggle_taskbar_window'):
+            self.parent_window.toggle_taskbar_window(checked)
+        print(f"\U0001f4bb 任务栏窗口: {'显示' if checked else '隐藏'}")
+
     # ===== 菜单 =====
     def _refresh_menu(self):
         """重新构建托盘菜单（语言切换时调用）"""
@@ -234,6 +261,15 @@ class TrayIcon(QSystemTrayIcon):
         self.menu.addAction(self._bottom_action)
         self.menu.addAction(self._float_action)
         self.menu.addAction(self._top_action)
+
+        self.menu.addSeparator()
+
+        # 任务栏显示窗口（独立打勾）
+        self._taskbar_action = QAction("\U0001f4bb " + self.tr("显示信息条"), self)
+        self._taskbar_action.setCheckable(True)
+        self._taskbar_action.setChecked(self._taskbar_visible)
+        self._taskbar_action.triggered.connect(self._on_taskbar_toggled)
+        self.menu.addAction(self._taskbar_action)
 
         self.menu.addSeparator()
 
