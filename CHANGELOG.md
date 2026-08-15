@@ -7,6 +7,35 @@ All notable changes to DesktopWidget are documented in this file.
 
 ---
 
+# 🚀 v1.3.8 (2026-08-15)
+
+## 📊 Information Bar
+
+- Added a new information bar for displaying system information from DesktopWidget.
+- The information bar can be freely dragged and positioned near the taskbar or anywhere on the desktop.
+- Provides a more flexible way to view system information and monitor system status.
+
+## 🌐 Installer & Multilingual Improvements
+
+- Added multilingual support to the installer.
+- Improved the language experience during installation.
+- Added Microsoft Store version detection, allowing the installer to recognize an existing Microsoft Store version of DesktopWidget.
+
+## 🏪 Microsoft Store Update Improvements
+
+- Improved Microsoft Store version identity detection.
+- The Store version can now identify its installation source and automatically determine the appropriate update behavior.
+- Added Microsoft Store as an available update channel, making it easier to receive updates through the official Microsoft Store.
+
+## 🐛 Stability Improvements
+
+- Improved installation and update-related logic.
+- Fixed various minor issues.
+- Improved overall application stability and user experience.
+
+
+---
+
 # 🚀 v1.3.7 (2026-08-09)
 
 ## 🕒 Clock Hand & Display Improvements
