@@ -17,7 +17,7 @@ from .solar_terms import get_next_term_info, translate_term
 from .threads import ServerScanner, WeatherThread, NetSpeedThread
 from .settings_dialog import SettingsDialog
 from .tray_icon import TrayIcon
-from .updater import UpdateChecker
+from .updater import UpdateChecker, is_store_version
 from .theme_manager import get_theme_manager
 from .i18n.translations import TranslatorManager
 from .widgets.notice_bubble import NoticeBubble
@@ -130,6 +130,12 @@ class MainWindow(QWidget):
         self.scanner = ServerScanner()
         self.scanner.ip_found.connect(lambda ip: setattr(self, 'server_ip', ip))
         self.scanner.start()
+
+        # MSIX 版检测：如果是商店版，强制设置更新渠道为 store
+        if is_store_version():
+            settings = QSettings("MyDesktopApp", "WeatherSettings")
+            settings.setValue("update_channel", "store")
+            settings.sync()
 
         self.tray = TrayIcon(self)
         self.tray.show()

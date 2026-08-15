@@ -929,6 +929,41 @@ L'app va se fermer.</translation>
             <source>检查失败：</source>
             <translation>Échec de la vérification : </translation>
         </message>
+        <message>
+            <location filename="settings_pages/update_page.py" line="0" />
+            <source>Microsoft Store</source>
+            <translation>Microsoft Store</translation>
+        </message>
+        <message>
+            <location filename="settings_pages/update_page.py" line="0" />
+            <source>已切换到 Microsoft Store，点击检查更新跳转应用商店</source>
+            <translation>Basculé vers Microsoft Store, cliquez sur Vérifier les mises à jour pour ouvrir le Store</translation>
+        </message>
+        <message>
+            <location filename="settings_pages/update_page.py" line="0" />
+            <source>正在打开 Microsoft Store...</source>
+            <translation>Ouverture de Microsoft Store...</translation>
+        </message>
+        <message>
+            <location filename="settings_pages/update_page.py" line="0" />
+            <source>已打开 Microsoft Store</source>
+            <translation>Microsoft Store ouvert</translation>
+        </message>
+        <message>
+            <location filename="settings_pages/update_page.py" line="0" />
+            <source>打开商店失败：</source>
+            <translation>Échec de l'ouverture du Store : </translation>
+        </message>
+        <message>
+            <location filename="settings_pages/update_page.py" line="0" />
+            <source>有新版本可用，请前往 Microsoft Store 更新（商店可能需要数小时完成审核）</source>
+            <translation>Nouvelle version disponible, veuillez mettre à jour via Microsoft Store (la validation du Store peut prendre plusieurs heures)</translation>
+        </message>
+        <message>
+            <location filename="settings_pages/update_page.py" line="0" />
+            <source>前往 Microsoft Store</source>
+            <translation>Aller à Microsoft Store</translation>
+        </message>
 </context>
     <context>
         <name>DonationPage</name>

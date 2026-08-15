@@ -414,3 +414,5 @@ AutoStartProgramGroupDescription=시작:
 AutoStartProgram=%1 자동 시작
 AddonHostProgramNotFound=%1을(를) 선택한 폴더에서 찾을 수 없습니다.%n%n계속하시겠습니까?
 
+MsixDetectedTitle=Microsoft Store 버전이 감지되었습니다
+MsixDetectedMsg=이 시스템에 DesktopWidget의 Microsoft Store 버전이 감지되었습니다.%n%n두 버전은 공존할 수 있지만, 충돌을 피하기 위해 Store 버전을 제거하는 것이 좋습니다.%n%n독립 실행 버전 설치를 계속하시겠습니까?

@@ -4,7 +4,7 @@ import os
 import tempfile
 
 from ..constants import VERSION, GITHUB_REPO
-from ..updater import UpdateChecker, Downloader, Updater
+from ..updater import UpdateChecker, Downloader, Updater, is_store_version
 
 
 # ===== 统一下拉框样式 =====
@@ -80,6 +80,7 @@ class UpdatePage(QWidget):
         self.channel_combo.setStyleSheet(COMBO_STYLE)
         self.channel_combo.addItem(self.tr("Gitee源"), "gitee")
         self.channel_combo.addItem(self.tr("GitHub源"), "github")
+        self.channel_combo.addItem(self.tr("Microsoft Store"), "store")
         self.channel_combo.currentIndexChanged.connect(self._on_channel_changed)
         channel_row.addWidget(self.channel_combo)
 
@@ -197,6 +198,12 @@ class UpdatePage(QWidget):
 
         self.token_edit.setEnabled(channel == "github")
 
+        # MSIX 版锁定更新渠道，禁止切换
+        if is_store_version():
+            self.channel_combo.setEnabled(False)
+            self.token_edit.setEnabled(False)
+            self.save_token_btn.setEnabled(False)
+
     def _on_channel_changed(self, index):
         channel = self.channel_combo.currentData()
         if channel == self._current_channel:
@@ -210,8 +217,11 @@ class UpdatePage(QWidget):
 
         self.token_edit.setEnabled(channel == "github")
 
-        channel_name = "Gitee" if channel == "gitee" else "GitHub"
-        self.update_status_label.setText(self.tr("已切换到") + f" {channel_name} " + self.tr("源，请点击检查更新"))
+        if channel == "store":
+            self.update_status_label.setText(self.tr("已切换到 Microsoft Store，点击检查更新跳转应用商店"))
+        else:
+            channel_name = "Gitee" if channel == "gitee" else "GitHub"
+            self.update_status_label.setText(self.tr("已切换到") + f" {channel_name} " + self.tr("源，请点击检查更新"))
         self.latest_version_label.setText(self.tr("最新版本：请点击检查更新"))
         self.install_update_btn.setVisible(False)
         self.check_update_btn.setVisible(True)
@@ -295,18 +305,36 @@ class UpdatePage(QWidget):
             download_url = result.get('download_url')
             release_notes = result.get('release_notes', '')
 
-            self.update_status_label.setText(self.tr("有新版本可用！"))
-            self.check_update_btn.setVisible(False)
-            self.install_update_btn.setVisible(True)
-            self.install_update_btn.setText("⬇ " + self.tr("下载更新"))
-            self.download_url = download_url
+            if self._current_channel == "store":
+                self.update_status_label.setText(self.tr("有新版本可用，请前往 Microsoft Store 更新（商店可能需要数小时完成审核）"))
+                self.check_update_btn.setVisible(False)
+                self.install_update_btn.setVisible(True)
+                self.install_update_btn.setText("⬇ " + self.tr("前往 Microsoft Store"))
+                self.install_update_btn.clicked.disconnect()
+                self.install_update_btn.clicked.connect(self._open_store)
+            else:
+                self.update_status_label.setText(self.tr("有新版本可用！"))
+                self.check_update_btn.setVisible(False)
+                self.install_update_btn.setVisible(True)
+                self.install_update_btn.setText("⬇ " + self.tr("下载更新"))
+                self.download_url = download_url
 
             if release_notes:
-                self.update_status_label.setText(self.tr("有新版本可用！"))
+                pass
         else:
             latest = result.get("latest_version", VERSION)
             self.latest_version_label.setText(self.tr("最新版本：") + latest)
             self.update_status_label.setText(self.tr("已是最新版本"))
+
+    # ---------- Microsoft Store ----------
+    def _open_store(self):
+        import subprocess
+        self.update_status_label.setText(self.tr("正在打开 Microsoft Store..."))
+        try:
+            subprocess.Popen(["cmd", "/c", "start", "", "ms-windows-store://pdp/?productid=9P6GSZ8NNW52"])
+            self.update_status_label.setText(self.tr("已打开 Microsoft Store"))
+        except Exception as e:
+            self.update_status_label.setText(self.tr("打开商店失败：") + str(e))
 
     # ---------- 下载与安装 ----------
     def install_update(self):

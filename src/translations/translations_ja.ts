@@ -929,6 +929,41 @@
             <source>检查失败：</source>
             <translation>チェック失敗：</translation>
         </message>
+        <message>
+            <location filename="settings_pages/update_page.py" line="0" />
+            <source>Microsoft Store</source>
+            <translation>Microsoft Store</translation>
+        </message>
+        <message>
+            <location filename="settings_pages/update_page.py" line="0" />
+            <source>已切换到 Microsoft Store，点击检查更新跳转应用商店</source>
+            <translation>Microsoft Store に切り替えました。更新確認をクリックしてストアを開く</translation>
+        </message>
+        <message>
+            <location filename="settings_pages/update_page.py" line="0" />
+            <source>正在打开 Microsoft Store...</source>
+            <translation>Microsoft Store を開いています...</translation>
+        </message>
+        <message>
+            <location filename="settings_pages/update_page.py" line="0" />
+            <source>已打开 Microsoft Store</source>
+            <translation>Microsoft Store を開きました</translation>
+        </message>
+        <message>
+            <location filename="settings_pages/update_page.py" line="0" />
+            <source>打开商店失败：</source>
+            <translation>ストアを開けませんでした：</translation>
+        </message>
+        <message>
+            <location filename="settings_pages/update_page.py" line="0" />
+            <source>有新版本可用，请前往 Microsoft Store 更新（商店可能需要数小时完成审核）</source>
+            <translation>新バージョンが利用可能です。Microsoft Store で更新してください（ストアの審査に数時間かかる場合があります）</translation>
+        </message>
+        <message>
+            <location filename="settings_pages/update_page.py" line="0" />
+            <source>前往 Microsoft Store</source>
+            <translation>Microsoft Store へ</translation>
+        </message>
 </context>
     <context>
         <name>DonationPage</name>

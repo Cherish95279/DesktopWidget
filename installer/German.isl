@@ -426,3 +426,5 @@ AutoStartProgramGroupDescription=Beginn des Setups:
 AutoStartProgram=Starte automatisch %1
 AddonHostProgramNotFound=%1 konnte im ausgewählten Ordner nicht gefunden werden.%n%nMöchten Sie dennoch fortfahren?
 
+MsixDetectedTitle=Microsoft Store-Version erkannt
+MsixDetectedMsg=Auf diesem System wurde eine Microsoft Store-Version von DesktopWidget erkannt.%n%nBeide Versionen können nebeneinander existieren, aber es wird empfohlen, die Store-Version zu deinstallieren, um Konflikte zu vermeiden.%n%nMöchten Sie trotzdem mit der Installation der eigenständigen Version fortfahren?

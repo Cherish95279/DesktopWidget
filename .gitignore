@@ -84,3 +84,6 @@ skins/*/desktop*.psd
 # Debug scripts
 _fetch_*.py
 _fix_*.py
+temp_*.*
+
+fix_*.py

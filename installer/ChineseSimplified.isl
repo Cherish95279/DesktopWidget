@@ -417,3 +417,6 @@ AssocingFileExtension=正在将 %2 文件扩展名与 %1 建立关联...
 AutoStartProgramGroupDescription=启动：
 AutoStartProgram=自动启动 %1
 AddonHostProgramNotFound=您选择的文件夹中无法找到 %1。%n%n您要继续吗？
+
+MsixDetectedTitle=检测到 Microsoft Store 版本
+MsixDetectedMsg=本机已检测到 Microsoft Store 版本的 DesktopWidget。%n%n两个版本可以共存，但建议卸载 Store 版本以避免冲突。%n%n是否仍要继续安装独立版本？

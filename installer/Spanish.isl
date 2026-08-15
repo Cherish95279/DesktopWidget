@@ -405,3 +405,6 @@ AssocingFileExtension=Asociando %1 con la extensión de archivo %2...
 AutoStartProgramGroupDescription=Inicio:
 AutoStartProgram=Iniciar automáticamente %1
 AddonHostProgramNotFound=%1 no pudo ser localizado en la carpeta seleccionada.%n%n¿Desea continuar de todas formas?
+
+MsixDetectedTitle=Versión de Microsoft Store detectada
+MsixDetectedMsg=Se ha detectado una versión de Microsoft Store de DesktopWidget en este sistema.%n%nAmbas versiones pueden coexistir, pero se recomienda desinstalar la versión de Store para evitar conflictos.%n%n¿Desea continuar con la instalación de la versión independiente?

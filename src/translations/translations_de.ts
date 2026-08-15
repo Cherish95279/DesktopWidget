@@ -929,6 +929,41 @@ Die App wird beendet und das Setup gestartet.</translation>
             <source>检查失败：</source>
             <translation>Prüfung fehlgeschlagen: </translation>
         </message>
+        <message>
+            <location filename="settings_pages/update_page.py" line="0" />
+            <source>Microsoft Store</source>
+            <translation>Microsoft Store</translation>
+        </message>
+        <message>
+            <location filename="settings_pages/update_page.py" line="0" />
+            <source>已切换到 Microsoft Store，点击检查更新跳转应用商店</source>
+            <translation>Zu Microsoft Store gewechselt, klicken Sie auf Aktualisierungen prüfen, um den Store zu öffnen</translation>
+        </message>
+        <message>
+            <location filename="settings_pages/update_page.py" line="0" />
+            <source>正在打开 Microsoft Store...</source>
+            <translation>Microsoft Store wird geöffnet...</translation>
+        </message>
+        <message>
+            <location filename="settings_pages/update_page.py" line="0" />
+            <source>已打开 Microsoft Store</source>
+            <translation>Microsoft Store geöffnet</translation>
+        </message>
+        <message>
+            <location filename="settings_pages/update_page.py" line="0" />
+            <source>打开商店失败：</source>
+            <translation>Store konnte nicht geöffnet werden: </translation>
+        </message>
+        <message>
+            <location filename="settings_pages/update_page.py" line="0" />
+            <source>有新版本可用，请前往 Microsoft Store 更新（商店可能需要数小时完成审核）</source>
+            <translation>Neue Version verfügbar, bitte über Microsoft Store aktualisieren (Überprüfung des Stores kann mehrere Stunden dauern)</translation>
+        </message>
+        <message>
+            <location filename="settings_pages/update_page.py" line="0" />
+            <source>前往 Microsoft Store</source>
+            <translation>Zu Microsoft Store gehen</translation>
+        </message>
 </context>
     <context>
         <name>DonationPage</name>

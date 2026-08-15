@@ -406,3 +406,6 @@ AssocingFileExtension=Associating %1 with the %2 file extension...
 AutoStartProgramGroupDescription=Startup:
 AutoStartProgram=Automatically start %1
 AddonHostProgramNotFound=%1 could not be located in the folder you selected.%n%nDo you want to continue anyway?
+
+MsixDetectedTitle=Microsoft Store Version Detected
+MsixDetectedMsg=Microsoft Store version of DesktopWidget has been detected on this system.%n%nTwo versions can coexist, but it is recommended to uninstall the Store version to avoid conflicts.%n%nDo you still want to continue installing the standalone version?

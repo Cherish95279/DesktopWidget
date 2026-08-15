@@ -3,6 +3,7 @@
 负责检查GitHub/Gitee Releases、下载新版本、执行更新
 """
 import os
+import sys
 import tempfile
 import subprocess
 
@@ -10,6 +11,14 @@ import requests
 from PyQt6.QtCore import QThread, pyqtSignal, QSettings
 
 from .constants import VERSION, GITHUB_REPO
+
+
+def is_store_version():
+    """检测当前是否为 MSIX 商店版（通过 .store 标记文件判断）"""
+    if getattr(sys, 'frozen', False):
+        base = os.path.dirname(sys.executable)
+        return os.path.exists(os.path.join(base, '.store'))
+    return False
 
 
 def _get_github_headers():

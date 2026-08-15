@@ -389,3 +389,6 @@ AssocingFileExtension=ファイル拡張子 %2 に %1 を関連付けていま�
 AutoStartProgramGroupDescription=スタートアップ:
 AutoStartProgram=%1 を自動的に開始する
 AddonHostProgramNotFound=選択されたフォルダーに %1 が見つかりませんでした。%n%nこのまま続行しますか？
+
+MsixDetectedTitle=Microsoft Store 版が検出されました
+MsixDetectedMsg=このシステムに DesktopWidget の Microsoft Store 版がインストールされています。%n%n両方のバージョンは共存できますが、衝突を避けるために Store 版をアンインストールすることをおすすめします。%n%nそれでもスタンドアロン版のインストールを続行しますか？
