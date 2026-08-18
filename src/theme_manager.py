@@ -34,6 +34,11 @@ class ThemeManager:
         # 确保当前主题有效
         self._validate_current_theme()
 
+    def rescan_themes(self):
+        """重新扫描主题（语言切换后调用，刷新主题显示名）"""
+        self._scan_themes()
+        self._validate_current_theme()
+
     def _scan_themes(self):
         """扫描 skins/ 目录，发现所有主题"""
         self._themes = {}

@@ -5,6 +5,7 @@ from PyQt6.QtCore import *
 from PyQt6.QtGui import QIcon, QAction
 from .utils import resource_path
 from .settings_pages import GeneralPage, DisplayPage, WeatherPage, ThemePage, UpdatePage, DonationPage, AboutPage
+from .settings_pages.dev_page import DevPage
 
 
 class SettingsDialog(QWidget):
@@ -64,6 +65,9 @@ class SettingsDialog(QWidget):
         self.update_page = None
         self.donation_page = None
         self.about_page = None
+        self.dev_page = None
+        self._dev_page_index = None
+        self._dev_page_btn = None
 
         self.page_creators = {
             0: self._create_general_page,
@@ -102,11 +106,44 @@ class SettingsDialog(QWidget):
             if i == 0:
                 btn.setChecked(True)
             btn.clicked.connect(lambda checked, idx=i: self.switch_page(idx))
+            # 为"关于"按钮添加三连击检测
+            if i == 6:
+                btn._about_click_count = 0
+                btn._about_click_timer = QTimer()
+                btn._about_click_timer.setSingleShot(True)
+                btn._about_click_timer.timeout.connect(lambda: setattr(btn, "_about_click_count", 0))
+                original_click = btn.clicked
+                # 由于 QPushButton 的 clicked 信号已连接，我们在 mousePressEvent 层面处理
+
             left_layout.addWidget(btn)
             self.cat_buttons.append(btn)
 
+        # 为"关于"按钮（索引6）安装三连击检测
+        if len(self.cat_buttons) == 7:
+            about_btn = self.cat_buttons[6]
+            about_btn.__click_count = 0
+            about_btn.__click_timer = QTimer()
+            about_btn.__click_timer.setSingleShot(True)
+            about_btn.__click_timer.timeout.connect(lambda: setattr(about_btn, "__click_count", 0))
+            old_press = about_btn.mousePressEvent
+            def _about_press(event, btn=about_btn, old=old_press):
+                old(event)
+                btn.__click_count += 1
+                if btn.__click_count >= 3:
+                    btn.__click_count = 0
+                    btn.__click_timer.stop()
+                    self._show_dev_option()
+                else:
+                    btn.__click_timer.start(3000)
+            about_btn.mousePressEvent = _about_press
+
         left_layout.addStretch()
         main_layout.addWidget(left_panel)
+
+        # 开发选项是否开启（从 QSettings 读取）
+        self._dev_mode_enabled = QSettings("MyDesktopApp", "WeatherSettings").value("dev_mode_enabled", False, type=bool)
+        if self._dev_mode_enabled:
+            QTimer.singleShot(0, self._show_dev_option)
 
         self.switch_page(0)
         main_layout.addWidget(self.stacked)
@@ -156,8 +193,96 @@ class SettingsDialog(QWidget):
     def _create_about_page(self):
         if self.about_page is None:
             self.about_page = AboutPage(self)
+            # 三连击检测移到左侧导航栏"关于"按钮
             self.stacked.addWidget(self.about_page)
         return self.about_page
+
+    def _show_dev_option(self):
+        """显示开发选项按钮和页面"""
+        if self._dev_page_btn is not None:
+            if not self._dev_page_btn.isVisible():
+                self._dev_page_btn.show()
+                self._dev_mode_enabled = True
+                QSettings("MyDesktopApp", "WeatherSettings").setValue("dev_mode_enabled", True)
+                self._dev_page_btn.click()
+            return
+
+        # 三连击触发时自动启用开发模式
+        self._dev_mode_enabled = True
+        QSettings("MyDesktopApp", "WeatherSettings").setValue("dev_mode_enabled", True)
+        QSettings("MyDesktopApp", "WeatherSettings").sync()
+        
+        self._dev_page_btn = QPushButton(self.tr("开发选项"))
+        self._dev_page_btn.setFixedHeight(40)
+        self._dev_page_btn.setFlat(True)
+        self._dev_page_btn.setCheckable(True)
+        self._dev_page_btn.setAutoExclusive(True)
+        self._dev_page_btn.setStyleSheet("""
+            QPushButton {
+                text-align: center;
+                font-size: 12px;
+                color: #e67e22;
+                border: none;
+                background: transparent;
+                border-radius: 0px;
+            }
+            QPushButton:hover {
+                background: #e8edf3;
+            }
+            QPushButton:checked {
+                background: #ffe0b2;
+                color: #e67e22;
+                font-weight: bold;
+            }
+        """)
+        self._dev_page_btn.setCursor(Qt.CursorShape.PointingHandCursor)
+
+        # 在左侧导航栏中，关于按钮之后插入开发选项按钮
+        left_layout = None
+        for child in self.findChildren(QWidget):
+            if child.layout() and isinstance(child.layout(), QVBoxLayout):
+                layout = child.layout()
+                for j in range(layout.count()):
+                    w = layout.itemAt(j).widget()
+                    if w and isinstance(w, QPushButton) and w.text() == self.tr("关于"):
+                        left_layout = layout
+                        break
+                if left_layout:
+                    break
+
+        if left_layout:
+            about_idx = -1
+            for j in range(left_layout.count()):
+                w = left_layout.itemAt(j).widget()
+                if w and isinstance(w, QPushButton) and w.text() == self.tr("关于"):
+                    about_idx = j
+                    break
+            if about_idx >= 0:
+                left_layout.insertWidget(about_idx + 1, self._dev_page_btn)
+
+        self._dev_page_btn.clicked.connect(lambda checked, idx=7: self.switch_page(idx))
+
+        self._dev_page_index = 7
+        self.page_creators[7] = self._create_dev_page
+        self.cat_labels.append(self.tr("开发选项"))
+        self.cat_buttons.append(self._dev_page_btn)
+
+        if self._dev_mode_enabled:
+            self.switch_page(7)
+
+    def _create_dev_page(self):
+        if self.dev_page is None:
+            self.dev_page = DevPage(self)
+            self.dev_page.dev_mode_changed.connect(self._on_dev_mode_changed)
+            self.stacked.addWidget(self.dev_page)
+        return self.dev_page
+
+    def _on_dev_mode_changed(self, enabled):
+        self._dev_mode_enabled = enabled
+        if not enabled and self._dev_page_btn is not None:
+            self._dev_page_btn.hide()
+        elif enabled and self._dev_page_btn is not None:
+            self._dev_page_btn.show()
 
     def switch_page(self, index):
         page = self.page_creators[index]()
@@ -176,7 +301,7 @@ class SettingsDialog(QWidget):
                 self.cat_buttons[i].setText(label)
         # 销毁并重建所有页面
         for attr in ["general_page", "display_page", "weather_page",
-                     "theme_page", "update_page", "donation_page", "about_page"]:
+                     "theme_page", "update_page", "donation_page", "about_page", "dev_page"]:
             page = getattr(self, attr, None)
             if page is not None:
                 self.stacked.removeWidget(page)

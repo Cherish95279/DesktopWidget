@@ -110,6 +110,7 @@ class WeatherThread(QThread):
                 "https://api.open-meteo.com/v1/forecast"
                 "?latitude={}&longitude={}"
                 "&current_weather=true"
+                "&hourly=relative_humidity_2m,apparent_temperature,surface_pressure"
                 "&timezone=auto"
                 "&forecast_days=1"
             ).format(lat, lng)
@@ -125,6 +126,26 @@ class WeatherThread(QThread):
             wind_dir = self._wind_direction(cw.get("winddirection", 0))
             wind_speed = cw.get("windspeed", 0)
             wind_text = f"{wind_dir}{wind_speed:.0f}m/s" if wind_speed else ""
+            # Pro: extra weather data
+            humidity = "--"
+            apparent_temp = "--"
+            pressure = "--"
+            try:
+                hourly = data.get("hourly", {})
+                times = hourly.get("time", [])
+                if times:
+                    now_hour = cw.get("time", "")
+                    idx_h = 0
+                    if now_hour in times:
+                        idx_h = times.index(now_hour)
+                    rh = hourly.get("relative_humidity_2m", [])
+                    at = hourly.get("apparent_temperature", [])
+                    sp = hourly.get("surface_pressure", [])
+                    if idx_h < len(rh): humidity = rh[idx_h]
+                    if idx_h < len(at): apparent_temp = at[idx_h]
+                    if idx_h < len(sp): pressure = sp[idx_h]
+            except Exception:
+                pass
             return {
                 "city": city_name,
                 "weather": weather_text,
@@ -132,6 +153,9 @@ class WeatherThread(QThread):
                 "wind": wind_text,
                 "sunrise": "--:--",
                 "sunset": "--:--",
+                "humidity": humidity,
+                "apparent_temp": apparent_temp,
+                "pressure": pressure,
             }
         except Exception as e:
             self.error_signal.emit(f"Open-Meteo: {e}")
@@ -646,13 +670,15 @@ class WeatherThread(QThread):
 
 # ---------- 网速监控 ----------
 class NetSpeedThread(QThread):
-    speed_updated = pyqtSignal(float, float)
+    speed_updated = pyqtSignal(float, float, int, int)  # down, up, total_recv, total_sent
 
     def __init__(self):
         super().__init__()
         self.last_bytes = psutil.net_io_counters()
         self.last_time = datetime.now()
         self._stopped = False
+        self.session_start_recv = self.last_bytes.bytes_recv
+        self.session_start_sent = self.last_bytes.bytes_sent
 
     def stop(self):
         self._stopped = True
@@ -666,7 +692,7 @@ class NetSpeedThread(QThread):
             if dt > 0:
                 down = (current.bytes_recv - self.last_bytes.bytes_recv) / dt / 1024 / 1024 * 8
                 up = (current.bytes_sent - self.last_bytes.bytes_sent) / dt / 1024 / 1024 * 8
-                self.speed_updated.emit(down, up)
+                self.speed_updated.emit(down, up, current.bytes_recv, current.bytes_sent)
             self.last_bytes = current
             self.last_time = now
             self.sleep(1)

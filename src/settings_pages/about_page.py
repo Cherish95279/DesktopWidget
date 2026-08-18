@@ -46,7 +46,7 @@ class AboutPage(QWidget):
             QPushButton {
                 padding: 6px 14px;
                 font-size: 12px;
-                border: 1px solid #ccc;
+                border: 1pxpx solid #ccc;
                 border-radius: 4px;
                 background: #f5f5f5;
                 color: #333;
@@ -64,6 +64,5 @@ class AboutPage(QWidget):
         layout.addStretch()
 
     def open_feedback(self):
-        """打开 GitHub Discussions 反馈页面"""
         url = "https://github.com/Cherish95279/DesktopWidget/discussions/new/choose"
         QDesktopServices.openUrl(QUrl(url))

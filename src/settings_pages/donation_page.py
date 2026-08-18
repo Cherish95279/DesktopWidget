@@ -9,7 +9,7 @@ class DonationPage(QWidget):
     def __init__(self, parent=None):
         super().__init__(parent)
 
-        self.current_pay_type = "alipay"  # alipay / wechat
+        self.current_pay_type = "alipay"  # alipay / wechat / paypal
 
         self.setup_ui()
         self.load_qrcode()
@@ -32,6 +32,18 @@ class DonationPage(QWidget):
         self.qrcode_label.setStyleSheet("border: 1px solid #ddd; border-radius: 8px; background-color: white;")
         self.qrcode_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
         main_layout.addWidget(self.qrcode_label, alignment=Qt.AlignmentFlag.AlignCenter)
+
+        # PayPal 在线链接（固定占位，避免切换时下方抖动；仅 PayPal 激活时显示）
+        self.paypal_link_label = QLabel(
+            '<a href="https://paypal.me/Cherish95279" style="color:#0070ba;text-decoration:none;">🌐 paypal.me/Cherish95279</a>'
+        )
+        self.paypal_link_label.setFixedHeight(26)
+        self.paypal_link_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.paypal_link_label.setOpenExternalLinks(False)
+        self.paypal_link_label.setToolTip(self.tr("在浏览器中打开"))
+        self.paypal_link_label.linkActivated.connect(self._open_paypal_link)
+        self.paypal_link_label.hide()
+        main_layout.addWidget(self.paypal_link_label, alignment=Qt.AlignmentFlag.AlignCenter)
 
         # 提示文字
         tip = QLabel("❤️ " + self.tr("感谢您的支持，您的捐赠是我持续维护的动力！"))
@@ -56,8 +68,14 @@ class DonationPage(QWidget):
         self.wechat_btn.setCheckable(True)
         self.wechat_btn.clicked.connect(lambda: self.switch_pay("wechat"))
 
+        self.paypal_btn = QPushButton("🅿️ " + self.tr("PayPal"))
+        self.paypal_btn.setFixedSize(90, 30)
+        self.paypal_btn.setCheckable(True)
+        self.paypal_btn.clicked.connect(lambda: self.switch_pay("paypal"))
+
         btn_layout.addWidget(self.alipay_btn)
         btn_layout.addWidget(self.wechat_btn)
+        btn_layout.addWidget(self.paypal_btn)
         main_layout.addLayout(btn_layout)
 
         # 下方弹性空间
@@ -129,8 +147,27 @@ class DonationPage(QWidget):
                 background: #e8f8ee;
             }
         """
+        paypal_style = """
+            QPushButton {
+                border: 2px solid #ccc;
+                border-radius: 4px;
+                background: #f5f5f5;
+                color: #333;
+                font-size: 12px;
+            }
+            QPushButton:checked {
+                border: 2px solid #0070ba;
+                background: #e7f1fc;
+                color: #0070ba;
+                font-weight: bold;
+            }
+            QPushButton:hover {
+                background: #e7f1fc;
+            }
+        """
         self.alipay_btn.setStyleSheet(alipay_style)
         self.wechat_btn.setStyleSheet(wechat_style)
+        self.paypal_btn.setStyleSheet(paypal_style)
 
     def switch_pay(self, pay_type):
         """切换支付方式"""
@@ -139,12 +176,23 @@ class DonationPage(QWidget):
         self.current_pay_type = pay_type
         self.alipay_btn.setChecked(pay_type == "alipay")
         self.wechat_btn.setChecked(pay_type == "wechat")
+        self.paypal_btn.setChecked(pay_type == "paypal")
+        # PayPal 视图显示在线链接，其他支付方式隐藏
+        self.paypal_link_label.setVisible(pay_type == "paypal")
         self.load_qrcode()
+
+    def _open_paypal_link(self):
+        """点击 PayPal 在线链接 → 打开浏览器"""
+        from PyQt6.QtGui import QDesktopServices
+        from PyQt6.QtCore import QUrl
+        QDesktopServices.openUrl(QUrl("https://paypal.me/Cherish95279"))
 
     def load_qrcode(self):
         """加载二维码图片"""
         if self.current_pay_type == "alipay":
             filename = "Alipay.png"
+        elif self.current_pay_type == "paypal":
+            filename = "PayPal.png"
         else:
             filename = "WeChatpay.png"
 

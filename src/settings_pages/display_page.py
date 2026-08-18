@@ -35,7 +35,6 @@ class DisplayPage(QWidget):
             ("cpu", self.tr("CPU")),
             ("gpu", self.tr("GPU")),
             ("resolution", self.tr("分辨率")),
-            ("refresh_rate", self.tr("刷新率")),
             ("memory", self.tr("内存")),
             ("date", self.tr("公历")),
             ("lunar", self.tr("农历")),
@@ -116,36 +115,62 @@ class DisplayPage(QWidget):
             row.addStretch()
             main_layout.addLayout(row)
 
-        # 提示文字
-        info_label = QLabel(self.tr("修改下拉菜单立即生效，无需保存"))
-        info_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        info_label.setStyleSheet("color: #888; font-size: 12px; margin: 10px 0;")
-        # ===== 信息条显示（独立下拉框） =====
+        # ===== 分隔线 =====
         separator = QLabel("")
         separator.setFixedHeight(1)
         separator.setStyleSheet("background: #e0e0e0; margin: 5px 0;")
         main_layout.addWidget(separator)
 
-        taskbar_row = QHBoxLayout()
-        taskbar_row.setSpacing(4)
-        taskbar_row.setContentsMargins(0, 5, 0, 5)
-        taskbar_label = QLabel(self.tr("信息条显示"))
-        taskbar_label.setStyleSheet("font-size: 12px; color: #333;")
-        taskbar_label.setFixedWidth(60)
-        taskbar_row.addWidget(taskbar_label)
+        # ===== 信息条 + 悬停开关（和上面8个下拉框对齐） =====
+        bottom_row = QHBoxLayout()
+        bottom_row.setSpacing(10)
+        bottom_row.setContentsMargins(0, 0, 0, 0)
 
+        # 信息条容器（和槽位容器一样 160px 宽）
+        taskbar_container = QWidget()
+        taskbar_container.setFixedWidth(160)
+        taskbar_layout = QHBoxLayout(taskbar_container)
+        taskbar_layout.setSpacing(4)
+        taskbar_layout.setContentsMargins(0, 0, 0, 0)
+        taskbar_label = QLabel(self.tr("信息条"))
+        taskbar_label.setStyleSheet("font-size: 12px; color: #333;")
+        taskbar_label.setFixedWidth(48)
+        taskbar_layout.addWidget(taskbar_label)
         self.taskbar_combo = QComboBox()
-        self.taskbar_combo.setMinimumWidth(140)
+        self.taskbar_combo.setMinimumWidth(82)
         self.taskbar_combo.setFixedHeight(28)
         self.taskbar_combo.setStyleSheet(COMBO_STYLE)
+        self.taskbar_combo.addItem(self.tr("不显示"), "none")
         for val, text in self.taskbar_pool:
             self.taskbar_combo.addItem(text, val)
         self.taskbar_combo.currentIndexChanged.connect(self._on_taskbar_combo_changed)
-        taskbar_row.addWidget(self.taskbar_combo)
-        taskbar_row.addStretch()
-        main_layout.addLayout(taskbar_row)
+        taskbar_layout.addWidget(self.taskbar_combo)
+        bottom_row.addWidget(taskbar_container)
 
-        # 提示文字
+        # 悬停开关容器（和槽位容器一样 160px 宽）
+        hover_container = QWidget()
+        hover_container.setFixedWidth(160)
+        hover_layout = QHBoxLayout(hover_container)
+        hover_layout.setSpacing(4)
+        hover_layout.setContentsMargins(0, 0, 0, 0)
+        hover_label = QLabel(self.tr("悬停开关"))
+        hover_label.setStyleSheet("font-size: 12px; color: #333;")
+        hover_label.setFixedWidth(48)
+        hover_layout.addWidget(hover_label)
+        self.hover_combo = QComboBox()
+        self.hover_combo.setMinimumWidth(82)
+        self.hover_combo.setFixedHeight(28)
+        self.hover_combo.setStyleSheet(COMBO_STYLE)
+        self.hover_combo.addItem(self.tr("开"), "on")
+        self.hover_combo.addItem(self.tr("关"), "off")
+        self.hover_combo.currentIndexChanged.connect(self._on_hover_combo_changed)
+        hover_layout.addWidget(self.hover_combo)
+        bottom_row.addWidget(hover_container)
+
+        bottom_row.addStretch()
+        main_layout.addLayout(bottom_row)
+
+        # 提示文字（移到底部）
         info_label = QLabel(self.tr("修改下拉菜单立即生效，无需保存"))
         info_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
         info_label.setStyleSheet("color: #888; font-size: 12px; margin: 10px 0;")
@@ -360,7 +385,7 @@ class DisplayPage(QWidget):
 
     # ---------- 信息条显示 ----------
     def _load_taskbar_setting(self):
-        """加载信息条显示设置"""
+        """加载信息条显示设置和悬停开关设置"""
         settings = QSettings("MyDesktopApp", "WeatherSettings")
         val = settings.value("taskbar_display", "netspeed")
         idx = self.taskbar_combo.findData(val)
@@ -368,6 +393,13 @@ class DisplayPage(QWidget):
             self.taskbar_combo.blockSignals(True)
             self.taskbar_combo.setCurrentIndex(idx)
             self.taskbar_combo.blockSignals(False)
+        # 加载悬停开关
+        hover_enabled = settings.value("hover_enabled", True, type=bool)
+        hover_idx = self.hover_combo.findData("on" if hover_enabled else "off")
+        if hover_idx >= 0:
+            self.hover_combo.blockSignals(True)
+            self.hover_combo.setCurrentIndex(hover_idx)
+            self.hover_combo.blockSignals(False)
 
     def _on_taskbar_combo_changed(self):
         """信息条显示下拉框变更 → 立即保存"""
@@ -378,6 +410,36 @@ class DisplayPage(QWidget):
             return
         settings = QSettings("MyDesktopApp", "WeatherSettings")
         settings.setValue("taskbar_display", val)
+        settings.sync()
+        # 如果选了"不显示"，隐藏信息条
+        from PyQt6.QtWidgets import QApplication
+        main_window = None
+        dlg = self.parent()
+        if dlg and hasattr(dlg, '_main_window'):
+            main_window = dlg._main_window
+        if not main_window:
+            for w in QApplication.topLevelWidgets():
+                if w.__class__.__name__ == 'MainWindow':
+                    main_window = w
+                    break
+        if main_window and hasattr(main_window, 'taskbar_widget'):
+            if val == "none":
+                main_window.taskbar_widget.hide()
+                settings.setValue("taskbar_visible", False)
+            else:
+                main_window.taskbar_widget.show()
+                settings.setValue("taskbar_visible", True)
+            settings.sync()
+
+    def _on_hover_combo_changed(self):
+        """悬停开关变更 → 立即保存"""
+        if self._loading:
+            return
+        val = self.hover_combo.currentData()
+        if val is None:
+            return
+        settings = QSettings("MyDesktopApp", "WeatherSettings")
+        settings.setValue("hover_enabled", val == "on")
         settings.sync()
 
     def restore_default(self):

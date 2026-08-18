@@ -151,3 +151,93 @@ def get_next_term_info(year, month, day):
         next_date = datetime(y0, m0, d0)
         days = (next_date - cur_date).days
         return (None, name0, days)
+
+# 节气顺序（序号 1-24）
+_TERM_ORDER = [
+    "小寒", "大寒", "立春", "雨水", "惊蛰", "春分",
+    "清明", "谷雨", "立夏", "小满", "芒种", "夏至",
+    "小暑", "大暑", "立秋", "处暑", "白露", "秋分",
+    "寒露", "霜降", "立冬", "小雪", "大雪", "冬至"
+]
+
+# 节气所属季节
+_TERM_SEASON = {
+    "小寒": "冬", "大寒": "冬", "立春": "春", "雨水": "春",
+    "惊蛰": "春", "春分": "春", "清明": "春", "谷雨": "春",
+    "立夏": "夏", "小满": "夏", "芒种": "夏", "夏至": "夏",
+    "小暑": "夏", "大暑": "夏", "立秋": "秋", "处暑": "秋",
+    "白露": "秋", "秋分": "秋", "寒露": "秋", "霜降": "秋",
+    "立冬": "冬", "小雪": "冬", "大雪": "冬", "冬至": "冬",
+}
+
+
+def get_current_term(year, month, day):
+    """获取当前所处的节气（即上一个已过节气）"""
+    all_terms = []
+    for y, terms in TERM_DATA.items():
+        for m, d, name in terms:
+            all_terms.append((y, m, d, name))
+    all_terms.sort(key=lambda x: (x[0], x[1], x[2]))
+    cur_ymd = (year, month, day)
+    current = None
+    for y, m, d, name in all_terms:
+        if (y, m, d) <= cur_ymd:
+            current = (y, m, d, name)
+        else:
+            break
+    return current
+
+
+def get_term_index(term_name):
+    """获取节气的序号（1-24）"""
+    if term_name in _TERM_ORDER:
+        return _TERM_ORDER.index(term_name) + 1
+    return None
+
+
+def get_term_season(term_name):
+    """获取节气所属季节"""
+    return _TERM_SEASON.get(term_name, None)
+
+
+def get_detailed_term_info(year, month, day):
+    """
+    获取详细的节气信息。
+    返回 dict:
+        current_term: 当前节气名
+        current_date: 当前节气日期 (y, m, d)
+        next_term: 下一节气名
+        next_date: 下一节气日期 (y, m, d)
+        days_until: 距下一节气天数
+        term_index: 当前节气序号 (1-24)
+        season: 所属季节
+    """
+    result = {}
+    all_terms = []
+    for y, terms in TERM_DATA.items():
+        for m, d, name in terms:
+            all_terms.append((y, m, d, name))
+    all_terms.sort(key=lambda x: (x[0], x[1], x[2]))
+    cur_ymd = (year, month, day)
+
+    current = None
+    nxt = None
+    for y, m, d, name in all_terms:
+        if (y, m, d) <= cur_ymd:
+            current = (y, m, d, name)
+        else:
+            nxt = (y, m, d, name)
+            break
+
+    if current:
+        result["current_term"] = current[3]
+        result["current_date"] = (current[0], current[1], current[2])
+        result["term_index"] = get_term_index(current[3])
+        result["season"] = get_term_season(current[3])
+    if nxt:
+        result["next_term"] = nxt[3]
+        result["next_date"] = (nxt[0], nxt[1], nxt[2])
+        from datetime import datetime as _dt
+        days = (_dt(nxt[0], nxt[1], nxt[2]) - _dt(year, month, day)).days
+        result["days_until"] = days
+    return result

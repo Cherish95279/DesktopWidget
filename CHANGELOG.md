@@ -7,6 +7,35 @@ All notable changes to DesktopWidget are documented in this file.
 
 ---
 
+# 🚀 v1.4.0（2026-08-18）
+
+## 🖱️ Hover Details
+
+- Added hover details, allowing users to view detailed information by hovering over a displayed item.
+- Hover details are available as a Pro feature.
+- If you don't need hover details, you can disable the hover option in Settings.
+
+## 📊 Information Bar Improvements
+
+- Added a simplified information bar.
+- The information bar can display multiple individual items simultaneously.
+- Provides a more flexible and streamlined way to display information.
+
+## ⚙️ Reporting Improvements
+
+- Optimized the data reporting logic.
+- Improved the stability and reliability of data reporting.
+
+## 🐛 Stability Improvements
+
+- Fixed various minor issues.
+- Improved application logic and behavior.
+- Improved overall application stability and user experience.
+
+---
+
+---
+
 # 🚀 v1.3.8 (2026-08-15)
 
 ## 📊 Information Bar

@@ -38,7 +38,6 @@ class UpdatePage(QWidget):
         self._current_channel = "gitee"
 
         self.setup_ui()
-        self.load_token()
         self.load_channel_setting()
         self.check_update_manually()
 
@@ -128,59 +127,6 @@ class UpdatePage(QWidget):
         self.install_update_btn.clicked.connect(self.install_update)
         layout.addWidget(self.install_update_btn)
 
-        # ---------- Token 区域 ----------
-        token_label = QLabel(self.tr("GitHub Token"))
-        token_label.setStyleSheet("font-size: 12px; color: #333;")
-        layout.addWidget(token_label)
-
-        token_input_layout = QHBoxLayout()
-        self.token_edit = QLineEdit()
-        self.token_edit.setPlaceholderText(self.tr("GitHub Token（可选）"))
-        self.token_edit.setEchoMode(QLineEdit.EchoMode.Password)
-        self.token_edit.setMinimumHeight(28)
-        token_input_layout.addWidget(self.token_edit)
-
-        self.token_visibility_btn = QPushButton("👁")
-        self.token_visibility_btn.setFixedSize(28, 28)
-        self.token_visibility_btn.setCheckable(True)
-        self.token_visibility_btn.setToolTip(self.tr("显示/隐藏 Token"))
-        self.token_visibility_btn.clicked.connect(self.toggle_token_visibility)
-        self.token_visibility_btn.setStyleSheet("""
-            QPushButton {
-                border: 1px solid #ccc;
-                border-radius: 4px;
-                background: white;
-                font-size: 14px;
-            }
-            QPushButton:hover {
-                background: #f0f0f0;
-            }
-        """)
-        token_input_layout.addWidget(self.token_visibility_btn)
-        layout.addLayout(token_input_layout)
-
-        token_btn_layout = QHBoxLayout()
-        token_btn_layout.addStretch()
-
-        self.save_token_btn = QPushButton(self.tr("保存 Token"))
-        self.save_token_btn.setFixedSize(100, 28)
-        self.save_token_btn.setStyleSheet("""
-            QPushButton {
-                font-size: 12px;
-                border: 1px solid #ccc;
-                border-radius: 4px;
-                background: #f5f5f5;
-                color: #333;
-            }
-            QPushButton:hover {
-                background: #e6f4ff;
-                border: 1px solid #1677ff;
-                color: #1677ff;
-            }
-        """)
-        self.save_token_btn.clicked.connect(self.save_token)
-        token_btn_layout.addWidget(self.save_token_btn)
-        layout.addLayout(token_btn_layout)
 
         layout.addStretch()
 
@@ -196,13 +142,10 @@ class UpdatePage(QWidget):
         else:
             self.channel_combo.setCurrentIndex(0)
 
-        self.token_edit.setEnabled(channel == "github")
 
         # MSIX 版锁定更新渠道，禁止切换
         if is_store_version():
             self.channel_combo.setEnabled(False)
-            self.token_edit.setEnabled(False)
-            self.save_token_btn.setEnabled(False)
 
     def _on_channel_changed(self, index):
         channel = self.channel_combo.currentData()
@@ -215,7 +158,6 @@ class UpdatePage(QWidget):
         settings.setValue("update_channel", channel)
         settings.sync()
 
-        self.token_edit.setEnabled(channel == "github")
 
         if channel == "store":
             self.update_status_label.setText(self.tr("已切换到 Microsoft Store，点击检查更新跳转应用商店"))
@@ -228,32 +170,6 @@ class UpdatePage(QWidget):
         self.download_url = None
         self.downloaded_setup_path = None
 
-    # ---------- Token ----------
-    def load_token(self):
-        settings = QSettings("MyDesktopApp", "WeatherSettings")
-        token = settings.value("github_token", "")
-        if token:
-            self.token_edit.setText(token)
-
-    def save_token(self):
-        token = self.token_edit.text().strip()
-        settings = QSettings("MyDesktopApp", "WeatherSettings")
-        if token:
-            settings.setValue("github_token", token)
-            self.update_status_label.setText(self.tr("Token 已保存"))
-            self.check_update_manually()
-        else:
-            settings.remove("github_token")
-            self.update_status_label.setText(self.tr("Token 已清除"))
-            self.check_update_manually()
-
-    def toggle_token_visibility(self):
-        if self.token_visibility_btn.isChecked():
-            self.token_edit.setEchoMode(QLineEdit.EchoMode.Normal)
-            self.token_visibility_btn.setText("🙈")
-        else:
-            self.token_edit.setEchoMode(QLineEdit.EchoMode.Password)
-            self.token_visibility_btn.setText("👁")
 
     # ---------- 更新检查 ----------
     def check_update_manually(self):
@@ -285,9 +201,6 @@ class UpdatePage(QWidget):
 
         if "error" in result:
             self.update_status_label.setText(self.tr("检查失败：") + result['error'])
-            if result.get("token_invalid", False):
-                self.token_edit.clear()
-                self.update_status_label.setText(self.tr("Token 已失效，已自动清除"))
             return
 
         if result.get("has_update", False):

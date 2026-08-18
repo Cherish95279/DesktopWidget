@@ -427,7 +427,33 @@
         <message><source>运行时间</source><translation>稼働時間</translation></message>
             <message><source>\u78c1\u789c\u603b\u8ba1</source><translation>\u78c1\u789c\u8a08</translation></message>
             <message><source>磁盘总计</source><translation>ディスク合計</translation></message>
-    <message><source>信息条显示</source><translation>情報バー表示</translation></message></context>
+    <message><source>信息条显示</source><translation>情報バー表示</translation></message>
+        <message>
+            <location filename="settings_pages/display_page.py" line="0" />
+            <source>信息条</source>
+            <translation>情報バー</translation>
+        </message>
+        <message>
+            <location filename="settings_pages/display_page.py" line="0" />
+            <source>不显示</source>
+            <translation>非表示</translation>
+        </message>
+        <message>
+            <location filename="settings_pages/display_page.py" line="0" />
+            <source>悬停开关</source>
+            <translation>ホバー</translation>
+        </message>
+        <message>
+            <location filename="settings_pages/display_page.py" line="0" />
+            <source>开</source>
+            <translation>オン</translation>
+        </message>
+        <message>
+            <location filename="settings_pages/display_page.py" line="0" />
+            <source>关</source>
+            <translation>オフ</translation>
+        </message>
+    </context>
             <context>
         <name>WeatherPage</name>
         <message>
@@ -988,6 +1014,16 @@
             <translation>WeChat</translation>
         </message>
         <message>
+            <location filename="settings_pages/donation_page.py" line="60" />
+            <source>PayPal</source>
+            <translation>PayPal</translation>
+        </message>
+        <message>
+            <location filename="settings_pages/donation_page.py" line="69" />
+            <source>在浏览器中打开</source>
+            <translation>ブラウザで開く</translation>
+        </message>
+        <message>
             <location filename="settings_pages/donation_page.py" line="88" />
             <source>我已捐赠</source>
             <translation>寄付済み</translation>
@@ -1314,4 +1350,372 @@ DesktopWidgetをさらに改善します！
             <message><source>O盘</source><translation>Oドライブ</translation></message>
             <message><source>P盘</source><translation>Pドライブ</translation></message>
             </context>
+    <context>
+        <name>DetailPopup</name>
+        <message>
+            <location filename="widgets/detail_popup.py" line="0" />
+            <source>CPU 使用率：{}%</source>
+            <translation>CPU使用率: {}%</translation>
+        </message>
+        <message>
+            <location filename="widgets/detail_popup.py" line="0" />
+            <source>频率：{:.0f} MHz</source>
+            <translation>周波数: {:.0f} MHz</translation>
+        </message>
+        <message>
+            <location filename="widgets/detail_popup.py" line="0" />
+            <source>核心/线程：{}/{}</source>
+            <translation>コア/スレッド: {}/{}</translation>
+        </message>
+        <message>
+            <location filename="widgets/detail_popup.py" line="0" />
+            <source>温度：{:.1f}°C</source>
+            <translation>温度: {:.1f}°C</translation>
+        </message>
+        <message>
+            <location filename="widgets/detail_popup.py" line="0" />
+            <source>GPU 使用率：{}%</source>
+            <translation>GPU使用率: {}%</translation>
+        </message>
+        <message>
+            <location filename="widgets/detail_popup.py" line="0" />
+            <source>显存使用率：{:.0f}%</source>
+            <translation>VRAM使用率: {:.0f}%</translation>
+        </message>
+        <message>
+            <location filename="widgets/detail_popup.py" line="0" />
+            <source>显存：{:.1f} GB / {:.1f} GB</source>
+            <translation>VRAM: {:.1f} GB / {:.1f} GB</translation>
+        </message>
+        <message>
+            <location filename="widgets/detail_popup.py" line="0" />
+            <source>频率：{} MHz</source>
+            <translation>周波数: {} MHz</translation>
+        </message>
+        <message>
+            <location filename="widgets/detail_popup.py" line="0" />
+            <source>功耗：{:.1f} W</source>
+            <translation>消費電力: {:.1f} W</translation>
+        </message>
+        <message>
+            <location filename="widgets/detail_popup.py" line="0" />
+            <source>内存使用率：{}%</source>
+            <translation>メモリ使用率: {}%</translation>
+        </message>
+        <message>
+            <location filename="widgets/detail_popup.py" line="0" />
+            <source>已用：{:.1f} GB / 总计：{:.1f} GB</source>
+            <translation>使用済: {:.1f} GB / 合計: {:.1f} GB</translation>
+        </message>
+        <message>
+            <location filename="widgets/detail_popup.py" line="0" />
+            <source>可用：{:.1f} GB</source>
+            <translation>空き: {:.1f} GB</translation>
+        </message>
+        <message>
+            <location filename="widgets/detail_popup.py" line="0" />
+            <source>下载：{:.1f} Mb/s</source>
+            <translation>ダウンロード: {:.1f} Mb/s</translation>
+        </message>
+        <message>
+            <location filename="widgets/detail_popup.py" line="0" />
+            <source>上传：{:.1f} Mb/s</source>
+            <translation>アップロード: {:.1f} Mb/s</translation>
+        </message>
+        <message>
+            <location filename="widgets/detail_popup.py" line="0" />
+            <source>累计下载：{:.1f} GB</source>
+            <translation>総ダウンロード: {:.1f} GB</translation>
+        </message>
+        <message>
+            <location filename="widgets/detail_popup.py" line="0" />
+            <source>累计下载：{:.1f} MB</source>
+            <translation>総ダウンロード: {:.1f} MB</translation>
+        </message>
+        <message>
+            <location filename="widgets/detail_popup.py" line="0" />
+            <source>累计上传：{:.1f} GB</source>
+            <translation>総アップロード: {:.1f} GB</translation>
+        </message>
+        <message>
+            <location filename="widgets/detail_popup.py" line="0" />
+            <source>累计上传：{:.1f} MB</source>
+            <translation>総アップロード: {:.1f} MB</translation>
+        </message>
+        <message>
+            <location filename="widgets/detail_popup.py" line="0" />
+            <source>天气：{}</source>
+            <translation>天気: {}</translation>
+        </message>
+        <message>
+            <location filename="widgets/detail_popup.py" line="0" />
+            <source>温度：{}℃</source>
+            <translation>温度: {}℃</translation>
+        </message>
+        <message>
+            <location filename="widgets/detail_popup.py" line="0" />
+            <source>风速：{}</source>
+            <translation>風速: {}</translation>
+        </message>
+        <message>
+            <location filename="widgets/detail_popup.py" line="0" />
+            <source>体感温度：{}℃</source>
+            <translation>体感温度: {}℃</translation>
+        </message>
+        <message>
+            <location filename="widgets/detail_popup.py" line="0" />
+            <source>湿度：{}%</source>
+            <translation>湿度: {}%</translation>
+        </message>
+        <message>
+            <location filename="widgets/detail_popup.py" line="0" />
+            <source>气压：{:.0f} hPa</source>
+            <translation>気圧: {:.0f} hPa</translation>
+        </message>
+        <message>
+            <location filename="widgets/detail_popup.py" line="0" />
+            <source>公网 IP：{}</source>
+            <translation>パブリックIP: {}</translation>
+        </message>
+        <message>
+            <location filename="widgets/detail_popup.py" line="0" />
+            <source>本机 IP：{}</source>
+            <translation>ローカルIP: {}</translation>
+        </message>
+        <message>
+            <location filename="widgets/detail_popup.py" line="0" />
+            <source>内网服务器：{}</source>
+            <translation>LANサーバー: {}</translation>
+        </message>
+        <message>
+            <location filename="widgets/detail_popup.py" line="0" />
+            <source>运营商：{}</source>
+            <translation>ISP: {}</translation>
+        </message>
+        <message>
+            <location filename="widgets/detail_popup.py" line="0" />
+            <source>%Y/%m/%d %A</source>
+            <translation>%Y/%m/%d %A</translation>
+        </message>
+        <message>
+            <location filename="widgets/detail_popup.py" line="0" />
+            <source>年内第 {} 天</source>
+            <translation>年内{}日目</translation>
+        </message>
+        <message>
+            <location filename="widgets/detail_popup.py" line="0" />
+            <source>农历：{}月{}</source>
+            <translation>旧暦: {}月{}</translation>
+        </message>
+        <message>
+            <location filename="widgets/detail_popup.py" line="0" />
+            <source>干支：{}年</source>
+            <translation>干支: {}年</translation>
+        </message>
+        <message>
+            <location filename="widgets/detail_popup.py" line="0" />
+            <source>生肖：{}</source>
+            <translation>干支: {}</translation>
+        </message>
+        <message>
+            <location filename="widgets/detail_popup.py" line="0" />
+            <source>节气：{}</source>
+            <translation>節気: {}</translation>
+        </message>
+        <message>
+            <location filename="widgets/detail_popup.py" line="0" />
+            <source>当前节气：{}</source>
+            <translation>現在の節気: {}</translation>
+        </message>
+        <message>
+            <location filename="widgets/detail_popup.py" line="0" />
+            <source>精确时间：{}月{}日 {}:{:02d}</source>
+            <translation>正確な時刻: {}月{}日 {}:{:02d}</translation>
+        </message>
+        <message>
+            <location filename="widgets/detail_popup.py" line="0" />
+            <source>下一节气：{}</source>
+            <translation>次の節気: {}</translation>
+        </message>
+        <message>
+            <location filename="widgets/detail_popup.py" line="0" />
+            <source>所属季节：{}</source>
+            <translation>季節: {}</translation>
+        </message>
+        <message>
+            <location filename="widgets/detail_popup.py" line="0" />
+            <source>已运行：{}</source>
+            <translation>稼働時間: {}</translation>
+        </message>
+        <message>
+            <location filename="widgets/detail_popup.py" line="0" />
+            <source>启动时间：{}</source>
+            <translation>起動時間: {}</translation>
+        </message>
+        <message>
+            <location filename="widgets/detail_popup.py" line="0" />
+            <source>总磁盘使用率：{}%</source>
+            <translation>ディスク全体: {}%</translation>
+        </message>
+        <message>
+            <location filename="widgets/detail_popup.py" line="0" />
+            <source>{}: {:.0f}GB / {:.0f}GB</source>
+            <translation>{}: {:.0f}GB / {:.0f}GB</translation>
+        </message>
+        <message>
+            <location filename="widgets/detail_popup.py" line="0" />
+            <source>总容量：{:.1f} GB</source>
+            <translation>合計: {:.1f} GB</translation>
+        </message>
+        <message>
+            <location filename="widgets/detail_popup.py" line="0" />
+            <source>已用：{:.1f} GB</source>
+            <translation>使用済: {:.1f} GB</translation>
+        </message>
+        <message>
+            <location filename="widgets/detail_popup.py" line="0" />
+            <source>{} 盘使用率：{}%</source>
+            <translation>{}ドライブ: {}%</translation>
+        </message>
+        <message>
+            <location filename="widgets/detail_popup.py" line="0" />
+            <source>类型：SSD</source>
+            <translation>タイプ: SSD</translation>
+        </message>
+        <message>
+            <location filename="widgets/detail_popup.py" line="0" />
+            <source>类型：HDD</source>
+            <translation>タイプ: HDD</translation>
+        </message>
+        <message>
+            <location filename="widgets/detail_popup.py" line="0" />
+            <source>类型：{}</source>
+            <translation>タイプ: {}</translation>
+        </message>
+        <message>
+            <location filename="widgets/detail_popup.py" line="0" />
+            <source>分辨率：{}</source>
+            <translation>解像度: {}</translation>
+        </message>
+        <message>
+            <location filename="widgets/detail_popup.py" line="0" />
+            <source>刷新率：{}Hz</source>
+            <translation>リフレッシュレート: {}Hz</translation>
+        </message>
+        <message>
+            <location filename="widgets/detail_popup.py" line="0" />
+            <source>缩放：{:.0f}%</source>
+            <translation>スケール: {:.0f}%</translation>
+        </message>
+        <message>
+            <location filename="widgets/detail_popup.py" line="0" />
+            <source>暂无数据</source>
+            <translation>データなし</translation>
+        </message>
+        <message>
+            <location filename="widgets/detail_popup.py" line="0" />
+            <source>Pro · 更多详情</source>
+            <translation>Pro · 詳細</translation>
+        </message>
+        <message>
+            <location filename="widgets/detail_popup.py" line="0" />
+            <source>春</source>
+            <translation>春</translation>
+        </message>
+        <message>
+            <location filename="widgets/detail_popup.py" line="0" />
+            <source>夏</source>
+            <translation>夏</translation>
+        </message>
+        <message>
+            <location filename="widgets/detail_popup.py" line="0" />
+            <source>秋</source>
+            <translation>秋</translation>
+        </message>
+        <message>
+            <location filename="widgets/detail_popup.py" line="0" />
+            <source>冬</source>
+            <translation>冬</translation>
+        </message>
+        <message>
+            <location filename="widgets/detail_popup.py" line="0" />
+            <source>北</source>
+            <translation>北</translation>
+        </message>
+        <message>
+            <location filename="widgets/detail_popup.py" line="0" />
+            <source>南</source>
+            <translation>南</translation>
+        </message>
+        <message>
+            <location filename="widgets/detail_popup.py" line="0" />
+            <source>东</source>
+            <translation>東</translation>
+        </message>
+        <message>
+            <location filename="widgets/detail_popup.py" line="0" />
+            <source>西</source>
+            <translation>西</translation>
+        </message>
+        <message>
+            <location filename="widgets/detail_popup.py" line="0" />
+            <source>东北</source>
+            <translation>北東</translation>
+        </message>
+        <message>
+            <location filename="widgets/detail_popup.py" line="0" />
+            <source>东南</source>
+            <translation>南東</translation>
+        </message>
+        <message>
+            <location filename="widgets/detail_popup.py" line="0" />
+            <source>西南</source>
+            <translation>南西</translation>
+        </message>
+        <message>
+            <location filename="widgets/detail_popup.py" line="0" />
+            <source>西北</source>
+            <translation>北西</translation>
+        </message>
+        <message>
+            <location filename="widgets/detail_popup.py" line="0" />
+            <source>北东北</source>
+            <translation>北北東</translation>
+        </message>
+        <message>
+            <location filename="widgets/detail_popup.py" line="0" />
+            <source>东东北</source>
+            <translation>東北東</translation>
+        </message>
+        <message>
+            <location filename="widgets/detail_popup.py" line="0" />
+            <source>东东南</source>
+            <translation>東南東</translation>
+        </message>
+        <message>
+            <location filename="widgets/detail_popup.py" line="0" />
+            <source>南东南</source>
+            <translation>南南東</translation>
+        </message>
+        <message>
+            <location filename="widgets/detail_popup.py" line="0" />
+            <source>南南西</source>
+            <translation>南南西</translation>
+        </message>
+        <message>
+            <location filename="widgets/detail_popup.py" line="0" />
+            <source>西南西</source>
+            <translation>西南西</translation>
+        </message>
+        <message>
+            <location filename="widgets/detail_popup.py" line="0" />
+            <source>西西北</source>
+            <translation>西北西</translation>
+        </message>
+        <message>
+            <location filename="widgets/detail_popup.py" line="0" />
+            <source>北西北</source>
+            <translation>北北西</translation>
+        </message>
+    </context>
 </TS>

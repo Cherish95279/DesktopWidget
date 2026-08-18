@@ -113,30 +113,30 @@ def get_weather_icon(weather_str):
 # ---------- IP 定位 ----------
 def get_ip_location():
     """
-    调用 ip-api.com 获取当前 IP 的地理位置
-    返回: (latitude, longitude, city) 或 (None, None, None)
+    调用 ip-api.com 获取当前 IP 的地理位置和运营商
+    返回: (latitude, longitude, city, isp) 或 (None, None, None, None)
     """
     import requests
     try:
-        url = "http://ip-api.com/json/?lang=zh-CN&fields=status,country,city,lat,lon"
+        url = "http://ip-api.com/json/?lang=zh-CN&fields=status,country,city,lat,lon,isp,org"
         resp = requests.get(url, timeout=5)
         if resp.status_code != 200:
-            # Fallback: try ipapi.co
             resp = requests.get("https://ipapi.co/json/", timeout=5)
             resp.raise_for_status()
             data = resp.json()
-            return (data.get("latitude"), data.get("longitude"), data.get("city"))
+            return (data.get("latitude"), data.get("longitude"), data.get("city"), data.get("org"))
         if resp.status_code == 200:
             data = resp.json()
             if data.get("status") == "success":
                 return (
                     data.get("lat"),
                     data.get("lon"),
-                    data.get("city")
+                    data.get("city"),
+                    data.get("isp")
                 )
     except Exception:
         pass
-    return None, None, None
+    return None, None, None, None
 
 # ---------- 天气文本翻译（用于 WeatherAPI 英文→多语言）----------
 _WEATHER_TRANSLATIONS = {
@@ -514,3 +514,40 @@ def translate_weather_text(weather_en: str, language_code: str = None) -> str:
         if result is not None:
             return result
     return weather_en
+
+
+# ---------- Pro付费状态 ----------
+def is_pro_enabled():
+    """
+    Return True if Pro mode is enabled.
+    - 开发选项模拟开关优先
+    - 商店版：检测 pro_version 加载项 License
+    - exe版：默认免费
+    """
+    from PyQt6.QtCore import QSettings
+    settings = QSettings("MyDesktopApp", "WeatherSettings")
+    # 开发选项模拟开关优先
+    dev_pro = settings.value("dev_pro_enabled", False, type=bool)
+    if dev_pro:
+        return True
+    # 版本检测
+    dev_version = settings.value("dev_version", "", type=str)
+    if dev_version:
+        is_store = (dev_version == "store")
+    else:
+        from .updater import is_store_version
+        is_store = is_store_version()
+    if is_store:
+        # 商店版：检测 pro_version License
+        try:
+            from .store_license import check_pro_license
+            result = check_pro_license()
+            if result == "error":
+                # 检测失败，不误判为 Pro
+                return False
+            return result
+        except Exception:
+            return False
+    else:
+        # exe版：免费
+        return False

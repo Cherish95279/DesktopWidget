@@ -28,6 +28,7 @@ _GPU_AVAILABLE = True  # 假设存在，加载失败时置0
 
 try:
     from zhdate import ZhDate
+
     LUNAR_AVAILABLE = True
 except ImportError:
     LUNAR_AVAILABLE = False
@@ -35,10 +36,14 @@ except ImportError:
 # ===== 打包后强制隐藏所有子进程窗口 =====
 if sys.platform == 'win32' and getattr(sys, 'frozen', False):
     _original_popen = subprocess.Popen
+
+
     def _popen_no_window(*args, **kwargs):
         if hasattr(subprocess, 'CREATE_NO_WINDOW'):
             kwargs['creationflags'] = kwargs.get('creationflags', 0) | subprocess.CREATE_NO_WINDOW
         return _original_popen(*args, **kwargs)
+
+
     subprocess.Popen = _popen_no_window
 
 
@@ -63,6 +68,18 @@ class MainWindow(QWidget):
         # ===== 新增：显式初始化更新检查状态（确保存在） =====
         self.update_check_status = "idle"
 
+        # ===== 匿名统计上报 =====
+        self._initial_ping_sent = False
+
+        # 等待天气和更新检查完成后进行第一次完整上报
+        self._initial_ping_timer = QTimer(self)
+        self._initial_ping_timer.timeout.connect(self._check_initial_ping_ready)
+        self._initial_ping_timer.start(1000)
+
+        # 第一次完整上报完成后，每30分钟上报一次
+        self._ping_timer = QTimer(self)
+        self._ping_timer.timeout.connect(self._periodic_ping)
+
         # 主题管理器
         self.theme_manager = get_theme_manager()
 
@@ -84,8 +101,13 @@ class MainWindow(QWidget):
         # 数据
         self.cpu = 0
         self.gpu = 0
+        self.gpu_mem_used = 0
+        self.gpu_mem_total = 0
+        self.gpu_clock = 0
+        self.gpu_power = 0
         self.mem = 0
         self.local_ip = self.get_local_ip()
+        self.public_ip = ""
         self.server_ip = "扫描中..."
         self.weather = {"city": "--", "weather": "--", "temp": "--", "wind": ""}
 
@@ -94,7 +116,9 @@ class MainWindow(QWidget):
         self._uptime_seconds = 0
         self.down_speed = 0.0
         self.up_speed = 0.0
-        self.fps = 0
+        self.total_recv = 0
+        self.total_sent = 0
+        self.refresh_rate = 0
         self.now = datetime.now()
         self.lunar_text = ""
         self.term_display = ""
@@ -137,8 +161,13 @@ class MainWindow(QWidget):
             settings.setValue("update_channel", "store")
             settings.sync()
 
+        # 延迟获取公网 IP
+        QTimer.singleShot(2000, self._fetch_public_ip)
+
         self.tray = TrayIcon(self)
         self.tray.show()
+        # hover detail popup
+        self._init_detail_popup()
 
         # 公告气泡
         self.notice_bubble = NoticeBubble(self)
@@ -185,16 +214,134 @@ class MainWindow(QWidget):
         """返回本次启动的更新检查状态"""
         return getattr(self, "update_check_status", "idle")
 
-    def _init_paint(self):
-        """初始化绘制统计和屏幕信息。"""
-        self.paint_count = 0
-        self.last_paint_time = QElapsedTimer()
-        self.last_paint_time.start()
-        self.fps_timer = QTimer(self)
-        self.fps_timer.timeout.connect(self.update_fps)
-        self.fps_timer.start(1000)
+    def _check_initial_ping_ready(self):
+        """
+        检查启动阶段的天气和更新检查是否都已经完成。
 
+        第一次完整上报只允许执行一次。
+        """
+        if self._initial_ping_sent:
+            return
+
+        # --------------------------------------------------------
+        # 1. 判断天气是否需要等待
+        # --------------------------------------------------------
+
+        settings = QSettings("MyDesktopApp", "WeatherSettings")
+
+        has_weather = False
+
+        for i in range(1, 9):
+            key = f"slot_{i}"
+            default_val = DEFAULT_LAYOUT.get(key, "empty")
+            value = settings.value(key, default_val)
+
+            if value == "weather":
+                has_weather = True
+                break
+
+        if has_weather:
+            weather_status = self.get_weather_status()
+
+            # 天气线程还没有产生第一次结果
+            if weather_status == "idle":
+                return
+        else:
+            # 没有天气槽位，不需要等待天气
+            weather_status = "not_enabled"
+
+        # --------------------------------------------------------
+        # 2. 判断更新检查是否完成
+        # --------------------------------------------------------
+
+        update_status = self.get_update_status()
+
+        if update_status in ("idle", "checking"):
+            return
+
+        # --------------------------------------------------------
+        # 3. 两项都完成
+        # --------------------------------------------------------
+
+        self._initial_ping_sent = True
+
+        # 停止启动阶段轮询
+        if self._initial_ping_timer.isActive():
+            self._initial_ping_timer.stop()
+
+        # 进行第一次完整上报
+        try:
+            from .ping_client import report_launch_full
+
+            report_launch_full(
+                weather_status,
+                update_status
+            )
+        except Exception:
+            pass
+
+        # --------------------------------------------------------
+        # 4. 第一次上报之后开始30分钟周期上报
+        # --------------------------------------------------------
+
+        if not self._ping_timer.isActive():
+            self._ping_timer.start(30 * 60 * 1000)
+
+    def _periodic_ping(self):
+        """
+        每30分钟上报一次当前状态。
+        """
+        try:
+            from .ping_client import report_launch_full
+
+            weather_status = self.get_weather_status()
+            update_status = self.get_update_status()
+
+            report_launch_full(
+                weather_status,
+                update_status
+            )
+
+        except Exception:
+            pass
+
+    def _read_refresh_rate(self):
+        """读取 Windows 当前显示配置刷新率"""
+        try:
+            import ctypes, struct
+            user32 = ctypes.windll.user32
+            num_paths = ctypes.c_uint32(0)
+            num_modes = ctypes.c_uint32(0)
+            ret = user32.GetDisplayConfigBufferSizes(1, ctypes.byref(num_paths), ctypes.byref(num_modes))
+            if ret == 0 and num_paths.value > 0:
+                path_buf = (ctypes.c_ubyte * (num_paths.value * 72))()
+                mode_buf = (ctypes.c_ubyte * (num_modes.value * 96))()
+                actual_paths = ctypes.c_uint32(num_paths.value)
+                actual_modes = ctypes.c_uint32(num_modes.value)
+                ret = user32.QueryDisplayConfig(1, ctypes.byref(actual_paths), path_buf, ctypes.byref(actual_modes), mode_buf, None)
+                if ret == 0:
+                    for i in range(actual_paths.value):
+                        num, den = struct.unpack_from('<II', path_buf, i * 72 + 48)
+                        if den > 0 and num > 0:
+                            return int(round(num / den))
+        except Exception:
+            pass
+        try:
+            import ctypes
+            user32 = ctypes.windll.user32
+            hdc = user32.GetDC(0)
+            refresh = ctypes.windll.gdi32.GetDeviceCaps(hdc, 116)
+            user32.ReleaseDC(0, hdc)
+            if refresh > 0:
+                return refresh
+        except Exception:
+            pass
+        return 60
+
+    def _init_paint(self):
+        """初始化屏幕信息。"""
         screen = QApplication.primaryScreen()
+        self.refresh_rate = self._read_refresh_rate()
         self.screen_res = (
             f"{screen.size().width()}×{screen.size().height()}"
             if screen else "1920×1080"
@@ -203,6 +350,8 @@ class MainWindow(QWidget):
     def _on_language_changed(self, lang_code):
         """语言切换回调，重新计算翻译并刷新界面"""
         self._refresh_i18n()
+        # 重新扫描主题（刷新主题显示名）
+        self.theme_manager.rescan_themes()
         # 重建设置对话框（如果打开着）
         if self.settings_dialog is not None:
             try:
@@ -219,7 +368,6 @@ class MainWindow(QWidget):
             self.taskbar_widget.retranslate_ui()
         self.update()
 
-
     def _init_i18n(self):
         """预计算所有 paintEvent 中使用的翻译字符串"""
         t = TranslatorManager().translate
@@ -228,7 +376,7 @@ class MainWindow(QWidget):
             "memory": t("MainWindow", "内存"),
             "set_api": t("MainWindow", "设置API"),
             "loading": t("MainWindow", "加载中"),
-            "weekdays": [t("MainWindow", d) for d in ["一","二","三","四","五","六","日"]],
+            "weekdays": [t("MainWindow", d) for d in ["一", "二", "三", "四", "五", "六", "日"]],
             "week": t("MainWindow", "星期"),
             "lunar": t("MainWindow", "农历"),
             "lunar_error": t("MainWindow", "农历错误"),
@@ -251,7 +399,7 @@ class MainWindow(QWidget):
         self._i18n["memory"] = t("MainWindow", "内存")
         self._i18n["set_api"] = t("MainWindow", "设置API")
         self._i18n["loading"] = t("MainWindow", "加载中")
-        self._i18n["weekdays"] = [t("MainWindow", d) for d in ["一","二","三","四","五","六","日"]]
+        self._i18n["weekdays"] = [t("MainWindow", d) for d in ["一", "二", "三", "四", "五", "六", "日"]]
         self._i18n["week"] = t("MainWindow", "星期")
         self._i18n["lunar"] = t("MainWindow", "农历")
         self._i18n["lunar_error"] = t("MainWindow", "农历错误")
@@ -384,7 +532,8 @@ class MainWindow(QWidget):
         if current_notice:
             notice_id = current_notice.get("id")
             if notice_id:
-                QTimer.singleShot(300, lambda: self._notice_window.select_notice_by_id(notice_id) if self._notice_window else None)
+                QTimer.singleShot(300, lambda: self._notice_window.select_notice_by_id(
+                    notice_id) if self._notice_window else None)
         self._notice_window.show()
 
     def _on_notice_window_destroyed(self):
@@ -395,7 +544,8 @@ class MainWindow(QWidget):
             self.settings_dialog.raise_()
             self.settings_dialog.activateWindow()
             if hasattr(self.settings_dialog, 'switch_page'):
-                page_index = {"general": 0, "display": 1, "weather": 2, "theme": 3, "update": 4, "donation": 5, "about": 6}.get(initial_page, 0)
+                page_index = {"general": 0, "display": 1, "weather": 2, "theme": 3, "update": 4, "donation": 5,
+                              "about": 6}.get(initial_page, 0)
                 self.settings_dialog.switch_page(page_index)
             return
         try:
@@ -510,7 +660,7 @@ class MainWindow(QWidget):
                     if not ip_attempted:
                         from .utils import get_ip_location
                         print("🌐 JSON 无匹配，尝试 IP 自动定位...")
-                        new_lat, new_lng, city = get_ip_location()
+                        new_lat, new_lng, city, ip_isp = get_ip_location()
                         settings.setValue("_ip_attempted", True)
                         if new_lat and new_lng:
                             settings.setValue("_ip_attempted", True)
@@ -519,6 +669,8 @@ class MainWindow(QWidget):
                             if city:
                                 settings.setValue("selected_city", city)
                                 settings.setValue("selected_location_display", city)
+                            if ip_isp:
+                                settings.setValue("ip_isp", ip_isp)
                             settings.setValue("location_source", "ip")
                             settings.sync()
                             lat = str(new_lat)
@@ -607,7 +759,7 @@ class MainWindow(QWidget):
         self.update()
 
     def on_weather_error(self, err_msg):
-        if not err_msg:            # 空字符串不打印
+        if not err_msg:  # 空字符串不打印
             return
         print(f" 天气错误: {err_msg}")
 
@@ -619,6 +771,45 @@ class MainWindow(QWidget):
                 self.taskbar_widget.update_position()
             else:
                 self.taskbar_widget.hide()
+
+    # ---------- hover detail popup ----------
+    def _init_detail_popup(self):
+        from .widgets.detail_popup import DetailPopup
+        self._detail_popup = DetailPopup(self)
+        self.setMouseTracking(True)
+        self._last_hover_slot = None
+        if hasattr(self, 'notice_bubble') and self.notice_bubble:
+            self.notice_bubble.setAttribute(Qt.WidgetAttribute.WA_TransparentForMouseEvents, True)
+
+    def leaveEvent(self, event):
+        super().leaveEvent(event)
+        if hasattr(self, '_detail_popup'):
+            self._last_hover_slot = None
+            self._detail_popup.start_fade_out(2000)
+
+    def _get_hover_slot(self, pos):
+        from PyQt6.QtCore import QSettings
+        from .constants import DEFAULT_LAYOUT
+        settings = QSettings("MyDesktopApp", "WeatherSettings")
+        slot_position_map = {
+            "slot_1": (20, 30, 105, 43),
+            "slot_2": (20, 86, 85, 43),
+            "slot_3": (20, 166, 70, 50),
+            "slot_4": (20, 235, 88, 50),
+            "slot_5": (280, 30, 94, 43),
+            "slot_6": (314, 86, 71, 43),
+            "slot_7": (324, 166, 60, 50),
+            "slot_8": (273, 245, 97, 52),
+        }
+        for slot_key in ["slot_1", "slot_2", "slot_3", "slot_4", "slot_5", "slot_6", "slot_7", "slot_8"]:
+            if slot_key not in slot_position_map:
+                continue
+            x, y, w, h = slot_position_map[slot_key]
+            rect = QRect(x, y, w, h)
+            if rect.contains(pos):
+                content_key = settings.value(slot_key, DEFAULT_LAYOUT.get(slot_key, "empty"))
+                return (slot_key, content_key, rect)
+        return None
 
     def closeEvent(self, event):
         if self._exiting:
@@ -645,7 +836,12 @@ class MainWindow(QWidget):
 
         if self._loading_timer is not None:
             self._loading_timer.stop()
-        for timer_name in ("clock_timer", "perf_timer", "fps_timer"):
+        for timer_name in (
+                "clock_timer",
+                "perf_timer",
+                "_initial_ping_timer",
+                "_ping_timer",
+        ):
             timer = getattr(self, timer_name, None)
             if timer is not None:
                 timer.stop()
@@ -658,6 +854,37 @@ class MainWindow(QWidget):
         from .notice import NoticeManager
         NoticeManager.get_instance().stop()
 
+    def get_public_ip(self):
+        """获取公网 IP，多个备用接口"""
+        import requests
+        urls = [
+            ("https://api.ipify.org?format=json", "json", "ip"),
+            ("https://httpbin.org/ip", "json", "origin"),
+            ("https://myip.ipip.net", "text", None),
+        ]
+        for url, fmt, key in urls:
+            try:
+                resp = requests.get(url, timeout=5)
+                if resp.status_code == 200:
+                    if fmt == "json":
+                        return resp.json().get(key, "")
+                    else:
+                        # text format: "当前 IP：x.x.x.x  来自于：..."
+                        text = resp.text
+                        import re
+                        m = re.search(r"(\d+\.\d+\.\d+\.\d+)", text)
+                        if m:
+                            return m.group(1)
+            except Exception:
+                continue
+        return ""
+
+    def _fetch_public_ip(self):
+        """后台获取公网 IP"""
+        ip = self.get_public_ip()
+        if ip:
+            self.public_ip = ip
+
     def get_local_ip(self):
         try:
             s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
@@ -668,10 +895,13 @@ class MainWindow(QWidget):
         except (OSError, socket.error):
             return "127.0.0.1"
 
-    def on_speed_update(self, down, up):
+    def on_speed_update(self, down, up, total_recv=0, total_sent=0):
         self.down_speed = max(0, down)
         self.up_speed = max(0, up)
+        self.total_recv = total_recv
+        self.total_sent = total_sent
         self.update()
+
 
     # ---------- GPU 读取（使用 ctypes 直接调用 NVML） ----------
     def update_perf(self):
@@ -712,8 +942,39 @@ class MainWindow(QWidget):
                         ret = nvmlDeviceGetUtilizationRates(handle, ctypes.byref(util))
                         if ret == 0:
                             self.gpu = util.value
-                        else:
-                            self.gpu = 0
+                        # GPU memory info
+                        try:
+                            class nvmlMemory_t(ctypes.Structure):
+                                _fields_ = [("total", ctypes.c_ulonglong), ("free", ctypes.c_ulonglong), ("used", ctypes.c_ulonglong)]
+                            mem_info = nvmlMemory_t()
+                            nvmlDeviceGetMemoryInfo = nvml.nvmlDeviceGetMemoryInfo
+                            nvmlDeviceGetMemoryInfo.argtypes = [ctypes.c_void_p, ctypes.POINTER(nvmlMemory_t)]
+                            nvmlDeviceGetMemoryInfo.restype = ctypes.c_int
+                            if nvmlDeviceGetMemoryInfo(handle, ctypes.byref(mem_info)) == 0:
+                                self.gpu_mem_total = mem_info.total
+                                self.gpu_mem_used = mem_info.used
+                        except Exception:
+                            pass
+                        # GPU clock
+                        try:
+                            nvmlDeviceGetClockInfo = nvml.nvmlDeviceGetClockInfo
+                            nvmlDeviceGetClockInfo.argtypes = [ctypes.c_void_p, ctypes.c_uint, ctypes.POINTER(ctypes.c_uint)]
+                            nvmlDeviceGetClockInfo.restype = ctypes.c_int
+                            clock = ctypes.c_uint()
+                            if nvmlDeviceGetClockInfo(handle, 0, ctypes.byref(clock)) == 0:
+                                self.gpu_clock = clock.value
+                        except Exception:
+                            pass
+                        # GPU power
+                        try:
+                            nvmlDeviceGetPowerUsage = nvml.nvmlDeviceGetPowerUsage
+                            nvmlDeviceGetPowerUsage.argtypes = [ctypes.c_void_p, ctypes.POINTER(ctypes.c_uint)]
+                            nvmlDeviceGetPowerUsage.restype = ctypes.c_int
+                            power = ctypes.c_uint()
+                            if nvmlDeviceGetPowerUsage(handle, ctypes.byref(power)) == 0:
+                                self.gpu_power = power.value
+                        except Exception:
+                            pass
                     else:
                         self.gpu = 0
                 else:
@@ -738,8 +999,8 @@ class MainWindow(QWidget):
         total_all = 0
         for part in psutil.disk_partitions():
             if (not part.opts.startswith("cdrom")
-                and not part.device.startswith("\\\\")
-                and part.fstype not in ("", "udf", "iso9660")):
+                    and not part.device.startswith("\\\\")
+                    and part.fstype not in ("", "udf", "iso9660")):
                 try:
                     usage = psutil.disk_usage(part.mountpoint)
                     if usage.total > 0:
@@ -791,7 +1052,9 @@ class MainWindow(QWidget):
         if LUNAR_AVAILABLE:
             try:
                 lunar = ZhDate.from_datetime(self.now)
-                self.lunar_text = f"{self._i18n['lunar']} {self.now:%y/%m/%d}"
+                from lunar_python import Solar as _Solar
+                _lunar = _Solar.fromDate(self.now).getLunar()
+                self.lunar_text = f"{self._i18n['lunar']} {_lunar.getMonthInChinese()}月{_lunar.getDayInChinese()}"
             except Exception:
                 self.lunar_text = self._i18n['lunar_error']
         else:
@@ -807,18 +1070,7 @@ class MainWindow(QWidget):
             self.term_display = ""
         self.update()
 
-    def update_fps(self):
-        elapsed = self.last_paint_time.elapsed()
-        if elapsed > 0:
-            self.fps = int(self.paint_count * 1000 / elapsed)
-        else:
-            self.fps = 0
-        self.paint_count = 0
-        self.last_paint_time.restart()
-        self.update()
-
     def paintEvent(self, event):
-        self.paint_count += 1
         painter = QPainter(self)
         painter.setRenderHint(QPainter.RenderHint.Antialiasing)
 
@@ -839,7 +1091,6 @@ class MainWindow(QWidget):
         self.draw_hand(painter, self.minute, cx, cy, self.hand_px, self.hand_py, now.minute * 6 + now.second * 0.1)
         self.draw_hand(painter, self.second, cx, cy, self.hand_px, self.hand_py, now.second * 6)
 
-
         # 绘制文字信息
         settings = QSettings("MyDesktopApp", "WeatherSettings")
         font_family = settings.value("font_family", "Microsoft YaHei")
@@ -855,7 +1106,7 @@ class MainWindow(QWidget):
             default_val = DEFAULT_LAYOUT.get(key, "empty")
             slot_values[key] = settings.value(key, default_val)
 
-        ip_text = f"{self.local_ip}"
+        ip_text = f"{self.public_ip or self.local_ip}"
 
         # ---- 只显示短格式地区名 ----
         selected_county = settings.value("selected_county", "")
@@ -879,7 +1130,6 @@ class MainWindow(QWidget):
         cpu_text = f"CPU{int(self.cpu)}%"
         gpu_text = f"GPU{int(self.gpu)}%"
         resolution_text = f"{self.screen_res}"
-        refresh_rate_text = f"{self.fps}Hz"
         memory_text = f"{self._i18n['memory']}\n{int(self.mem)}%"
         uptime_text = self.uptime
         term_text = self.term_display if self.term_display else ""
@@ -893,7 +1143,6 @@ class MainWindow(QWidget):
             "cpu": cpu_text,
             "gpu": gpu_text,
             "resolution": resolution_text,
-            "refresh_rate": refresh_rate_text,
             "memory": memory_text,
             "date": date_text,
             "lunar": lunar_text,
@@ -906,12 +1155,13 @@ class MainWindow(QWidget):
             if dk == "disk_total":
                 content_text_map[dk] = f"{int(dv)}%"
             else:
-            
+
                 letter = dk.replace("disk_", "")
                 content_text_map[dk] = f"{letter}: {int(dv)}%"
 
         multiline_map = {
-            "date": [self.now.strftime('%Y/%m/%d'), f"{self._i18n['week']}{self._i18n['weekdays'][self.now.weekday()]}"],
+            "date": [self.now.strftime('%Y/%m/%d'),
+                     f"{self._i18n['week']}{self._i18n['weekdays'][self.now.weekday()]}"],
             "netspeed": [f"↓{self.down_speed:.1f}Mb/s", f"↑{self.up_speed:.1f}Mb/s"],
             "memory": [self._i18n['memory'], f"{int(self.mem)}%"],
             "disk_total": [self._i18n['disk_total'], f"{int(self.disk_usage.get('disk_total', 0))}%"],
@@ -979,10 +1229,30 @@ class MainWindow(QWidget):
         if e.button() == Qt.MouseButton.LeftButton:
             self.drag_pos = e.globalPosition().toPoint()
 
-    def mouseMoveEvent(self, e):
+    def mouseMoveEvent(self, event):
         if self.drag_pos:
-            self.move(self.pos() + e.globalPosition().toPoint() - self.drag_pos)
-            self.drag_pos = e.globalPosition().toPoint()
+            self.move(self.pos() + event.globalPosition().toPoint() - self.drag_pos)
+            self.drag_pos = event.globalPosition().toPoint()
+        if hasattr(self, '_detail_popup'):
+            hover_enabled = QSettings("MyDesktopApp", "WeatherSettings").value("hover_enabled", True, type=bool)
+            if hover_enabled:
+                pos = event.position().toPoint()
+                slot_info = self._get_hover_slot(pos)
+                if slot_info:
+                    slot_key, content_key, rect = slot_info
+                    if self._last_hover_slot != (slot_key, content_key):
+                        self._last_hover_slot = (slot_key, content_key)
+                        self._detail_popup.stop_fade_out()
+                        self._detail_popup.show_for_slot(slot_key, content_key, rect)
+                else:
+                    if self._last_hover_slot is not None:
+                        self._last_hover_slot = None
+                        self._detail_popup.start_fade_out(2000)
+            else:
+                if self._last_hover_slot is not None:
+                    self._last_hover_slot = None
+                    self._detail_popup.hide()
 
     def mouseReleaseEvent(self, e):
         self.drag_pos = None
+    # ---------- hover detail popup ----------

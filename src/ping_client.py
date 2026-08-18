@@ -1,249 +1,521 @@
 ﻿# -*- coding: utf-8 -*-
 """
-匿名设备统计客户端
-用于在程序启动时上报以下信息到手机服务器：
-- UUID（匿名设备标识）
-- 版本号
-- 操作系统版本
-- 是否开机自启
-- 当前使用的主题
-- 天气 API 请求状态（本次启动以来）
-- 更新检查结果（本次启动）
+DesktopWidget 匿名设备统计客户端
+
+新版统计上报字段：
+
+- uuid
+- version
+- distribution
+- os
+- autostart
+- theme
+- weather
+- update
+- lang
+- screen
+- hover
+- slots
+- uptime
+
+共 13 个字段。
+
+国家/地区由服务器根据请求 IP 判断。
+活跃时间由服务器根据请求时间判断。
 """
 
+import string
+import urllib.parse
+import urllib.request
 import uuid
 import platform
-import urllib.request
-from PyQt6.QtCore import QSettings, QTimer
+import time
+import ctypes
 
+from PyQt6.QtCore import QSettings
+
+
+# ============================================================
+# 程序启动时间
+# ============================================================
+
+_PROCESS_START_TIME = time.monotonic()
+
+
+# ============================================================
+# UUID
+# ============================================================
 
 def get_or_create_uuid():
-    """获取或创建匿名设备标识（存储在 QSettings 中）"""
-    settings = QSettings("MyDesktopApp", "WeatherSettings")
-    device_uuid = settings.value("device_uuid", "")
+    """获取或创建匿名设备标识"""
+
+    settings = QSettings(
+        "MyDesktopApp",
+        "WeatherSettings"
+    )
+
+    device_uuid = settings.value(
+        "device_uuid",
+        ""
+    )
+
     if not device_uuid:
         device_uuid = str(uuid.uuid4())
-        settings.setValue("device_uuid", device_uuid)
+
+        settings.setValue(
+            "device_uuid",
+            device_uuid
+        )
+
         settings.sync()
+
     return device_uuid
 
 
+# ============================================================
+# 发行渠道
+# ============================================================
+
+def get_distribution():
+    """
+    判断当前程序是 Microsoft Store 版还是 EXE 安装版。
+
+    Windows AppModel：
+    - Store/MSIX：当前进程属于 Package
+    - 普通 EXE：ERROR_NO_PACKAGE
+    """
+
+    try:
+        kernel32 = ctypes.windll.kernel32
+
+        ERROR_NO_PACKAGE = 15700
+
+        length = ctypes.c_uint32(0)
+
+        result = kernel32.GetCurrentPackageFullName(
+            ctypes.byref(length),
+            None
+        )
+
+        if result != ERROR_NO_PACKAGE:
+            return "store"
+
+    except Exception:
+        pass
+
+    return "exe"
+
+
+# ============================================================
+# 操作系统
+# ============================================================
+
 def get_os_info():
-    """获取操作系统信息"""
-    system = platform.system()      # Windows / Linux / Darwin
-    release = platform.release()    # 10 / 11 / 22.04 等
-    return f"{system} {release}"
+    """获取 Windows 操作系统版本"""
+
+    try:
+        system = platform.system()
+        release = platform.release()
+
+        return f"{system} {release}"
+
+    except Exception:
+        return "unknown"
+
+
+# ============================================================
+# 开机自启
+# ============================================================
 
 def get_autostart_status():
     """获取开机自启状态"""
+
     try:
-        from src.autostart import get_autostart_status as _get_status
+        from src.autostart import (
+            get_autostart_status as _get_status
+        )
+
     except ImportError:
+
         try:
-            from .autostart import get_autostart_status as _get_status
+            from .autostart import (
+                get_autostart_status as _get_status
+            )
+
         except ImportError:
             return False
+
     try:
         return _get_status()
+
     except Exception:
         return False
 
 
+# ============================================================
+# 当前主题
+# ============================================================
+
 def get_current_theme():
-    """获取当前主题名称（始终返回简体中文，不受语言影响）"""
+    """
+    获取当前主题。
+
+    统计统一使用中文名称。
+    """
+
     try:
         from .theme_manager import get_theme_manager
+
         manager = get_theme_manager()
+
         folder = manager.get_theme_folder()
+
         theme_map = {
             "default": "默认主题",
             "skins_01": "竹林",
             "skins_02": "赛博风",
         }
-        return theme_map.get(folder, folder)
+
+        return theme_map.get(
+            folder,
+            folder
+        )
+
     except Exception:
         return "未知"
 
 
-def report_launch():
-    """
-    上报启动事件（同步请求，但会放在单独线程中调用）
-    收集所有数据后一次性发送
-    """
-    try:
-        # 基础数据
-        uuid_val = get_or_create_uuid()
-        from .constants import VERSION
-        version = VERSION
-
-        # A1: 操作系统版本
-        os_info = get_os_info()
-
-        # A3: 是否开机自启
-        autostart = "1" if get_autostart_status() else "0"
-
-        # A4: 当前主题
-        theme = get_current_theme()
-
-        # ===== B2: 天气状态（需要通过主窗口获取） =====
-        # 这里无法直接获取，由调用方通过参数传入，或通过全局方式获取
-        # 我们采用延迟获取方式：在 widget.py 中调用时传入
-        # 但为了保持 ping_client 的独立性，设计为在 widget.py 中获取后传入
-        # 这里的 report_launch 将被扩展为接受额外参数
-
-        # 构建 URL（不含天气和更新状态，由调用方补充）
-        url = (
-            f"https://cherish9527.cc.cd/ping"
-            f"?uuid={uuid_val}"
-            f"&version={version}"
-            f"&os={os_info}"
-            f"&autostart={autostart}"
-            f"&theme={theme}"
-        )
-        # 发送 GET 请求，超时 3 秒
-        print(f"[PING] URL: {url}")
-        req = urllib.request.Request(url, headers={"User-Agent": "DesktopWidget/1.0"})
-        with urllib.request.urlopen(req, timeout=3) as response:
-            response.read()
-    except Exception:
-        # 静默失败，不影响主程序
-        pass
-
-
+# ============================================================
+# 当前语言
+# ============================================================
 
 def get_language():
-    """????????????????"""
+    """
+    获取当前界面语言。
+
+    无论当前界面使用什么语言，
+    上报统一使用中文名称。
+    """
+
     try:
-        settings = QSettings("MyDesktopApp", "WeatherSettings")
-        lang_code = settings.value("language", "")
+        settings = QSettings(
+            "MyDesktopApp",
+            "WeatherSettings"
+        )
+
+        lang_code = settings.value(
+            "language",
+            ""
+        )
+
         if not lang_code:
-            from .i18n.translations import TranslatorManager
-            lang_code = TranslatorManager().current_language()
+
+            from .i18n.translations import (
+                TranslatorManager
+            )
+
+            lang_code = (
+                TranslatorManager()
+                .current_language()
+            )
+
         lang_map = {
-            "zh_CN": "????",
-            "zh_TW": "????",
-            "en": "??",
-            "ja": "??",
-            "ko": "??",
-            "es": "????",
-            "fr": "??",
-            "de": "??",
+            "zh_CN": "简体中文",
+            "zh_TW": "繁体中文",
+            "en": "英语",
+            "ja": "日语",
+            "ko": "韩语",
+            "es": "西班牙语",
+            "fr": "法语",
+            "de": "德语",
         }
-        return lang_map.get(lang_code, lang_code)
+
+        return lang_map.get(
+            lang_code,
+            "未知"
+        )
+
     except Exception:
-        return "??"
+        return "未知"
+
+
+# ============================================================
+# 屏幕分辨率
+# ============================================================
+
 def get_screen_resolution():
     """获取主屏幕分辨率"""
+
     try:
         from PyQt6.QtWidgets import QApplication
-        from PyQt6.QtGui import QScreen
+
         app = QApplication.instance()
+
         if app:
+
             screen = app.primaryScreen()
+
             if screen:
+
                 size = screen.size()
-                return f"{size.width()}x{size.height()}"
+
+                return (
+                    f"{size.width()}x"
+                    f"{size.height()}"
+                )
+
     except Exception:
         pass
+
     return "unknown"
 
 
+# ============================================================
+# 8 个信息槽位
+# ============================================================
+
 def get_slot_config():
-    """??8?????????????????"""
+    """
+    获取 8 个信息槽位配置。
+
+    统计统一使用中文名称。
+    """
+
     try:
-        settings = QSettings("MyDesktopApp", "WeatherSettings")
+
+        settings = QSettings(
+            "MyDesktopApp",
+            "WeatherSettings"
+        )
+
         slot_name_map = {
+
             "ip": "IP",
-            "weather": "??",
-            "netspeed": "??",
+            "weather": "天气",
+            "netspeed": "网速",
             "cpu": "CPU",
             "gpu": "GPU",
-            "resolution": "???",
-            "refresh_rate": "???",
-            "memory": "??",
-            "date": "??",
-            "lunar": "??",
-            "term": "??",
-            "uptime": "????",
-            "disk_total": "????",
+            "resolution": "分辨率",
+            "refresh_rate": "刷新率",
+            "memory": "内存",
+            "date": "日期",
+            "lunar": "农历",
+            "term": "节气",
+            "uptime": "运行时间",
+            "disk_total": "磁盘总容量",
         }
-        # Add disk_X mappings for A-P
-        import string
+
+        # disk_A ~ disk_P
         for letter in string.ascii_uppercase[:16]:
-            slot_name_map[f"disk_{letter}"] = f"{letter}?"
+
+            slot_name_map[
+                f"disk_{letter}"
+            ] = f"{letter}盘"
+
         slots = []
+
         for i in range(1, 9):
+
             key = f"slot_{i}"
-            val = settings.value(key, "")
-            if val and val != "empty":
-                display = slot_name_map.get(val, val)
+
+            value = settings.value(
+                key,
+                ""
+            )
+
+            if value and value != "empty":
+
+                display = slot_name_map.get(
+                    value,
+                    value
+                )
+
                 slots.append(display)
+
             else:
-                slots.append("?")
+                slots.append("空")
+
         return ",".join(slots)
+
     except Exception:
         return "unknown"
+
+
+# ============================================================
+# 悬停显示
+# ============================================================
+
+def get_hover_status():
+    """获取悬停详细信息开关"""
+
+    try:
+
+        settings = QSettings(
+            "MyDesktopApp",
+            "WeatherSettings"
+        )
+
+        enabled = settings.value(
+            "hover_enabled",
+            True,
+            type=bool
+        )
+
+        return "1" if enabled else "0"
+
+    except Exception:
+        return "0"
+
+
+# ============================================================
+# 运行时长
+# ============================================================
+
+def get_uptime():
+    """
+    获取本次程序运行时间。
+
+    单位：秒
+    """
+
+    try:
+
+        seconds = int(
+            time.monotonic()
+            - _PROCESS_START_TIME
+        )
+
+        return max(seconds, 0)
+
+    except Exception:
+        return 0
+
+
+# ============================================================
+# 完整上报
+# ============================================================
+
 def report_launch_full(
     weather_status: str = "idle",
-    update_status: str = "idle"
+    update_status: str = "idle",
 ):
     """
-    完整上报（包含天气和更新状态）
-    由 widget.py 在获取到主窗口实例后调用
+    完整匿名上报。
+
+    上报时机由 MainWindow 控制。
     """
+
     try:
+
+        # ----------------------------------------------------
+        # 收集数据
+        # ----------------------------------------------------
+
         uuid_val = get_or_create_uuid()
+
         from .constants import VERSION
+
         version = VERSION
 
+        distribution = get_distribution()
+
         os_info = get_os_info()
-        autostart = "1" if get_autostart_status() else "0"
+
+        autostart = (
+            "1"
+            if get_autostart_status()
+            else "0"
+        )
+
         theme = get_current_theme()
 
-        # 对特殊字符进行 URL 编码
-        import urllib.parse
-        os_encoded = urllib.parse.quote(os_info)
-        theme_encoded = urllib.parse.quote(theme)
-        lang_encoded = urllib.parse.quote(get_language())
-        res_encoded = urllib.parse.quote(get_screen_resolution())
-        slot_encoded = urllib.parse.quote(get_slot_config())
+        language = get_language()
+
+        screen_resolution = (
+            get_screen_resolution()
+        )
+
+        hover = get_hover_status()
+
+        slots = get_slot_config()
+
+        uptime = get_uptime()
+
+
+        # ----------------------------------------------------
+        # 构建参数
+        # ----------------------------------------------------
+
+        params = {
+
+            "uuid": uuid_val,
+
+            "version": version,
+
+            "distribution": distribution,
+
+            "os": os_info,
+
+            "autostart": autostart,
+
+            "theme": theme,
+
+            "weather": weather_status,
+
+            "update": update_status,
+
+            "lang": language,
+
+            "screen": screen_resolution,
+
+            "hover": hover,
+
+            "slots": slots,
+
+            "uptime": uptime,
+        }
+
+
+        # ----------------------------------------------------
+        # URL 编码
+        # ----------------------------------------------------
+
+        query = urllib.parse.urlencode(
+            params,
+            safe=""
+        )
+
+
+        # ----------------------------------------------------
+        # 构建 URL
+        # ----------------------------------------------------
 
         url = (
-            f"https://cherish9527.cc.cd/ping"
-            f"?uuid={uuid_val}"
-            f"&version={version}"
-            f"&os={os_encoded}"
-            f"&autostart={autostart}"
-            f"&theme={theme_encoded}"
-            f"&weather={weather_status}"
-            f"&update={update_status}"
-            f"&lang={lang_encoded}"
-            f"&screen={res_encoded}"
-            f"&slots={slot_encoded}"
+            "https://cherish9527.cc.cd/ping?"
+            + query
         )
-        req = urllib.request.Request(url, headers={"User-Agent": "DesktopWidget/1.0"})
-        with urllib.request.urlopen(req, timeout=3) as response:
+
+
+        # ----------------------------------------------------
+        # 发送请求
+        # ----------------------------------------------------
+
+        req = urllib.request.Request(
+            url,
+            headers={
+                "User-Agent":
+                    "DesktopWidget/1.0"
+            },
+        )
+
+        with urllib.request.urlopen(
+            req,
+            timeout=3
+        ) as response:
+
             response.read()
+
+
     except Exception:
-        # 静默失败
+        # 统计系统绝不能影响主程序
         pass
-
-
-def report_launch_async():
-    """异步上报（在 Qt 事件循环中延迟执行，不阻塞 UI）"""
-    QTimer.singleShot(100, report_launch)
-
-def start_periodic_report(main_window):
-    def _do_report():
-        try:
-            ws = main_window.get_weather_status() if main_window else "idle"
-            us = main_window.get_update_status() if main_window else "idle"
-            report_launch_full(ws, us)
-        except Exception:
-            pass
-    timer = QTimer()
-    timer.setInterval(30 * 60 * 1000)
-    timer.timeout.connect(_do_report)
-    timer.start()
-
-
