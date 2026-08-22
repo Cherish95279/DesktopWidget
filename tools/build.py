@@ -15,7 +15,6 @@ import subprocess
 import shutil
 from datetime import datetime
 
-
 # GitHub Actions Windows Runner UTF-8兼容
 if sys.platform == "win32":
     try:
@@ -23,7 +22,6 @@ if sys.platform == "win32":
         sys.stderr.reconfigure(encoding="utf-8")
     except Exception:
         pass
-
 
 # 颜色输出
 try:
@@ -95,12 +93,10 @@ def archive_dist(version):
         )
         return
 
-
     os.makedirs(
         archive_path,
         exist_ok=True
     )
-
 
     shutil.move(
         dist_path,
@@ -114,14 +110,12 @@ def archive_dist(version):
         f"已归档: dist/ -> {archive_path}\\dist"
     )
 
-
     build_path = os.path.join(
         project_root,
         "build"
     )
 
     if os.path.exists(build_path):
-
         shutil.rmtree(
             build_path
         )
@@ -142,7 +136,6 @@ def update_version(version):
 
     clean_version = version.lstrip("v")
 
-
     # constants.py
 
     constants_path = os.path.join(
@@ -151,15 +144,12 @@ def update_version(version):
         "constants.py"
     )
 
-
     with open(
-        constants_path,
-        "r",
-        encoding="utf-8"
+            constants_path,
+            "r",
+            encoding="utf-8"
     ) as f:
-
         content = f.read()
-
 
     content = re.sub(
         r'VERSION = "v\d+\.\d+\.\d+"',
@@ -167,21 +157,16 @@ def update_version(version):
         content
     )
 
-
     with open(
-        constants_path,
-        "w",
-        encoding="utf-8"
+            constants_path,
+            "w",
+            encoding="utf-8"
     ) as f:
-
         f.write(content)
-
 
     print_info(
         f"已更新 {constants_path}: VERSION = {version}"
     )
-
-
 
     # DesktopWidget.iss
 
@@ -190,23 +175,18 @@ def update_version(version):
         "DesktopWidget.iss"
     )
 
-
     with open(
-        iss_path,
-        "r",
-        encoding="utf-8"
+            iss_path,
+            "r",
+            encoding="utf-8"
     ) as f:
-
         content = f.read()
-
-
 
     content = re.sub(
         r'#define MyAppVersion "\d+\.\d+\.\d+"',
         f'#define MyAppVersion "{clean_version}"',
         content
     )
-
 
     content = re.sub(
         r'VersionInfoTextVersion=\d+\.\d+\.\d+',
@@ -220,40 +200,45 @@ def update_version(version):
         content
     )
 
-
     with open(
-        iss_path,
-        "w",
-        encoding="utf-8"
+            iss_path,
+            "w",
+            encoding="utf-8"
     ) as f:
-
         f.write(content)
-
-
 
     print_info(
         f"已更新 {iss_path}: MyAppVersion = {clean_version}"
     )
 
 
-
 def run_pyinstaller():
-
     project_root = get_project_root()
 
     print_info(
         "正在执行 PyInstaller 打包..."
     )
 
-
     os.chdir(
         project_root
     )
 
+    # 查找 pyinstaller.exe（优先用户指定的全局路径，回退到 PATH）
+    pyinstaller_path = r"D:\python\Scripts\pyinstaller.exe"
+    if not os.path.exists(pyinstaller_path):
+        pyinstaller_path = shutil.which("pyinstaller")
+    if not pyinstaller_path:
+        print_error("未找到 pyinstaller.exe！")
+        sys.exit(1)
+
+    # venv site-packages 路径（基于项目根，等价于 D:\PythonProjects\DesktopWidget\.venv\Lib\site-packages）
+    venv_site_packages = os.path.join(
+        project_root, ".venv", "Lib", "site-packages"
+    )
 
     cmd = [
 
-        "pyinstaller",
+        pyinstaller_path,
 
         "-D",
 
@@ -267,11 +252,26 @@ def run_pyinstaller():
         "-i",
         "icons/app.ico",
 
+        "--paths",
+        venv_site_packages,
+
         "--collect-all",
         "zhdate",
 
         "--hidden-import",
         "zhdate",
+
+        "--collect-all",
+        "winsdk",
+
+        "--hidden-import",
+        "winsdk.windows.services.store",
+
+        "--collect-all",
+        "asyncio",
+
+        "--hidden-import",
+        "asyncio.base_events",
 
         "--add-data",
         f"skins{os.pathsep}skins",
@@ -285,7 +285,6 @@ def run_pyinstaller():
         "widget.py"
     ]
 
-
     result = subprocess.run(
         cmd,
         capture_output=True,
@@ -294,9 +293,7 @@ def run_pyinstaller():
         errors="replace"
     )
 
-
     if result.returncode != 0:
-
         print_error(
             "PyInstaller 打包失败！"
         )
@@ -305,23 +302,17 @@ def run_pyinstaller():
 
         sys.exit(1)
 
-
-
     print_info(
         "PyInstaller 打包完成！"
     )
 
 
-
 def run_inno_setup():
-
     project_root = get_project_root()
-
 
     print_info(
         "正在执行 Inno Setup 编译..."
     )
-
 
     # 查找iscc.exe
 
@@ -329,53 +320,39 @@ def run_inno_setup():
         "ISCC_PATH"
     )
 
-
     if not iscc_path:
-
         iscc_path = shutil.which(
             "iscc"
         )
 
-
     if not iscc_path:
-
         iscc_path = (
             r"D:\Program Files (x86)"
             r"\Inno Setup 6\iscc.exe"
         )
 
-
-
     if not os.path.exists(iscc_path):
-
         print_error(
             f"未找到 Inno Setup Compiler: {iscc_path}"
         )
 
         sys.exit(1)
 
-
-
     iss_path = os.path.join(
         project_root,
         "DesktopWidget.iss"
     )
 
-
     if not os.path.exists(iss_path):
-
         print_error(
             f"未找到脚本: {iss_path}"
         )
 
         sys.exit(1)
 
-
-
     os.chdir(
         project_root
     )
-
 
     result = subprocess.run(
         [
@@ -392,9 +369,7 @@ def run_inno_setup():
         errors="replace"
     )
 
-
     if result.returncode != 0:
-
         print_error(
             "Inno Setup 编译失败！"
         )
@@ -403,19 +378,13 @@ def run_inno_setup():
 
         sys.exit(1)
 
-
-
     print_info(
         "Inno Setup 编译完成！"
     )
 
 
-
 def main():
-
-
     if len(sys.argv) < 2:
-
         print_error(
             "请指定版本号！"
         )
@@ -426,37 +395,26 @@ def main():
 
         sys.exit(1)
 
-
-
     version = sys.argv[1]
 
-
     if not re.match(
-        r"v?\d+\.\d+\.\d+",
-        version
+            r"v?\d+\.\d+\.\d+",
+            version
     ):
-
         print_error(
             f"无效版本号: {version}"
         )
 
         sys.exit(1)
 
-
-
     if not version.startswith("v"):
-
         version = "v" + version
-
-
 
     print_info(
         f"开始打包 {version}..."
     )
 
     print("=" * 50)
-
-
 
     update_version(version)
 
@@ -466,11 +424,7 @@ def main():
 
     run_inno_setup()
 
-
-
     clean_version = version.lstrip("v")
-
-
 
     print("=" * 50)
 
@@ -478,18 +432,14 @@ def main():
         "✅ 打包完成！"
     )
 
-
     print_info(
         f"输出文件: dist\\DesktopWidget-v{clean_version}-windows-x64-Setup.exe"
 
-        
     )
-
 
     print_info(
         f"版本号: {version}"
     )
-
 
     print_info("")
 
@@ -512,7 +462,6 @@ def main():
     print_info(
         "  4. 推送 Release"
     )
-
 
 
 if __name__ == "__main__":

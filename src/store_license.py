@@ -3,28 +3,46 @@
 微软商店 Pro License 检测和购买模块。
 仅商店版（MSIX）可用，exe 版会返回检测失败。
 """
-import asyncio
 import threading
 
 # pro_version 加载项的 Store ID
 PRO_STORE_ID = "9NN1JB5S2Q0Q"
 
+def _log(msg):
+    import os, tempfile
+    try:
+        with open(os.path.join(tempfile.gettempdir(), "dw_store_debug.log"), "a", encoding="utf-8") as f:
+            f.write(str(msg) + "\n")
+    except Exception:
+        pass
+
+
 # 缓存检测结果，避免频繁调用异步 API
 _cached_result = None  # None=未检测, True=已购买, False=未购买, "error"=检测失败
 
 
-def _run_async(coro):
-    """在新线程中运行异步函数"""
-    result = [None]
-    def run():
+def _wait_async(async_op, timeout=30):
+    """同步等待 winsdk 异步操作完成，不依赖 asyncio"""
+    import threading as _t
+    done = _t.Event()
+    box = {}
+
+    def _on_completed(op, status):
+        box["status"] = status
+        box["result"] = None
         try:
-            result[0] = asyncio.run(coro)
+            box["result"] = op.get_results()
         except Exception as e:
-            result[0] = ("error", str(e))
-    t = threading.Thread(target=run, daemon=True)
-    t.start()
-    t.join(timeout=10)
-    return result[0]
+            box["error"] = e
+        done.set()
+
+    async_op.completed = _on_completed
+    done.wait(timeout=timeout)
+    if not done.is_set():
+        return ("error", "timeout")
+    if "error" in box:
+        return ("error", str(box["error"]))
+    return box.get("result")
 
 
 def _check_license_inner(window_handle=None):
@@ -35,23 +53,28 @@ def _check_license_inner(window_handle=None):
             ctx = StoreContext.get_for_window(window_handle)
         else:
             ctx = StoreContext.get_default()
+        _log(f"check_pro_license ctx_ok={ctx is not None} wh={window_handle}")
         if ctx is None:
             return "error"
 
-        async def check():
-            license = await ctx.get_app_license_async()
-            add_ons = license.add_on_licenses
-            for i in range(add_ons.size):
-                key = add_ons.get_at(i)
-                val = add_ons.lookup(key)
-                if val.is_active:
-                    return True
-            return False
+        op = ctx.get_app_license_async()
+        license = _wait_async(op)
+        if isinstance(license, tuple) and license[0] == "error":
+            _log(f"check_pro_license license_error: {license[1]}")
+            return "error"
 
-        return _run_async(check())
-    except ImportError:
+        add_ons = license.add_on_licenses
+        for i in range(add_ons.size):
+            key = add_ons.get_at(i)
+            val = add_ons.lookup(key)
+            if val.is_active:
+                return True
+        return False
+    except ImportError as e:
+        _log(f"check_pro_license ImportError: {e}")
         return "error"
-    except Exception:
+    except Exception as e:
+        _log(f"check_pro_license exception: {type(e).__name__}: {e}")
         return "error"
 
 
@@ -86,8 +109,9 @@ def request_purchase(callback=None, window_handle=None):
         from winsdk.windows.services.store import StoreContext, StorePurchaseStatus
         import winsdk._winrt as winrt
 
-        async def purchase():
+        def purchase():
             ctx = StoreContext.get_default()
+            _log(f"request_purchase ctx_ok={ctx is not None} wh={window_handle}")
             if ctx is None:
                 return "error"
 
@@ -95,11 +119,23 @@ def request_purchase(callback=None, window_handle=None):
             if window_handle:
                 try:
                     winrt.initialize_with_window(ctx, window_handle)
-                except Exception:
-                    pass
+                    _log("initialize_with_window ok")
+                except Exception as e:
+                    _log(f"initialize_with_window failed: {type(e).__name__}: {e}")
 
-            result = await ctx.request_purchase_async(PRO_STORE_ID)
+            try:
+                op = ctx.request_purchase_async(PRO_STORE_ID)
+                result = _wait_async(op, timeout=120)
+            except Exception as e:
+                _log(f"request_purchase_async exception: {type(e).__name__}: {e}")
+                return "error"
+
+            if isinstance(result, tuple) and result[0] == "error":
+                _log(f"purchase_wait_error: {result[1]}")
+                return "error"
+
             status = result.status
+            _log(f"purchase_status={status}")
             if status == StorePurchaseStatus.SUCCEEDED:
                 refresh_license()
                 return True
@@ -110,16 +146,18 @@ def request_purchase(callback=None, window_handle=None):
                 return False
 
         def run():
-            r = _run_async(purchase())
+            r = purchase()
+            _log(f"purchase_callback_result={r!r}")
             if callback:
                 callback(r)
 
         t = threading.Thread(target=run, daemon=True)
         t.start()
     except ImportError:
+        _log("request_purchase ImportError")
         if callback:
             callback("error")
     except Exception as e:
-        print(f"[Store] request_purchase error: {e}")
+        _log(f"request_purchase outer_exception: {type(e).__name__}: {e}")
         if callback:
             callback("error")

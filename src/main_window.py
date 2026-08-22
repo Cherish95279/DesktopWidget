@@ -51,6 +51,17 @@ if sys.platform == 'win32' and getattr(sys, 'frozen', False):
 class MainWindow(QWidget):
     def __init__(self):
         super().__init__()
+
+        # ===== 开机自启初始化（首次运行默认开启） =====
+        try:
+            from PyQt6.QtCore import QSettings
+            from .autostart import set_autostart, get_autostart_status
+            settings = QSettings("MyDesktopApp", "WeatherSettings")
+            autostart_on = settings.value("autostart", True, type=bool)
+            if autostart_on and not get_autostart_status():
+                set_autostart(True)
+        except Exception:
+            pass
         TranslatorManager().init_translator(QApplication.instance())
         TranslatorManager().on_language_changed(self._on_language_changed)
         self._init_i18n()

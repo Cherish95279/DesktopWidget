@@ -5,6 +5,14 @@ from PyQt6.QtCore import *
 from PyQt6.QtGui import *
 import psutil
 
+def _dw_log(msg):
+    import os, tempfile
+    try:
+        with open(os.path.join(tempfile.gettempdir(), "dw_store_debug.log"), "a", encoding="utf-8") as f:
+            f.write(str(msg) + "\n")
+    except Exception:
+        pass
+
 
 class DetailPopup(QWidget):
     """
@@ -519,29 +527,42 @@ class DetailPopup(QWidget):
     def _on_pro_clicked(self):
         """点击 Pro 提示行，触发购买"""
         try:
+            _dw_log("_on_pro_clicked entered")
             from ..utils import is_pro_enabled
             pro = is_pro_enabled()
+            _dw_log(f"is_pro_enabled={pro!r}")
             if pro:
                 return
             from PyQt6.QtCore import QSettings
             settings = QSettings("MyDesktopApp", "WeatherSettings")
-            dev_version = settings.value("dev_version", "", type=str)
-            if dev_version:
-                is_store = (dev_version == "store")
-            else:
+            import sys as _sys
+            if getattr(_sys, "frozen", False):
                 from ..updater import is_store_version
                 is_store = is_store_version()
+                _dw_log(f"frozen is_store={is_store!r}")
+            else:
+                dev_version = settings.value("dev_version", "", type=str)
+                _dw_log(f"dev_version={dev_version!r}")
+                if dev_version:
+                    is_store = (dev_version == "store")
+                else:
+                    from ..updater import is_store_version
+                    is_store = is_store_version()
+                    _dw_log(f"is_store={is_store!r}")
             if is_store:
                 # 商店版：调用购买 API
                 from ..store_license import request_purchase
                 window_handle = int(self._main_window.winId())
+                _dw_log(f"calling request_purchase wh={window_handle}")
                 request_purchase(callback=self._on_purchase_result, window_handle=window_handle)
             else:
                 # exe版/开发环境：打开商店网页
+                _dw_log("NOT store, opening webpage")
                 from PyQt6.QtGui import QDesktopServices
                 from PyQt6.QtCore import QUrl
                 QDesktopServices.openUrl(QUrl("ms-windows-store://pdp/?productid=9P6GSZ8NNW52"))
         except Exception as e:
+            _dw_log(f"exception: {type(e).__name__}: {e}")
             print(f"[Pro] click error: {e}")
 
     def _on_purchase_result(self, result):

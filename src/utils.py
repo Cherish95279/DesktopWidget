@@ -115,10 +115,14 @@ def get_ip_location():
     """
     调用 ip-api.com 获取当前 IP 的地理位置和运营商
     返回: (latitude, longitude, city, isp) 或 (None, None, None, None)
+    城市名语言跟随当前界面语言
     """
     import requests
     try:
-        url = "http://ip-api.com/json/?lang=zh-CN&fields=status,country,city,lat,lon,isp,org"
+        from PyQt6.QtCore import QSettings
+        app_lang = QSettings("MyDesktopApp", "WeatherSettings").value("language", "")
+        ip_lang = app_lang.split("_")[0] if app_lang else "en"
+        url = f"http://ip-api.com/json/?lang={ip_lang}&fields=status,country,city,lat,lon,isp,org"
         resp = requests.get(url, timeout=5)
         if resp.status_code != 200:
             resp = requests.get("https://ipapi.co/json/", timeout=5)
@@ -530,13 +534,18 @@ def is_pro_enabled():
     dev_pro = settings.value("dev_pro_enabled", False, type=bool)
     if dev_pro:
         return True
-    # 版本检测
-    dev_version = settings.value("dev_version", "", type=str)
-    if dev_version:
-        is_store = (dev_version == "store")
-    else:
+    # 版本检测：打包后强制用 .store 文件检测，忽略开发选项残留
+    import sys as _sys
+    if getattr(_sys, "frozen", False):
         from .updater import is_store_version
         is_store = is_store_version()
+    else:
+        dev_version = settings.value("dev_version", "", type=str)
+        if dev_version:
+            is_store = (dev_version == "store")
+        else:
+            from .updater import is_store_version
+            is_store = is_store_version()
     if is_store:
         # 商店版：检测 pro_version License
         try:
