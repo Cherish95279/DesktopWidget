@@ -21,6 +21,8 @@ class DetailPopup(QWidget):
     根据 is_pro_enabled() 区分 Free/Pro 显示内容。
     """
 
+    purchase_finished = pyqtSignal(object)
+
     F_POPUP_WIDTH = 220
     F_POPUP_MIN_HEIGHT = 60
     F_BG_COLOR = QColor(245, 246, 250, 220)    # 浅灰半透明
@@ -47,6 +49,7 @@ class DetailPopup(QWidget):
         self._fade_timer = QTimer()
         self._fade_timer.setSingleShot(True)
         self._fade_timer.timeout.connect(self.hide)
+        self.purchase_finished.connect(self._handle_purchase_result)
 
         self._setup_ui()
 
@@ -566,9 +569,14 @@ class DetailPopup(QWidget):
             print(f"[Pro] click error: {e}")
 
     def _on_purchase_result(self, result):
-        """购买结果回调"""
+        """购买结果回调（在后台线程被调用），通过信号转发到主线程处理"""
+        self.purchase_finished.emit(result)
+
+    def _handle_purchase_result(self, result):
+        """主线程处理购买结果"""
         if result is True:
-            # 购买成功，刷新显示
+            from ..store_license import refresh_license
+            refresh_license()
             self.hide()
 
     def hideEvent(self, event):

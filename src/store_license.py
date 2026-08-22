@@ -4,6 +4,7 @@
 仅商店版（MSIX）可用，exe 版会返回检测失败。
 """
 import threading
+import time
 
 # pro_version 加载项的 Store ID
 PRO_STORE_ID = "9NN1JB5S2Q0Q"
@@ -19,6 +20,12 @@ def _log(msg):
 
 # 缓存检测结果，避免频繁调用异步 API
 _cached_result = None  # None=未检测, True=已购买, False=未购买, "error"=检测失败
+_cached_time = 0.0  # 缓存写入时间（monotonic）
+# True/False 缓存 5 分钟过期，"error" 仅缓存 30 秒，避免临时故障被长期锁定
+_CACHE_TTL = 300
+_ERROR_CACHE_TTL = 30
+# 是否已订阅商店许可证变更事件
+_license_subscribed = False
 
 
 def _wait_async(async_op, timeout=30):
@@ -87,9 +94,16 @@ def check_pro_license(window_handle=None):
         "error" = 检测失败（网络/API异常）
     """
     global _cached_result
+    global _cached_time
+    now = time.monotonic()
     if _cached_result is not None:
-        return _cached_result
+        ttl = _ERROR_CACHE_TTL if _cached_result == "error" else _CACHE_TTL
+        if (now - _cached_time) < ttl:
+            return _cached_result
+    # 首次或缓存过期：订阅许可证变更事件（仅一次）
+    subscribe_license_changes()
     _cached_result = _check_license_inner(window_handle)
+    _cached_time = now
     return _cached_result
 
 
@@ -97,6 +111,35 @@ def refresh_license():
     """清除缓存，重新检测"""
     global _cached_result
     _cached_result = None
+    global _cached_time
+    _cached_time = 0.0
+
+
+def subscribe_license_changes():
+    """订阅商店许可证变更事件。
+    系统后台同步许可证（如内购完成后）时会触发，自动清除缓存，
+    使下次检测拿到最新状态，无需重启应用。
+    """
+    global _license_subscribed
+    if _license_subscribed:
+        return
+    try:
+        from winsdk.windows.services.store import StoreContext
+        ctx = StoreContext.get_default()
+        if ctx is None:
+            return
+
+        def _on_changed(sender, args):
+            _log("offline_licenses_changed")
+            refresh_license()
+
+        ctx.add_offline_licenses_changed(_on_changed)
+        _license_subscribed = True
+        _log("subscribe_license_changes ok")
+    except ImportError:
+        pass
+    except Exception as e:
+        _log(f"subscribe_license_changes exception: {type(e).__name__}: {e}")
 
 
 def request_purchase(callback=None, window_handle=None):

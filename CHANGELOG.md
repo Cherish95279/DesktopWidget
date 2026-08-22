@@ -7,6 +7,31 @@ All notable changes to DesktopWidget are documented in this file.
 
 ---
 
+# 🚀 v1.5.0 (2026-08-22)
+
+## 💳 Payment Feature Improvements
+
+- Fixed an issue where the payment API failed to launch in the Microsoft Store version.
+
+## ⚙️ Program Logic Improvements
+
+- Improved version detection logic.
+
+- Optimized the startup-at-boot logic to improve startup stability.
+
+## 🌤️ Weather Feature Improvements
+
+- Fixed an issue where the weather location was always displayed in Chinese when using automatic location detection.
+
+## 🐛 Stability Improvements
+
+- Optimized other known issues.
+
+- Improved overall application stability and user experience.
+
+
+---
+
 # 🚀 v1.4.0（2026-08-18）
 
 ## 🖱️ Hover Details
