@@ -1,2 +1,0 @@
---- ko (1 untranslated) ---
-  [SettingsDialog] 捐赠

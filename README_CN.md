@@ -378,9 +378,11 @@ DesktopWidget/
 ├── screenshots/              # 截图与预览资源
 ├── icons/                    # 应用图标
 ├── skins/                    # 主题资源
-├── tools/                    # 构建与发布工具
+├── installer/                # Inno Setup 语言包
 │
 ├── widget.py                 # 程序入口
+├── DesktopWidget.spec        # PyInstaller 打包配置
+├── DesktopWidget.iss         # Inno Setup 安装脚本
 ├── LICENSE                   # MIT 开源协议
 └── README.md
 ```

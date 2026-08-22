@@ -3,7 +3,7 @@ from PyQt6.QtCore import QCoreApplication
 AMAP_KEY = "c348525fc6252c6a54b8c72fa5017a45"
 ORIG_W, ORIG_H = 400, 297
 CENTER_X, CENTER_Y = 201, 144
-VERSION = "v1.4.1"
+VERSION = "v1.4.8"
 
 # GitHub 仓库信息
 GITHUB_REPO = "Cherish95279/DesktopWidget"

@@ -338,9 +338,11 @@ DesktopWidget/
 ├── screenshots/              # Preview images
 ├── icons/                    # Application icons
 ├── skins/                    # Theme resources
-├── tools/                    # Build and release tools
+├── installer/                # Inno Setup language files
 │
 ├── widget.py                 # Application entry point
+├── DesktopWidget.spec        # PyInstaller build config
+├── DesktopWidget.iss         # Inno Setup installer script
 ├── LICENSE                   # MIT License
 └── README.md
 ```
