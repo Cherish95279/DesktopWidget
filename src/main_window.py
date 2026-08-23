@@ -55,11 +55,19 @@ class MainWindow(QWidget):
         # ===== 开机自启初始化（首次运行默认开启） =====
         try:
             from PyQt6.QtCore import QSettings
-            from .autostart import set_autostart, get_autostart_status
+            from .autostart import set_autostart, get_autostart_detail
             settings = QSettings("MyDesktopApp", "WeatherSettings")
             autostart_on = settings.value("autostart", True, type=bool)
-            if autostart_on and not get_autostart_status():
+            detail = get_autostart_detail()
+            # 仅在“应用还能控制”且当前未开启时尝试开启，
+            # DisabledByUser 时 request_enable_async 不会再弹提示，跳过避免空跑
+            if autostart_on and detail["available"] and not detail["enabled"] and not detail["blocked_by_user"]:
                 set_autostart(True)
+                detail = get_autostart_detail()
+            # 同步缓存到系统真实状态，避免 QSettings 与系统脱节
+            if detail["available"]:
+                settings.setValue("autostart", detail["enabled"])
+                settings.sync()
         except Exception:
             pass
         TranslatorManager().init_translator(QApplication.instance())

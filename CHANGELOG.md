@@ -7,6 +7,17 @@ All notable changes to DesktopWidget are documented in this file.
 
 ---
 
+# 🚀 v1.5.1 (2026-08-23)
+
+## ⚙️ Startup-at-Boot Fix
+
+\- Fixed an issue where the startup-at-boot setting was always disconnected from the actual startup logic.
+
+\- Ensured that the startup-at-boot setting stays consistent with the actual startup behavior.
+
+
+---
+
 # 🚀 v1.5.0 (2026-08-22)
 
 ## 💳 Payment Feature Improvements

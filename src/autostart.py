@@ -71,7 +71,7 @@ def _get_autostart_status_reg() -> bool:
 # StartupTask 方式（商店版 MSIX）
 # ============================================================
 
-def _wait_async(async_op, timeout=10):
+def _wait_async(async_op, timeout=15):
     """同步等待 winsdk 异步操作完成"""
     import threading
     done = threading.Event()
@@ -93,22 +93,38 @@ def _wait_async(async_op, timeout=10):
     return box.get("result")
 
 
+def _get_startup_task():
+    """获取 StartupTask 对象，失败返回 None"""
+    try:
+        from winsdk.windows.applicationmodel import StartupTask
+        task = _wait_async(StartupTask.get_async(_STARTUP_TASK_ID))
+        if isinstance(task, tuple) and task[0] == "error":
+            return None
+        return task
+    except Exception:
+        return None
+
+def _state_enabled(state) -> bool:
+    """判断某个 StartupTaskState 是否表示“已开启”（会随开机启动）"""
+    try:
+        from winsdk.windows.applicationmodel import StartupTaskState
+        return state in (StartupTaskState.ENABLED, StartupTaskState.ENABLED_BY_POLICY)
+    except Exception:
+        return False
+
 def _set_autostart_startup_task(enabled: bool) -> bool:
     try:
-        from winsdk.windows.applicationmodel import StartupTask, StartupTaskState
-
-        op = StartupTask.get_async(_STARTUP_TASK_ID)
-        task = _wait_async(op)
-        if isinstance(task, tuple) and task[0] == "error":
+        task = _get_startup_task()
+        if task is None:
             return False
 
         if enabled:
-            # 请求开启自启（用户可能看到系统提示）
-            enable_op = task.request_enable_async()
-            result = _wait_async(enable_op)
+            # 请求开启自启（首次用户可能看到系统提示）
+            result = _wait_async(task.request_enable_async())
             if isinstance(result, tuple) and result[0] == "error":
-                return False
-            return result == StartupTaskState.ALLOWED or result == StartupTaskState.ENABLED_BY_POLICY or result == StartupTaskState.ENABLED
+                # 超时/异常：请求可能已发出，回退读取真实状态
+                return _state_enabled(task.state)
+            return _state_enabled(result) or _state_enabled(task.state)
         else:
             task.disable()
             return True
@@ -118,15 +134,21 @@ def _set_autostart_startup_task(enabled: bool) -> bool:
 
 def _get_autostart_status_startup_task() -> bool:
     try:
-        from winsdk.windows.applicationmodel import StartupTask, StartupTaskState
-
-        op = StartupTask.get_async(_STARTUP_TASK_ID)
-        task = _wait_async(op)
-        if isinstance(task, tuple) and task[0] == "error":
+        task = _get_startup_task()
+        if task is None:
             return False
+        return _state_enabled(task.state)
+    except Exception:
+        return False
 
-        state = task.state
-        return state == StartupTaskState.ENABLED or state == StartupTaskState.ENABLED_BY_POLICY
+def _is_blocked_by_user_startup_task() -> bool:
+    """MSIX 下用户曾在系统层手动关闭，此时 App 自身无法再开启"""
+    try:
+        from winsdk.windows.applicationmodel import StartupTaskState
+        task = _get_startup_task()
+        if task is None:
+            return False
+        return task.state == StartupTaskState.DISABLED_BY_USER
     except Exception:
         return False
 
@@ -155,3 +177,45 @@ def get_autostart_status() -> bool:
         return _get_autostart_status_startup_task()
     else:
         return _get_autostart_status_reg()
+
+def get_autostart_detail() -> dict:
+    """
+    返回开机自启的详细状态，供 UI 决定提示文案。
+
+    - enabled: 当前是否真正会开机自启
+    - available: 检测是否可用（MSIX 下 winsdk 异常时为 False）
+    - blocked_by_user: MSIX 下被用户在系统层手动关闭，App 无法再开启
+    """
+    if not _is_store_version():
+        return {
+            "enabled": _get_autostart_status_reg(),
+            "available": True,
+            "blocked_by_user": False,
+        }
+    task = _get_startup_task()
+    if task is None:
+        return {"enabled": False, "available": False, "blocked_by_user": False}
+    try:
+        from winsdk.windows.applicationmodel import StartupTaskState
+        state = task.state
+        return {
+            "enabled": _state_enabled(state),
+            "available": True,
+            "blocked_by_user": state == StartupTaskState.DISABLED_BY_USER,
+        }
+    except Exception:
+        return {"enabled": False, "available": False, "blocked_by_user": False}
+
+def is_autostart_blocked_by_user() -> bool:
+    """是否被用户在系统层手动关闭（仅 MSIX 有意义）"""
+    if not _is_store_version():
+        return False
+    return _is_blocked_by_user_startup_task()
+
+def open_startup_settings() -> bool:
+    """打开系统“启动应用”设置页，供用户手动开启被禁用的自启"""
+    try:
+        os.startfile("ms-settings:startupapps")
+        return True
+    except Exception:
+        return False

@@ -6,7 +6,13 @@ from PyQt6.QtGui import QColor, QFont, QFontDatabase
 from ..utils import resource_path
 from ..i18n.translations import TranslatorManager
 from ..notice.notice_manager import NoticeManager
-from ..autostart import set_autostart, get_autostart_status
+from ..autostart import (
+    set_autostart,
+    get_autostart_status,
+    get_autostart_detail,
+    is_autostart_blocked_by_user,
+    open_startup_settings,
+)
 
 
 class GeneralPage(QWidget):
@@ -196,18 +202,33 @@ class GeneralPage(QWidget):
     def _toggle_autostart(self):
         if self._updating:
             return
-        self.autostart_checked = not self.autostart_checked
-        self._update_autostart_button()
-        settings = QSettings("MyDesktopApp", "WeatherSettings")
-        settings.setValue("autostart", self.autostart_checked)
-        settings.sync()
-        # 直接写入/删除 Windows 注册表
-        if not set_autostart(self.autostart_checked):
-            QMessageBox.warning(
-                self,
-                self.tr("提示"),
-                self.tr("设置开机自启动失败，请检查权限")
-            )
+        new_value = not self.autostart_checked
+        if set_autostart(new_value):
+            # 成功才提交界面与缓存
+            self.autostart_checked = new_value
+            self._update_autostart_button()
+            settings = QSettings("MyDesktopApp", "WeatherSettings")
+            settings.setValue("autostart", self.autostart_checked)
+            settings.sync()
+        else:
+            # 失败：恢复为系统真实状态，并给出针对性提示
+            self.autostart_checked = get_autostart_status()
+            self._update_autostart_button()
+            if is_autostart_blocked_by_user():
+                ret = QMessageBox.question(
+                    self,
+                    self.tr("提示"),
+                    self.tr("开机自启已被你在系统设置中关闭，需要手动重新开启。是否打开“启动应用”设置页？"),
+                    QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
+                )
+                if ret == QMessageBox.StandardButton.Yes:
+                    open_startup_settings()
+            else:
+                QMessageBox.warning(
+                    self,
+                    self.tr("提示"),
+                    self.tr("设置开机自启动失败，请稍后重试，或在“任务管理器→启动”中手动开启")
+                )
 
     def _update_autostart_button(self):
         if self.autostart_checked:
@@ -291,10 +312,18 @@ class GeneralPage(QWidget):
             settings = QSettings("MyDesktopApp", "WeatherSettings")
 
             self.autostart_checked = settings.value("autostart", True, type=bool)
-            self._update_autostart_button()
-            # 首次运行时默认开启 → 同步写入注册表
-            if self.autostart_checked and not get_autostart_status():
+            detail = get_autostart_detail()
+            # 首次运行时默认开启 → 尝试同步写入系统（注册表/StartupTask）
+            # DisabledByUser 时 App 无法再开，跳过无效调用
+            if self.autostart_checked and detail["available"] and not detail["enabled"] and not detail["blocked_by_user"]:
                 set_autostart(True)
+                detail = get_autostart_detail()
+            # 以系统真实状态为准刷新 UI，避免界面与系统脱节
+            if detail["available"]:
+                self.autostart_checked = detail["enabled"]
+                settings.setValue("autostart", self.autostart_checked)
+                settings.sync()
+            self._update_autostart_button()
 
             mode = settings.value("window_mode", "float")
             mode_index = {"float": 0, "bottom": 1, "top": 2}.get(mode, 0)
