@@ -74,10 +74,17 @@ def create_desktop_shortcut():
 
 from src.main_window import MainWindow
 from src.notice import NoticeManager
+from src.single_instance import check_or_listen
 
 
 def main():
     app = QApplication(sys.argv)
+
+    # 单实例保护：若已有实例在运行，则通知其显示窗口并退出当前进程
+    instance_server = check_or_listen(app)
+    if instance_server is None:
+        # 已有实例在运行（或无法建立监听时退化为多开），本进程退出
+        sys.exit(0)
 
     app.setApplicationName("DesktopWidget")
     app.setOrganizationName("MyDesktopApp")
@@ -94,6 +101,10 @@ def main():
     window = MainWindow()
 
     app.aboutToQuit.connect(window.shutdown)
+
+    # 收到第二个实例的唤起请求时，显示并激活主窗口
+    if instance_server is not None:
+        instance_server.activated.connect(window.show_and_activate)
 
     # 公告管理器
     notice_manager = NoticeManager.get_instance()

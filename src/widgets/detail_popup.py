@@ -36,8 +36,7 @@ class DetailPopup(QWidget):
         self._main_window = parent
         self.setWindowFlags(
             Qt.WindowType.FramelessWindowHint |
-            Qt.WindowType.Tool |
-            Qt.WindowType.WindowStaysOnTopHint
+            Qt.WindowType.Tool
         )
         self.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
         self.setAttribute(Qt.WidgetAttribute.WA_ShowWithoutActivating)
@@ -58,6 +57,20 @@ class DetailPopup(QWidget):
         self.setMaximumWidth(350)
         self.setMinimumHeight(60)
         self.setMaximumHeight(9999)
+
+    def apply_window_mode(self, mode):
+        """Sync this popup z-order hint with the main window mode."""
+        flags = (
+            Qt.WindowType.FramelessWindowHint |
+            Qt.WindowType.Tool
+        )
+        if mode == "top":
+            flags = flags | Qt.WindowType.WindowStaysOnTopHint
+        was_visible = self.isVisible()
+        self.setWindowFlags(flags)
+        if was_visible:
+            self.show()
+            self.raise_()
 
     def paintEvent(self, event):
         painter = QPainter(self)
@@ -509,7 +522,7 @@ class DetailPopup(QWidget):
 
     def leaveEvent(self, event):
         """鼠标离开弹窗时开始消失"""
-        self.start_fade_out(1000)
+        self.start_fade_out(200)
         super().leaveEvent(event)
 
     def mousePressEvent(self, event):

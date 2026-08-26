@@ -797,6 +797,9 @@ class MainWindow(QWidget):
         self._detail_popup = DetailPopup(self)
         self.setMouseTracking(True)
         self._last_hover_slot = None
+        # 启动时按当前窗口模式同步弹窗层级
+        if hasattr(self, 'tray') and self.tray and hasattr(self.tray, '_window_mode'):
+            self._detail_popup.apply_window_mode(self.tray._window_mode)
         if hasattr(self, 'notice_bubble') and self.notice_bubble:
             self.notice_bubble.setAttribute(Qt.WidgetAttribute.WA_TransparentForMouseEvents, True)
 
@@ -804,7 +807,7 @@ class MainWindow(QWidget):
         super().leaveEvent(event)
         if hasattr(self, '_detail_popup'):
             self._last_hover_slot = None
-            self._detail_popup.start_fade_out(2000)
+            self._detail_popup.start_fade_out(200)
 
     def _get_hover_slot(self, pos):
         from PyQt6.QtCore import QSettings
@@ -829,6 +832,12 @@ class MainWindow(QWidget):
                 content_key = settings.value(slot_key, DEFAULT_LAYOUT.get(slot_key, "empty"))
                 return (slot_key, content_key, rect)
         return None
+
+    def show_and_activate(self):
+        """显示并激活主窗口（用于单实例唤起）。"""
+        self.show()
+        self.raise_()
+        self.activateWindow()
 
     def closeEvent(self, event):
         if self._exiting:
@@ -1266,7 +1275,7 @@ class MainWindow(QWidget):
                 else:
                     if self._last_hover_slot is not None:
                         self._last_hover_slot = None
-                        self._detail_popup.start_fade_out(2000)
+                        self._detail_popup.start_fade_out(200)
             else:
                 if self._last_hover_slot is not None:
                     self._last_hover_slot = None

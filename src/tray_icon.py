@@ -193,6 +193,10 @@ class TrayIcon(QSystemTrayIcon):
         window.setWindowFlags(flags)
         window.show()  # 重新显示使标志生效
 
+        # 同步悬停详情弹窗的层级，使其跟随主窗口模式
+        if hasattr(window, '_detail_popup') and window._detail_popup:
+            window._detail_popup.apply_window_mode(mode)
+
         # 更新菜单项选中状态
         if hasattr(self, '_bottom_action'):
             self._bottom_action.setChecked(mode == "bottom")

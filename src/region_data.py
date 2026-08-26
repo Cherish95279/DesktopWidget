@@ -1301,7 +1301,14 @@ def _load_coords():
     try:
         import json
         import os
-        json_path = os.path.join(os.path.dirname(__file__), "china_regions.json")
+        import sys
+        # PyInstaller 冻结环境优先用资源根目录，开发环境回退到本文件所在目录
+        try:
+            json_path = os.path.join(sys._MEIPASS, "china_regions.json")
+            if not os.path.exists(json_path):
+                json_path = os.path.join(os.path.dirname(__file__), "china_regions.json")
+        except AttributeError:
+            json_path = os.path.join(os.path.dirname(__file__), "china_regions.json")
         if not os.path.exists(json_path):
             print(f"[WARN] china_regions.json 不存在: {json_path}")
             _coords_loaded = True

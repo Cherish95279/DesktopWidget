@@ -7,6 +7,33 @@ All notable changes to DesktopWidget are documented in this file.
 
 ---
 
+# 🚀 v1.5.2 (2026-08-26)
+
+## 🌤️ Weather Feature Fixes
+
+\- Fixed an issue where the weather main window displayed `<set api>` during the first weather thread startup when the IP location was detected as China.
+
+## 🔒 Application Runtime Improvements
+
+\- Added a single-instance lock for windows.
+
+\- When double-clicking the app icon while an instance is already running, the existing window will be brought to the front instead of creating a new window or process.
+
+## 🖱️ Hover Window Improvements
+
+\- Improved the hover window level behavior. The always-on-top setting now follows the main window mode instead of being permanently fixed.
+
+\- Improved hover window responsiveness by changing the hide delay from 2000/1000ms to a unified 200ms.
+
+## 🐛 Stability Improvements
+
+\- Optimized other known issues.
+
+\- Improved overall application stability and user experience.
+
+
+---
+
 # 🚀 v1.5.1 (2026-08-23)
 
 ## ⚙️ Startup-at-Boot Fix
