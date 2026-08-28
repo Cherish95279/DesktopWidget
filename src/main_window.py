@@ -197,11 +197,11 @@ class MainWindow(QWidget):
         self.notice_bubble.set_on_click(self._on_bubble_clicked)
         self.notice_bubble.raise_()
 
-        # 任务栏显示窗口（默认隐藏）
+        # 任务栏显示窗口（显示状态由 tray_icon._load_taskbar_visible 统一控制）
         self.taskbar_widget = TaskbarWidget(self, tray_menu=self.tray.menu if self.tray else None)
-        taskbar_visible = QSettings("MyDesktopApp", "WeatherSettings").value("taskbar_visible", False, type=bool)
-        if taskbar_visible:
-            self.taskbar_widget.show()
+        # taskbar_widget 创建后再恢复显示状态（时序依赖）
+        if self.tray:
+            self.tray._load_taskbar_visible()
 
         # 自动更新
         self.update_checker = None
@@ -786,10 +786,9 @@ class MainWindow(QWidget):
         """托盘右键菜单切换任务栏窗口显隐"""
         if hasattr(self, 'taskbar_widget') and self.taskbar_widget:
             if visible:
-                self.taskbar_widget.show()
-                self.taskbar_widget.update_position()
+                self.taskbar_widget.show_in_taskbar()
             else:
-                self.taskbar_widget.hide()
+                self.taskbar_widget.hide_from_taskbar()
 
     # ---------- hover detail popup ----------
     def _init_detail_popup(self):
@@ -881,6 +880,10 @@ class MainWindow(QWidget):
 
         from .notice import NoticeManager
         NoticeManager.get_instance().stop()
+
+        # 退出前脱离任务栏，避免销毁仍挂在 explorer 的子窗口
+        if hasattr(self, "taskbar_widget") and self.taskbar_widget:
+            self.taskbar_widget.hide_from_taskbar()
 
     def get_public_ip(self):
         """获取公网 IP，多个备用接口"""

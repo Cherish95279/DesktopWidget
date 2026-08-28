@@ -34,14 +34,16 @@ class TrayIcon(QSystemTrayIcon):
         self._window_mode = "float"  # bottom / float / top
 
         # 任务栏窗口相关
-        self._taskbar_visible = False
+        self._taskbar_visible = True
         self._taskbar_action = None
 
         self.activated.connect(self.on_activated)
 
         self.menu = QMenu()
         self.setup_menu()
-        self.setContextMenu(self.menu)
+        # 菜单弹出时暂停嵌入器定时器，避免 bring_to_top 搅动 z-order 导致菜单被任务栏压住
+        self.menu.aboutToShow.connect(self._on_menu_about_to_show)
+        self.menu.aboutToHide.connect(self._on_menu_about_to_hide)
 
         # 注册公告回调
         self._register_notice_callbacks()
@@ -49,8 +51,6 @@ class TrayIcon(QSystemTrayIcon):
         # 恢复窗口模式状态
         self._load_window_mode()
 
-        # 恢复任务栏窗口状态
-        self._load_taskbar_visible()
 
     def _register_notice_callbacks(self):
         manager = NoticeManager.get_instance()
@@ -221,9 +221,15 @@ class TrayIcon(QSystemTrayIcon):
 
     # ===== 任务栏窗口控制 =====
     def _load_taskbar_visible(self):
-        """从 QSettings 加载任务栏窗口可见性"""
+        """从 QSettings 加载任务栏窗口可见性，并同步菜单勾选与显示状态"""
         settings = QSettings("MyDesktopApp", "WeatherSettings")
-        self._taskbar_visible = settings.value("taskbar_visible", False, type=bool)
+        self._taskbar_visible = settings.value("taskbar_visible", True, type=bool)
+        # 同步菜单勾选状态
+        if self._taskbar_action:
+            self._taskbar_action.setChecked(self._taskbar_visible)
+        # 统一由这里控制显示，避免 main_window 重复调用
+        if hasattr(self.parent_window, 'toggle_taskbar_window'):
+            self.parent_window.toggle_taskbar_window(self._taskbar_visible)
 
     def _save_taskbar_visible(self, visible: bool):
         """保存任务栏窗口可见性到 QSettings"""
@@ -269,7 +275,7 @@ class TrayIcon(QSystemTrayIcon):
         self.menu.addSeparator()
 
         # 任务栏显示窗口（独立打勾）
-        self._taskbar_action = QAction("\U0001f4bb " + self.tr("显示信息条"), self)
+        self._taskbar_action = QAction("\U0001f4bb " + self.tr("任务栏显示"), self)
         self._taskbar_action.setCheckable(True)
         self._taskbar_action.setChecked(self._taskbar_visible)
         self._taskbar_action.triggered.connect(self._on_taskbar_toggled)
@@ -296,8 +302,29 @@ class TrayIcon(QSystemTrayIcon):
         exit_action.triggered.connect(self.quit_app)
         self.menu.addAction(exit_action)
 
+    def _on_menu_about_to_show(self):
+        """菜单弹出前暂停嵌入器定时器，避免 bring_to_top 与菜单 z-order 竞态。"""
+        mw = self.parent_window
+        if mw and hasattr(mw, 'taskbar_widget') and mw.taskbar_widget:
+            embedder = getattr(mw.taskbar_widget, '_embedder', None)
+            if embedder:
+                embedder._timer.stop()
+
+    def _on_menu_about_to_hide(self):
+        """菜单隐藏后恢复嵌入器定时器。"""
+        mw = self.parent_window
+        if mw and hasattr(mw, 'taskbar_widget') and mw.taskbar_widget:
+            embedder = getattr(mw.taskbar_widget, '_embedder', None)
+            if embedder and embedder._embedded:
+                embedder._timer.start(500)
+
     def on_activated(self, reason):
-        if reason == QSystemTrayIcon.ActivationReason.Trigger:
+        if reason == QSystemTrayIcon.ActivationReason.Context:
+            # 延迟 exec，避免在 activated 信号回调里嵌套事件循环导致栈损坏
+            from PyQt6.QtGui import QCursor
+            pos = QCursor.pos()
+            QTimer.singleShot(0, lambda: self.menu.exec(pos))
+        elif reason == QSystemTrayIcon.ActivationReason.Trigger:
             if self._has_notice and not self._notice_opened:
                 print("🖱 左键单击托盘图标 → 打开公告")
                 self._open_notice_window()

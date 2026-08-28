@@ -153,7 +153,7 @@
             <source>退出</source>
             <translation>終了</translation>
         </message>
-    <message><source>显示信息条</source><translation>情報バーを表示</translation></message></context>
+    <message><source>任务栏显示</source><translation>タスクバー表示</translation></message></context>
     <context>
         <name>SettingsDialog</name>
         <message>
@@ -427,11 +427,10 @@
         <message><source>运行时间</source><translation>稼働時間</translation></message>
             <message><source>\u78c1\u789c\u603b\u8ba1</source><translation>\u78c1\u789c\u8a08</translation></message>
             <message><source>磁盘总计</source><translation>ディスク合計</translation></message>
-    <message><source>信息条显示</source><translation>情報バー表示</translation></message>
-        <message>
+            <message>
             <location filename="settings_pages/display_page.py" line="0" />
-            <source>信息条</source>
-            <translation>情報バー</translation>
+            <source>任务栏</source>
+            <translation>タスクバー</translation>
         </message>
         <message>
             <location filename="settings_pages/display_page.py" line="0" />

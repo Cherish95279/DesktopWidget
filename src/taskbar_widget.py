@@ -1,13 +1,19 @@
-"""任务栏悬浮显示窗口 - 类似 TrafficMonitor 的独立小窗"""
+# -*- coding: utf-8 -*-
+"""任务栏嵌入显示窗口 - 嵌入 Windows 任务栏通知区域左侧。
+
+放弃自由拖动，改为通过 Win32 SetParent 嵌入任务栏。
+宽度根据内容自适应，高度适配任务栏客户区。
+"""
 from PyQt6.QtWidgets import QWidget
 from PyQt6.QtCore import Qt, QTimer, QSettings
-from PyQt6.QtGui import QPainter, QFont, QColor, QPen
+from PyQt6.QtGui import QPainter, QFont, QColor, QPen, QFontMetrics
 
 from .i18n.translations import TranslatorManager
+from .taskbar.taskbar_embedder import TaskbarEmbedder
 
 
 class TaskbarWidget(QWidget):
-    """贴在任务栏上方的小型信息显示窗"""
+    """嵌入任务栏的信息显示窗。"""
 
     def __init__(self, main_window, tray_menu=None):
         super().__init__(None)
@@ -17,28 +23,40 @@ class TaskbarWidget(QWidget):
 
         self.setWindowFlags(
             Qt.WindowType.FramelessWindowHint |
-            Qt.WindowType.WindowStaysOnTopHint |
             Qt.WindowType.Tool |
             Qt.WindowType.NoDropShadowWindowHint
         )
-        self.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
         self.setAttribute(Qt.WidgetAttribute.WA_ShowWithoutActivating)
 
-        self.setFixedSize(150, 26)
+        # 初始尺寸，嵌入后由 embedder 接管
+        self.setFixedSize(120, 28)
 
         self._bg_color = QColor(30, 30, 30, 200)
-        self._text_color = QColor(255, 257, 255)
+        self._text_color = QColor(255, 255, 255)
+        self._font = QFont('Microsoft YaHei', 9)
 
         self._init_i18n_texts()
         TranslatorManager().on_language_changed(self._on_language_changed)
 
+        # 数据刷新定时器（复用现有机制，仅触发重绘）
         self._timer = QTimer(self)
         self._timer.timeout.connect(self.update)
         self._timer.start(1000)
 
-        self._drag_pos = None
+        # 嵌入管理器
+        self._embedder = TaskbarEmbedder(self)
 
-        self.update_position()
+    # ---------- 嵌入控制 ----------
+    def show_in_taskbar(self):
+        """显示并嵌入任务栏。"""
+        self._embedder.enable()
+
+    def hide_from_taskbar(self):
+        """脱离任务栏并隐藏。"""
+        self._embedder.disable()
+
+    def retranslate_ui(self):
+        self._on_language_changed(self._lang)
 
     def _init_i18n_texts(self):
         t = TranslatorManager().translate
@@ -56,45 +74,13 @@ class TaskbarWidget(QWidget):
         self._init_i18n_texts()
         self.update()
 
-    def update_position(self):
-        settings = QSettings('MyDesktopApp', 'WeatherSettings')
-        saved_x = settings.value('taskbar_x')
-        saved_y = settings.value('taskbar_y')
-        if saved_x is not None and saved_y is not None:
-            self.move(int(saved_x), int(saved_y))
-            return
-
-        screen = self.main_window.screen() if self.main_window else None
-        if screen is None:
-            from PyQt6.QtWidgets import QApplication
-            screen = QApplication.primaryScreen()
-        if screen:
-            geo = screen.availableGeometry()
-            x = geo.right() - self.width() - 10
-            y = geo.bottom() - self.height()
-            self.move(x, y)
-
-    def mousePressEvent(self, event):
-        if event.button() == Qt.MouseButton.LeftButton:
-            self._drag_pos = event.globalPosition().toPoint()
-
-    def mouseMoveEvent(self, event):
-        if self._drag_pos is not None:
-            delta = event.globalPosition().toPoint() - self._drag_pos
-            new_pos = self.pos() + delta
-            self.move(new_pos)
-            self._drag_pos = event.globalPosition().toPoint()
-
-    def mouseReleaseEvent(self, event):
-        if event.button() == Qt.MouseButton.LeftButton:
-            self._drag_pos = None
-            settings = QSettings('MyDesktopApp', 'WeatherSettings')
-            settings.setValue('taskbar_x', self.x())
-            settings.setValue('taskbar_y', self.y())
-            settings.sync()
-
-    def retranslate_ui(self):
-        self._on_language_changed(self._lang)
+    def desired_width(self):
+        """根据当前内容计算所需宽度（供 embedder 定位使用）。"""
+        text = self._get_display_text()
+        fm = QFontMetrics(self._font)
+        # 多行时取最长行的宽度
+        max_w = max(fm.horizontalAdvance(line) for line in text.split('\n'))
+        return max_w + 16  # 左右各 8px 内边距
 
     def contextMenuEvent(self, event):
         if self._tray_menu is not None:
@@ -102,17 +88,29 @@ class TaskbarWidget(QWidget):
 
     def paintEvent(self, event):
         painter = QPainter(self)
+        # 恢复抗锯齿：colorkey 用浅灰色，文字边缘半透明像素偏浅灰，融入浅色任务栏
         painter.setRenderHint(QPainter.RenderHint.Antialiasing)
 
-        font = QFont('Microsoft YaHei', 9)
-        painter.setFont(font)
-        font_color_from_settings = QSettings('MyDesktopApp', 'WeatherSettings').value('font_color', '#1c344d')
-        painter.setPen(QPen(QColor(font_color_from_settings)))
+        # 填充色键色 RGB(210,210,211)，该色被 SetLayeredWindowAttributes 设为透明
+        painter.fillRect(self.rect(), QColor(210, 210, 211))
+        painter.setFont(self._font)
+        font_color = QSettings('MyDesktopApp', 'WeatherSettings').value('font_color', '#1c344d')
+        painter.setPen(QPen(QColor(font_color)))
 
         text = self._get_display_text()
-        painter.drawText(self.rect(), Qt.AlignmentFlag.AlignCenter, text)
-
-        self.raise_()
+        lines = text.split('\n')
+        if len(lines) == 1:
+            painter.drawText(self.rect(), Qt.AlignmentFlag.AlignCenter, text)
+        else:
+            # 多行手动绘制，控制行距
+            fm = QFontMetrics(self._font)
+            line_h = fm.height()
+            total_h = line_h * len(lines)
+            y = (self.height() - total_h) // 2 + fm.ascent()
+            for line in lines:
+                painter.drawText(0, y - line_h, self.width(), line_h,
+                                 Qt.AlignmentFlag.AlignCenter, line)
+                y += line_h
 
     def _get_display_text(self):
         settings = QSettings('MyDesktopApp', 'WeatherSettings')
@@ -120,7 +118,7 @@ class TaskbarWidget(QWidget):
         mw = self.main_window
 
         if key == 'netspeed':
-            return chr(8593) + '{:.1f}MB/s '.format(mw.down_speed) + chr(8595) + '{:.1f}MB/s'.format(mw.up_speed)
+            return chr(8593) + ' {:.1f}MB/s'.format(mw.up_speed) + '\n' + chr(8595) + ' {:.1f}MB/s'.format(mw.down_speed)
         elif key == 'weather':
             w = mw.weather.get('weather', '--')
             t = mw.weather.get('temp', '--')

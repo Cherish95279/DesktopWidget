@@ -13,6 +13,7 @@ from ctypes import wintypes
 import os
 import tempfile
 import traceback
+import random
 
 
 class RECT(ctypes.Structure):
@@ -20,7 +21,7 @@ class RECT(ctypes.Structure):
                 ("right", ctypes.c_long), ("bottom", ctypes.c_long)]
 
 
-# 简单窗口类的 WNDPROC，只处理 WM_DESTROY
+# 简单窗口类的 WNDPROC
 WNDPROC = ctypes.WINFUNCTYPE(ctypes.c_long, wintypes.HWND, wintypes.UINT, wintypes.WPARAM, wintypes.LPARAM)
 
 
@@ -60,8 +61,6 @@ user32.SetParent.restype = wintypes.HWND
 user32.SetParent.argtypes = [wintypes.HWND, wintypes.HWND]
 user32.GetWindowLongPtrW.restype = ctypes.c_void_p
 user32.GetWindowLongPtrW.argtypes = [wintypes.HWND, ctypes.c_int]
-user32.SetWindowLongPtrW.restype = ctypes.c_void_p
-user32.SetWindowLongPtrW.argtypes = [wintypes.HWND, ctypes.c_int, ctypes.c_void_p]
 user32.GetWindowLongW.restype = ctypes.c_long
 user32.GetWindowLongW.argtypes = [wintypes.HWND, ctypes.c_int]
 user32.SetWindowLongW.restype = ctypes.c_long
@@ -75,7 +74,6 @@ user32.DefWindowProcW.restype = ctypes.c_long
 user32.DefWindowProcW.argtypes = [wintypes.HWND, wintypes.UINT, wintypes.WPARAM, wintypes.LPARAM]
 user32.UnregisterClassW.restype = wintypes.BOOL
 user32.UnregisterClassW.argtypes = [wintypes.LPCWSTR, wintypes.HINSTANCE]
-user32.GetWindowThreadProcessId.argtypes = [wintypes.HWND, ctypes.POINTER(wintypes.DWORD)]
 user32.RegisterClassW.restype = wintypes.ATOM
 user32.RegisterClassW.argtypes = [ctypes.POINTER(WNDCLASSW)]
 user32.CreateWindowExW.restype = wintypes.HWND
@@ -83,6 +81,7 @@ user32.CreateWindowExW.argtypes = [wintypes.DWORD, wintypes.LPCWSTR, wintypes.LP
                                    wintypes.DWORD, ctypes.c_int, ctypes.c_int, ctypes.c_int,
                                    ctypes.c_int, wintypes.HWND, wintypes.HMENU,
                                    wintypes.HINSTANCE, ctypes.c_void_p]
+user32.GetWindowThreadProcessId.argtypes = [wintypes.HWND, ctypes.POINTER(wintypes.DWORD)]
 kernel32.GetModuleHandleW.restype = wintypes.HMODULE
 kernel32.GetModuleHandleW.argtypes = [wintypes.LPCWSTR]
 kernel32.GetCurrentPackageFullName.restype = wintypes.LONG
@@ -102,7 +101,8 @@ WS_CAPTION = 0x00C00000
 WS_THICKFRAME = 0x00040000
 SWP_NOZORDER = 0x0004
 SWP_NOACTIVATE = 0x0010
-HWND_MESSAGE = wintypes.HWND(-3)
+SWP_SHOWWINDOW = 0x0040
+
 
 def _log(lines, msg):
     lines.append(msg)
@@ -141,7 +141,6 @@ def _walk(hwnd, lines, depth=0):
     txt_s = ' text="%s"' % txt if txt else ""
     _log(lines, "%sHWND=%s class=%s%s rect=(%d,%d,%d,%d) size=%dx%d vis=%s pid=%d"
          % (indent, _hex(hwnd), cls, txt_s, l, t, r, b, r - l, b - t, vis, pid.value))
-
     child = user32.GetWindow(hwnd, GW_CHILD)
     while child:
         _walk(child, lines, depth + 1)
@@ -187,17 +186,13 @@ def _run_probe_inner(lines):
     _log(lines, "")
     _log(lines, "===== Phase 1: 只读探测（看得见任务栏吗）=====")
 
-    # 1.1 EnumWindows 计数
     all_wins = []
-
     def _enum_cb(hwnd, lp):
         all_wins.append(hwnd)
         return True
-
     user32.EnumWindows(EnumWindowsProc(_enum_cb), 0)
     _log(lines, "EnumWindows 顶级窗口数: %d" % len(all_wins))
 
-    # 1.2 FindWindow Shell_TrayWnd
     shell = user32.FindWindowW("Shell_TrayWnd", None)
     _log(lines, "FindWindow(Shell_TrayWnd) = %s" % _hex(shell))
     if shell:
@@ -206,7 +201,6 @@ def _run_probe_inner(lines):
         _log(lines, "  Shell_TrayWnd 子窗口树:")
         _walk(shell, lines, 1)
 
-    # 1.3 找 TrayNotifyWnd
     tray_notify = None
     if shell:
         child = user32.GetWindow(shell, GW_CHILD)
@@ -230,8 +224,6 @@ def _run_probe_inner(lines):
     _log(lines, "")
     _log(lines, "===== Phase 2: 最小写入验证（能嵌入吗，做完立即还原）=====")
 
-    # 2.1 注册一个临时窗口类（类名加随机后缀，避免重复注册冲突）
-    import random
     cls_name = "DwProbeTmp_%d" % random.randint(100000, 999999)
     wc = WNDCLASSW()
     wc.lpfnWndProc = WNDPROC(lambda h, m, w, l: user32.DefWindowProcW(h, m, w, l))
@@ -243,7 +235,6 @@ def _run_probe_inner(lines):
         return
     _log(lines, "[OK] RegisterClassW atom=%d cls=%s" % (atom, cls_name))
 
-    # 2.2 创建临时窗口（0x0，不显示）
     tmp_hwnd = user32.CreateWindowExW(
         0, cls_name, "", WS_POPUP, 0, 0, 0, 0, None, None, wc.hInstance, None)
     if not tmp_hwnd:
@@ -252,11 +243,9 @@ def _run_probe_inner(lines):
     _log(lines, "[OK] CreateWindowExW tmp_hwnd=%s" % _hex(tmp_hwnd))
 
     try:
-        # 2.3 记录原始父窗口
-        old_parent = user32.GetWindowLongPtrW(tmp_hwnd, -8)  # GWLP_HWNDPARENT
+        old_parent = user32.GetWindowLongPtrW(tmp_hwnd, -8)
         _log(lines, "原始 GWLP_HWNDPARENT = %s" % _hex(old_parent))
 
-        # 2.4 SetParent 到 Shell_TrayWnd —— 关键一步
         ret = user32.SetParent(tmp_hwnd, shell)
         err = ctypes.get_last_error()
         if ret:
@@ -265,7 +254,6 @@ def _run_probe_inner(lines):
             _log(lines, "[FAIL] SetParent 返回 0, GetLastError=%d" % err)
             _log(lines, "      （Error 5=拒绝访问 → MSIX 沙箱拒绝写入）")
 
-        # 2.5 读取并修改窗口样式（加 WS_CHILD）
         style = user32.GetWindowLongW(tmp_hwnd, GWL_STYLE)
         _log(lines, "当前 style = 0x%08X" % (style & 0xFFFFFFFF))
         new_style = (style & ~WS_POPUP) | WS_CHILD
@@ -276,14 +264,11 @@ def _run_probe_inner(lines):
         else:
             _log(lines, "[FAIL] SetWindowLong 失败, GetLastError=%d" % err2)
 
-        # 2.6 SetWindowPos 定位
         ok = user32.SetWindowPos(tmp_hwnd, None, 1600, 1040, 80, 28, SWP_NOZORDER | SWP_NOACTIVATE)
         _log(lines, "[%s] SetWindowPos 返回 %s" % ("OK" if ok else "FAIL", ok))
 
-        # 2.7 立即还原
         user32.SetParent(tmp_hwnd, None)
         _log(lines, "[还原] SetParent(tmp, None) 已执行")
-
     finally:
         user32.DestroyWindow(tmp_hwnd)
         user32.UnregisterClassW(cls_name, wc.hInstance)
@@ -298,14 +283,11 @@ def _run_probe_inner(lines):
         _log(lines, "Phase 2 写入验证失败：SetParent 被拒绝。")
         _log(lines, "MSIX 版嵌入不可行，需降级方案。")
 
-    return
-
 
 def _finish(lines):
     """写入日志文件，返回 (lines, path1, path2)。至少写一个，尽量写两个。"""
     content = "\n".join(str(x) for x in lines) + "\n"
     paths = []
-    # 候选位置：TEMP、LOCALAPPDATA、模块所在目录、当前工作目录
     candidates = [
         os.path.join(tempfile.gettempdir(), "dw_taskbar_probe.log"),
         os.path.join(os.environ.get("LOCALAPPDATA", tempfile.gettempdir()), "dw_taskbar_probe.log"),
@@ -318,7 +300,7 @@ def _finish(lines):
                 f.write(content)
             paths.append(p)
             if len(paths) >= 2:
-                break  # 两个就够了
+                break
         except Exception:
             pass
     while len(paths) < 2:

@@ -132,7 +132,7 @@ class DisplayPage(QWidget):
         taskbar_layout = QHBoxLayout(taskbar_container)
         taskbar_layout.setSpacing(4)
         taskbar_layout.setContentsMargins(0, 0, 0, 0)
-        taskbar_label = QLabel(self.tr("信息条"))
+        taskbar_label = QLabel(self.tr("任务栏"))
         taskbar_label.setStyleSheet("font-size: 12px; color: #333;")
         taskbar_label.setFixedWidth(48)
         taskbar_layout.addWidget(taskbar_label)

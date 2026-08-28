@@ -153,7 +153,7 @@ Neue Ankündigung!</translation>
             <source>退出</source>
             <translation>Beenden</translation>
         </message>
-    <message><source>显示信息条</source><translation>Infoleiste anzeigen</translation></message></context>
+    <message><source>任务栏显示</source><translation>Taskleiste anzeigen</translation></message></context>
     <context>
         <name>SettingsDialog</name>
         <message>
@@ -427,11 +427,10 @@ Neue Ankündigung!</translation>
         <message><source>运行时间</source><translation>Betriebszeit</translation></message>
             <message><source>\u78c1\u789c\u603b\u8ba1</source><translation>Gesamter Datentr\u00e4ger</translation></message>
             <message><source>磁盘总计</source><translation>Gesamter Datenträger</translation></message>
-    <message><source>信息条显示</source><translation>Infoleistenanzeige</translation></message>
-        <message>
+            <message>
             <location filename="settings_pages/display_page.py" line="0" />
-            <source>信息条</source>
-            <translation>Info-Leiste</translation>
+            <source>任务栏</source>
+            <translation>Taskleiste</translation>
         </message>
         <message>
             <location filename="settings_pages/display_page.py" line="0" />
