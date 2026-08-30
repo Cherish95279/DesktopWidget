@@ -153,7 +153,8 @@
             <source>退出</source>
             <translation>退出</translation>
         </message>
-    <message><source>任务栏显示</source><translation>工作列顯示</translation></message></context>
+    <message><source>显示任务栏窗口</source><translation>顯示工作列視窗</translation></message>
+    <message><source>显示主窗口</source><translation>顯示主視窗</translation></message></context>
     <context>
         <name>SettingsDialog</name>
         <message>

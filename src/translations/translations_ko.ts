@@ -153,7 +153,8 @@
             <source>退出</source>
             <translation>종료</translation>
         </message>
-    <message><source>任务栏显示</source><translation>작업 표시줄 표시</translation></message></context>
+    <message><source>显示任务栏窗口</source><translation>작업표시줄 창</translation></message>
+    <message><source>显示主窗口</source><translation>메인 창</translation></message></context>
     <context>
         <name>SettingsDialog</name>
         <message>

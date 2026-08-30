@@ -33,6 +33,10 @@ class TrayIcon(QSystemTrayIcon):
         # 窗口模式相关
         self._window_mode = "float"  # bottom / float / top
 
+        # 主窗口显示相关
+        self._main_window_visible = True
+        self._main_window_action = None
+
         # 任务栏窗口相关
         self._taskbar_visible = True
         self._taskbar_action = None
@@ -50,6 +54,9 @@ class TrayIcon(QSystemTrayIcon):
 
         # 恢复窗口模式状态
         self._load_window_mode()
+
+        # 恢复主窗口可见性
+        self._load_main_window_visible()
 
 
     def _register_notice_callbacks(self):
@@ -219,6 +226,32 @@ class TrayIcon(QSystemTrayIcon):
             return
         self._apply_window_mode(mode)
 
+    # ===== 主窗口显示控制 =====
+    def _load_main_window_visible(self):
+        """从 QSettings 加载主窗口可见性"""
+        settings = QSettings("MyDesktopApp", "WeatherSettings")
+        self._main_window_visible = settings.value("main_window_visible", True, type=bool)
+        if self._main_window_action:
+            self._main_window_action.setChecked(self._main_window_visible)
+
+    def _save_main_window_visible(self, visible: bool):
+        """保存主窗口可见性到 QSettings"""
+        settings = QSettings("MyDesktopApp", "WeatherSettings")
+        settings.setValue("main_window_visible", visible)
+        settings.sync()
+
+    def _on_main_window_toggled(self, checked: bool):
+        """主窗口显示/隐藏切换"""
+        self._main_window_visible = checked
+        self._save_main_window_visible(checked)
+        if checked:
+            self.parent_window.show()
+            self.parent_window.raise_()
+            self.parent_window.activateWindow()
+        else:
+            self.parent_window.hide()
+        print(f"\U0001f5a5 主窗口: {'显示' if checked else '隐藏'}")
+
     # ===== 任务栏窗口控制 =====
     def _load_taskbar_visible(self):
         """从 QSettings 加载任务栏窗口可见性，并同步菜单勾选与显示状态"""
@@ -274,8 +307,15 @@ class TrayIcon(QSystemTrayIcon):
 
         self.menu.addSeparator()
 
+        # 主窗口显示（独立打勾）
+        self._main_window_action = QAction("\U0001f5a5 " + self.tr("显示主窗口"), self)
+        self._main_window_action.setCheckable(True)
+        self._main_window_action.setChecked(self._main_window_visible)
+        self._main_window_action.triggered.connect(self._on_main_window_toggled)
+        self.menu.addAction(self._main_window_action)
+
         # 任务栏显示窗口（独立打勾）
-        self._taskbar_action = QAction("\U0001f4bb " + self.tr("任务栏显示"), self)
+        self._taskbar_action = QAction("\U0001f4bb " + self.tr("显示任务栏窗口"), self)
         self._taskbar_action.setCheckable(True)
         self._taskbar_action.setChecked(self._taskbar_visible)
         self._taskbar_action.triggered.connect(self._on_taskbar_toggled)
@@ -329,9 +369,9 @@ class TrayIcon(QSystemTrayIcon):
                 print("🖱 左键单击托盘图标 → 打开公告")
                 self._open_notice_window()
             else:
-                self.toggle_window()
+                pass
         elif reason == QSystemTrayIcon.ActivationReason.DoubleClick:
-            self.toggle_window()
+            pass
 
     # ===== 更新通知闪烁 =====
     def start_update_flash(self):
@@ -394,10 +434,18 @@ class TrayIcon(QSystemTrayIcon):
     def toggle_window(self):
         if self.parent_window.isVisible():
             self.parent_window.hide()
+            self._main_window_visible = False
+            self._save_main_window_visible(False)
+            if self._main_window_action:
+                self._main_window_action.setChecked(False)
         else:
             self.parent_window.show()
             self.parent_window.raise_()
             self.parent_window.activateWindow()
+            self._main_window_visible = True
+            self._save_main_window_visible(True)
+            if self._main_window_action:
+                self._main_window_action.setChecked(True)
 
     def quit_app(self):
         self.parent_window._exiting = True

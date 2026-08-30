@@ -153,7 +153,8 @@ Nouvelle annonce !</translation>
             <source>退出</source>
             <translation>Quitter</translation>
         </message>
-    <message><source>任务栏显示</source><translation>Afficher barre des tâches</translation></message></context>
+    <message><source>显示任务栏窗口</source><translation>Barre des tâches</translation></message>
+    <message><source>显示主窗口</source><translation>Fenêtre principale</translation></message></context>
     <context>
         <name>SettingsDialog</name>
         <message>

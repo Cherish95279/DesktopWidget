@@ -153,7 +153,8 @@ Neue Ankündigung!</translation>
             <source>退出</source>
             <translation>Beenden</translation>
         </message>
-    <message><source>任务栏显示</source><translation>Taskleiste anzeigen</translation></message></context>
+    <message><source>显示任务栏窗口</source><translation>Taskleistenfenster</translation></message>
+    <message><source>显示主窗口</source><translation>Hauptfenster</translation></message></context>
     <context>
         <name>SettingsDialog</name>
         <message>

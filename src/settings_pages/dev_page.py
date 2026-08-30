@@ -148,43 +148,6 @@ class DevPage(QWidget):
         version_row.addStretch()
         main_layout.addLayout(version_row)
 
-        # ---------- 任务栏嵌入可行性探测（临时，下版本移除）----------
-        probe_label = QLabel(self.tr("任务栏嵌入探测"))
-        probe_label.setStyleSheet("font-size: 12px; font-weight: bold; color: #e67e22;")
-        main_layout.addWidget(probe_label)
-
-        probe_row = QHBoxLayout()
-        self.probe_btn = QPushButton(self.tr("探测"))
-        self.probe_btn.setFixedHeight(28)
-        self.probe_btn.setCursor(Qt.CursorShape.PointingHandCursor)
-        self.probe_btn.setStyleSheet("""
-            QPushButton {
-                border: 1px solid #ccc;
-                border-radius: 4px;
-                background: #f5f5f5;
-                color: #333;
-                font-size: 12px;
-                padding: 0 12px;
-            }
-            QPushButton:hover {
-                background: #e6f4ff;
-                border: 1px solid #1677ff;
-                color: #1677ff;
-            }
-            QPushButton:disabled {
-                color: #aaa;
-                background: #f0f0f0;
-            }
-        """)
-        self.probe_btn.clicked.connect(self._on_probe_clicked)
-        probe_row.addWidget(self.probe_btn)
-
-        self.probe_status_label = QLabel(self.tr("未探测"))
-        self.probe_status_label.setStyleSheet("font-size: 11px; color: #999;")
-        probe_row.addWidget(self.probe_status_label)
-        probe_row.addStretch()
-        main_layout.addLayout(probe_row)
-
         main_layout.addStretch()
         self.load_settings()
 
@@ -228,45 +191,6 @@ class DevPage(QWidget):
                         display_page.hover_combo.blockSignals(True)
                         display_page.hover_combo.setCurrentIndex(hover_idx)
                         display_page.hover_combo.blockSignals(False)
-
-    def _on_probe_clicked(self):
-        """启动任务栏嵌入可行性探测（后台线程）。"""
-        from PyQt6.QtCore import QThread, pyqtSignal
-
-        self.probe_btn.setEnabled(False)
-        self.probe_status_label.setText(self.tr("探测中..."))
-
-        class _ProbeThread(QThread):
-            finished_signal = pyqtSignal(object, object, object)
-
-            def run(self_):
-                try:
-                    from ..taskbar_probe import run_probe
-                    result = run_probe()
-                    # result = (lines, path1, path2)
-                    self_.finished_signal.emit(result[0], result[1], result[2])
-                except Exception as e:
-                    self_.finished_signal.emit([str(e)], None, None)
-
-        self._probe_thread = _ProbeThread(self)
-        self._probe_thread.finished_signal.connect(self._on_probe_finished)
-        self._probe_thread.start()
-
-    def _on_probe_finished(self, lines, path1, path2):
-        """探测完成回调。"""
-        self.probe_btn.setEnabled(True)
-        paths = [p for p in [path1, path2] if p]
-        if paths:
-            from PyQt6.QtWidgets import QMessageBox
-            self.probe_status_label.setText(self.tr("已完成"))
-            msg = self.tr("探测完成。\n\n日志位置：\n") + "\n".join(paths)
-            QMessageBox.information(self, self.tr("任务栏探测"), msg)
-        else:
-            self.probe_status_label.setText(self.tr("失败"))
-            content = "\n".join(str(x) for x in lines) if lines else "unknown"
-            from PyQt6.QtWidgets import QMessageBox
-            QMessageBox.warning(self, self.tr("任务栏探测"),
-                                self.tr("日志文件写入失败，以下是探测内容：\n\n") + content)
 
     def _update_pro_status_text(self):
         if self._pro_enabled:

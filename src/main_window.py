@@ -219,7 +219,8 @@ class MainWindow(QWidget):
         self.update_perf()
         self.update_clock()
         self.move_to_top_right()
-        self.show()
+        if getattr(self.tray, "_main_window_visible", True):
+            self.show()
 
     # ===== 新增：获取天气状态（供 ping_client 调用） =====
     def get_weather_status(self) -> str:

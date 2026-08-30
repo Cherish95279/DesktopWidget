@@ -153,7 +153,8 @@
             <source>退出</source>
             <translation>終了</translation>
         </message>
-    <message><source>任务栏显示</source><translation>タスクバー表示</translation></message></context>
+    <message><source>显示任务栏窗口</source><translation>タスクバー窓</translation></message>
+    <message><source>显示主窗口</source><translation>メインウィンドウ</translation></message></context>
     <context>
         <name>SettingsDialog</name>
         <message>

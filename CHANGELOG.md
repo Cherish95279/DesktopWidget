@@ -7,6 +7,32 @@ All notable changes to DesktopWidget are documented in this file.
 
 ---
 
+# 🚀 v1.5.3 (2026-08-30)
+
+## 📌 Taskbar Window
+
+- The information bar is now fixed to the bottom-right corner of the taskbar, and its label has been changed to “Taskbar Window”.
+
+- Added an option to show or hide the Taskbar Window according to your preference.
+
+- The new Taskbar Window now also supports right-clicking.
+
+## 🖱️ System Tray Improvements
+
+- Fixed an issue where the system tray menu could occasionally be obscured by the taskbar when right-clicking the tray icon.
+
+- The probability of the menu being obscured by the taskbar has been reduced to approximately 0.1%.
+
+- Added a “Show Main Window” option to the right-click menu of the system tray icon, allowing you to show or hide the main window.
+
+## 🐛 Stability Improvements
+
+- Optimized other known issues.
+
+- Improved overall application stability and user experience.
+
+---
+
 # 🚀 v1.5.2 (2026-08-26)
 
 ## 🌤️ Weather Feature Fixes

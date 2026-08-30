@@ -154,7 +154,8 @@ New announcement!</translation>
             <source>退出</source>
             <translation>Exit</translation>
         </message>
-    <message><source>任务栏显示</source><translation>Taskbar Display</translation></message></context>
+    <message><source>显示任务栏窗口</source><translation>Taskbar Window</translation></message>
+    <message><source>显示主窗口</source><translation>Show Main Window</translation></message></context>
     <context>
         <name>SettingsDialog</name>
         <message>

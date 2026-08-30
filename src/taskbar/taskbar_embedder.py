@@ -15,13 +15,15 @@ from PyQt6.QtCore import QObject, QTimer
 from . import win32_taskbar as wt
 
 # 信息条与通知区域的水平间距（像素）
-H_PADDING = 4
+H_PADDING = 0
 # 信息条内部左右留白（像素）
 INNER_PADDING = 8
 # 信息条高度比任务栏客户区小多少（上下各占一半，形成"药丸"外观）
 HEIGHT_INSET = 8
 # 信息条最小高度
 MIN_HEIGHT = 24
+# 右键点击热区额外宽度（仅左侧加，colorkey 透明，视觉不可见但可接收事件）
+HIT_PADDING = 10
 
 
 def _log(msg):
@@ -128,7 +130,7 @@ class TaskbarEmbedder(QObject):
 
         tb_h = tb[3] - tb[1]
         widget_w = self._widget.desired_width()
-        widget_h = max(MIN_HEIGHT, tb_h - HEIGHT_INSET)
+        widget_h = tb_h
         # 子窗口 SetWindowPos 用父窗口客户区相对坐标，需减去任务栏屏幕偏移
         x = tn[0] - H_PADDING - widget_w - tb[0]
         y = (tb_h - widget_h) // 2

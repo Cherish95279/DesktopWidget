@@ -84,7 +84,9 @@ class TaskbarWidget(QWidget):
 
     def contextMenuEvent(self, event):
         if self._tray_menu is not None:
-            self._tray_menu.popup(event.globalPos())
+            pos = event.globalPos()
+            from PyQt6.QtCore import QTimer
+            QTimer.singleShot(0, lambda: self._tray_menu.exec(pos))
 
     def paintEvent(self, event):
         painter = QPainter(self)
