@@ -149,6 +149,21 @@
             <translation>更新確認</translation>
         </message>
         <message>
+            <location filename="tray_icon.py" line="342" />
+            <source>帮助</source>
+            <translation>ヘルプ</translation>
+        </message>
+        <message>
+            <location filename="tray_icon.py" line="343" />
+            <source>联系开发者</source>
+            <translation>開発者に連絡</translation>
+        </message>
+        <message>
+            <location filename="tray_icon.py" line="350" />
+            <source>更新日志</source>
+            <translation>更新履歴</translation>
+        </message>
+        <message>
             <location filename="tray_icon.py" line="220" />
             <source>退出</source>
             <translation>終了</translation>

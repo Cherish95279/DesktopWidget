@@ -149,6 +149,21 @@ Nouvelle annonce !</translation>
             <translation>Vérifier màj</translation>
         </message>
         <message>
+            <location filename="tray_icon.py" line="342" />
+            <source>帮助</source>
+            <translation>Aide</translation>
+        </message>
+        <message>
+            <location filename="tray_icon.py" line="343" />
+            <source>联系开发者</source>
+            <translation>Contacter le développeur</translation>
+        </message>
+        <message>
+            <location filename="tray_icon.py" line="350" />
+            <source>更新日志</source>
+            <translation>Journal des modifications</translation>
+        </message>
+        <message>
             <location filename="tray_icon.py" line="220" />
             <source>退出</source>
             <translation>Quitter</translation>

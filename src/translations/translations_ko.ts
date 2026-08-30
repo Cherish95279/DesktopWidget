@@ -149,6 +149,21 @@
             <translation>업데이트 확인</translation>
         </message>
         <message>
+            <location filename="tray_icon.py" line="342" />
+            <source>帮助</source>
+            <translation>도움말</translation>
+        </message>
+        <message>
+            <location filename="tray_icon.py" line="343" />
+            <source>联系开发者</source>
+            <translation>개발자에게 연락</translation>
+        </message>
+        <message>
+            <location filename="tray_icon.py" line="350" />
+            <source>更新日志</source>
+            <translation>업데이트 로그</translation>
+        </message>
+        <message>
             <location filename="tray_icon.py" line="220" />
             <source>退出</source>
             <translation>종료</translation>

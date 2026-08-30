@@ -1,8 +1,9 @@
 from PyQt6.QtWidgets import QSystemTrayIcon, QMenu, QApplication
-from PyQt6.QtGui import QIcon, QAction, QPainter, QColor, QPixmap
-from PyQt6.QtCore import QSize, QTimer, QSettings, Qt
+from PyQt6.QtGui import QIcon, QAction, QPainter, QColor, QPixmap, QDesktopServices
+from PyQt6.QtCore import QSize, QTimer, QSettings, Qt, QUrl
 from .utils import resource_path
 from .notice import NoticeManager, NoticeWindow
+from .i18n.translations import TranslatorManager
 
 
 class TrayIcon(QSystemTrayIcon):
@@ -338,6 +339,20 @@ class TrayIcon(QSystemTrayIcon):
 
         self.menu.addSeparator()
 
+        # 帮助菜单（二级子菜单）
+        help_menu = QMenu("ℹ️ " + self.tr("帮助"), self.menu)
+        contact_action = QAction("📭 " + self.tr("联系开发者"), self)
+        contact_action.triggered.connect(
+            lambda: QDesktopServices.openUrl(QUrl("mailto:cherish95278@outlook.com"))
+        )
+        help_menu.addAction(contact_action)
+
+        changelog_action = QAction("📝 " + self.tr("更新日志"), self)
+        changelog_action.triggered.connect(self._open_changelog)
+        help_menu.addAction(changelog_action)
+
+        self.menu.addMenu(help_menu)
+
         exit_action = QAction("❌ " + self.tr("退出"), self)
         exit_action.triggered.connect(self.quit_app)
         self.menu.addAction(exit_action)
@@ -446,6 +461,15 @@ class TrayIcon(QSystemTrayIcon):
             self._save_main_window_visible(True)
             if self._main_window_action:
                 self._main_window_action.setChecked(True)
+
+    def _open_changelog(self):
+        """根据当前界面语言打开对应的更新日志页面。"""
+        lang = TranslatorManager().current_language()
+        if lang in ("zh_CN", "zh_TW"):
+            url = QUrl("https://gitee.com/Cherish95279/DesktopWidget/blob/main/CHANGELOG_CN.md")
+        else:
+            url = QUrl("https://github.com/Cherish95279/DesktopWidget/blob/main/CHANGELOG.md")
+        QDesktopServices.openUrl(url)
 
     def quit_app(self):
         self.parent_window._exiting = True
