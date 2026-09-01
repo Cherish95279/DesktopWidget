@@ -68,6 +68,7 @@ htmlcov/
 *.tmp
 *.bak
 *.swp
+listingData-9P6GSZ8NNW52-1152921505701785353.csv
 
 # 环境变量文件
 .env

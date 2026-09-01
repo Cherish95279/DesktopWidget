@@ -5,6 +5,26 @@ All notable changes to DesktopWidget are documented in this file.
 > Chinese version:
 > [CHANGELOG_CN.md](CHANGELOG_CN.md)
 
+# 🚀 v1.5.4 (2026-09-01)
+
+## 🖱️ System Tray Menu
+
+- Added a "Help" button to the system tray right-click menu.
+
+- The "Help" menu includes two new options:
+  - "Contact Developer" — quickly reach out to the developer.
+  - "Changelog" — view the update history (automatically opens the changelog file matching the current app language).
+
+## 🎨 Theme System
+
+- Added a custom theme feature. You can now create your own themes and import them into the app.
+
+## 🐛 Stability Improvements
+
+- Optimized other known issues.
+
+- Improved overall application stability and user experience.
+
 ---
 
 # 🚀 v1.5.3 (2026-08-30)
@@ -123,8 +143,6 @@ All notable changes to DesktopWidget are documented in this file.
 
 ---
 
----
-
 # 🚀 v1.3.8 (2026-08-15)
 
 ## 📊 Information Bar
@@ -211,8 +229,6 @@ All notable changes to DesktopWidget are documented in this file.
 
 ---
 
----
-
 # 🚀 v1.3.3 (2026-07-24)
 
 ## 🔔 Notification and Update Reminder Improvements
@@ -231,8 +247,6 @@ All notable changes to DesktopWidget are documented in this file.
 
 - Fixed other minor logic issues.
 - Improved overall application stability.
-
----
 
 ---
 
