@@ -778,7 +778,100 @@
             <source>着色强度</source>
             <translation>着色强度</translation>
         </message>
+        <message>
+            <location filename="settings_pages/theme_page.py" line="0" />
+            <source>导入主题</source>
+            <translation>导入主题</translation>
+        </message>
+        <message>
+            <location filename="settings_pages/theme_page.py" line="0" />
+            <source>删除主题</source>
+            <translation>删除主题</translation>
+        </message>
+        <message>
+            <location filename="settings_pages/theme_page.py" line="0" />
+            <source>内置主题不可删除</source>
+            <translation>内置主题不可删除</translation>
+        </message>
+        <message>
+            <location filename="settings_pages/theme_page.py" line="0" />
+            <source>确定删除主题「%1」吗？此操作不可撤销</source>
+            <translation>确定删除主题「%1」吗？此操作不可撤销</translation>
+        </message>
+        <message>
+            <location filename="settings_pages/theme_page.py" line="0" />
+            <source>删除失败</source>
+            <translation>删除失败</translation>
+        </message>
 </context>
+    <context>
+        <name>ImportThemeDialog</name>
+        <message>
+            <location filename="settings_pages/import_theme_dialog.py" line="0" />
+            <source>导入主题</source>
+            <translation>导入主题</translation>
+        </message>
+        <message>
+            <location filename="settings_pages/import_theme_dialog.py" line="0" />
+            <source>选择压缩包</source>
+            <translation>选择压缩包</translation>
+        </message>
+        <message>
+            <location filename="settings_pages/import_theme_dialog.py" line="0" />
+            <source>浏览...</source>
+            <translation>浏览...</translation>
+        </message>
+        <message>
+            <location filename="settings_pages/import_theme_dialog.py" line="0" />
+            <source>点击右侧按钮选择 .zip 文件</source>
+            <translation>点击右侧按钮选择 .zip 文件</translation>
+        </message>
+        <message>
+            <location filename="settings_pages/import_theme_dialog.py" line="0" />
+            <source>校验结果</source>
+            <translation>校验结果</translation>
+        </message>
+        <message>
+            <location filename="settings_pages/import_theme_dialog.py" line="0" />
+            <source>主题名称</source>
+            <translation>主题名称</translation>
+        </message>
+        <message>
+            <location filename="settings_pages/import_theme_dialog.py" line="0" />
+            <source>缺少</source>
+            <translation>缺少</translation>
+        </message>
+        <message>
+            <location filename="settings_pages/import_theme_dialog.py" line="0" />
+            <source>校验通过</source>
+            <translation>校验通过</translation>
+        </message>
+        <message>
+            <location filename="settings_pages/import_theme_dialog.py" line="0" />
+            <source>缺失可选素材</source>
+            <translation>缺失可选素材</translation>
+        </message>
+        <message>
+            <location filename="settings_pages/import_theme_dialog.py" line="0" />
+            <source>选择主题压缩包</source>
+            <translation>选择主题压缩包</translation>
+        </message>
+        <message>
+            <location filename="settings_pages/import_theme_dialog.py" line="0" />
+            <source>主题压缩包 (*.zip)</source>
+            <translation>主题压缩包 (*.zip)</translation>
+        </message>
+        <message>
+            <location filename="settings_pages/import_theme_dialog.py" line="0" />
+            <source>取消</source>
+            <translation>取消</translation>
+        </message>
+        <message>
+            <location filename="settings_pages/import_theme_dialog.py" line="0" />
+            <source>导入</source>
+            <translation>导入</translation>
+        </message>
+    </context>
     <context>
         <name>UpdatePage</name>
         <message>
@@ -1315,7 +1408,38 @@ WeChatpay.png</source>
             <source>切换主题: %1</source>
             <translation type="unfinished" />
         </message>
-    <message><source>赛博风</source><translation>赛博风</translation></message></context>
+    <message><source>赛博风</source><translation>赛博风</translation></message>
+        <message>
+            <location filename="theme_manager.py" line="0" />
+            <source>文件不存在</source>
+            <translation>文件不存在</translation>
+        </message>
+        <message>
+            <location filename="theme_manager.py" line="0" />
+            <source>无法解压压缩包</source>
+            <translation>无法解压压缩包</translation>
+        </message>
+        <message>
+            <location filename="theme_manager.py" line="0" />
+            <source>压缩包缺少必需素材</source>
+            <translation>压缩包缺少必需素材</translation>
+        </message>
+        <message>
+            <location filename="theme_manager.py" line="0" />
+            <source>主题校验未通过</source>
+            <translation>主题校验未通过</translation>
+        </message>
+        <message>
+            <location filename="theme_manager.py" line="0" />
+            <source>内置主题不可删除</source>
+            <translation>内置主题不可删除</translation>
+        </message>
+        <message>
+            <location filename="theme_manager.py" line="0" />
+            <source>主题不存在</source>
+            <translation>主题不存在</translation>
+        </message>
+</context>
     <context>
         <name>Constants</name>
         <message>

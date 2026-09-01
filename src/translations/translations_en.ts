@@ -780,7 +780,100 @@ New announcement!</translation>
             <source>着色强度</source>
             <translation>Tint Strength</translation>
         </message>
+        <message>
+            <location filename="settings_pages/theme_page.py" line="0" />
+            <source>导入主题</source>
+            <translation>Import Theme</translation>
+        </message>
+        <message>
+            <location filename="settings_pages/theme_page.py" line="0" />
+            <source>删除主题</source>
+            <translation>Delete Theme</translation>
+        </message>
+        <message>
+            <location filename="settings_pages/theme_page.py" line="0" />
+            <source>内置主题不可删除</source>
+            <translation>Built-in themes cannot be deleted</translation>
+        </message>
+        <message>
+            <location filename="settings_pages/theme_page.py" line="0" />
+            <source>确定删除主题「%1」吗？此操作不可撤销</source>
+            <translation>Are you sure you want to delete theme "%1"? This cannot be undone.</translation>
+        </message>
+        <message>
+            <location filename="settings_pages/theme_page.py" line="0" />
+            <source>删除失败</source>
+            <translation>Delete failed</translation>
+        </message>
 </context>
+    <context>
+        <name>ImportThemeDialog</name>
+        <message>
+            <location filename="settings_pages/import_theme_dialog.py" line="0" />
+            <source>导入主题</source>
+            <translation>Import Theme</translation>
+        </message>
+        <message>
+            <location filename="settings_pages/import_theme_dialog.py" line="0" />
+            <source>选择压缩包</source>
+            <translation>Select archive</translation>
+        </message>
+        <message>
+            <location filename="settings_pages/import_theme_dialog.py" line="0" />
+            <source>浏览...</source>
+            <translation>Browse...</translation>
+        </message>
+        <message>
+            <location filename="settings_pages/import_theme_dialog.py" line="0" />
+            <source>点击右侧按钮选择 .zip 文件</source>
+            <translation>Click the button on the right to select a .zip file</translation>
+        </message>
+        <message>
+            <location filename="settings_pages/import_theme_dialog.py" line="0" />
+            <source>校验结果</source>
+            <translation>Validation result</translation>
+        </message>
+        <message>
+            <location filename="settings_pages/import_theme_dialog.py" line="0" />
+            <source>主题名称</source>
+            <translation>Theme name</translation>
+        </message>
+        <message>
+            <location filename="settings_pages/import_theme_dialog.py" line="0" />
+            <source>缺少</source>
+            <translation>Missing</translation>
+        </message>
+        <message>
+            <location filename="settings_pages/import_theme_dialog.py" line="0" />
+            <source>校验通过</source>
+            <translation>Validation passed</translation>
+        </message>
+        <message>
+            <location filename="settings_pages/import_theme_dialog.py" line="0" />
+            <source>缺失可选素材</source>
+            <translation>Missing optional assets</translation>
+        </message>
+        <message>
+            <location filename="settings_pages/import_theme_dialog.py" line="0" />
+            <source>选择主题压缩包</source>
+            <translation>Select theme archive</translation>
+        </message>
+        <message>
+            <location filename="settings_pages/import_theme_dialog.py" line="0" />
+            <source>主题压缩包 (*.zip)</source>
+            <translation>Theme archive (*.zip)</translation>
+        </message>
+        <message>
+            <location filename="settings_pages/import_theme_dialog.py" line="0" />
+            <source>取消</source>
+            <translation>Cancel</translation>
+        </message>
+        <message>
+            <location filename="settings_pages/import_theme_dialog.py" line="0" />
+            <source>导入</source>
+            <translation>Import</translation>
+        </message>
+    </context>
     <context>
         <name>UpdatePage</name>
         <message>
@@ -1317,7 +1410,38 @@ I will keep improving DesktopWidget!
             <source>切换主题: %1</source>
             <translation>Switched theme: %1</translation>
         </message>
-    <message><source>赛博风</source><translation>Cyber Style</translation></message></context>
+    <message><source>赛博风</source><translation>Cyber Style</translation></message>
+        <message>
+            <location filename="theme_manager.py" line="0" />
+            <source>文件不存在</source>
+            <translation>File does not exist</translation>
+        </message>
+        <message>
+            <location filename="theme_manager.py" line="0" />
+            <source>无法解压压缩包</source>
+            <translation>Unable to extract archive</translation>
+        </message>
+        <message>
+            <location filename="theme_manager.py" line="0" />
+            <source>压缩包缺少必需素材</source>
+            <translation>Archive missing required assets</translation>
+        </message>
+        <message>
+            <location filename="theme_manager.py" line="0" />
+            <source>主题校验未通过</source>
+            <translation>Theme validation failed</translation>
+        </message>
+        <message>
+            <location filename="theme_manager.py" line="0" />
+            <source>内置主题不可删除</source>
+            <translation>Built-in themes cannot be deleted</translation>
+        </message>
+        <message>
+            <location filename="theme_manager.py" line="0" />
+            <source>主题不存在</source>
+            <translation>Theme does not exist</translation>
+        </message>
+</context>
     <context>
         <name>Constants</name>
         <message>

@@ -39,7 +39,8 @@ class UpdatePage(QWidget):
 
         self.setup_ui()
         self.load_channel_setting()
-        self.check_update_manually()
+        # 创建时不发起请求，复用主窗口已有的检查结果
+        self._sync_from_main_window()
 
     def setup_ui(self):
         layout = QVBoxLayout(self)
@@ -171,6 +172,30 @@ class UpdatePage(QWidget):
         self.downloaded_setup_path = None
 
 
+    def _sync_from_main_window(self):
+        """尝试复用主窗口已有的检查结果，避免重复请求。"""
+        parent = self.parent_dialog
+        if parent is None or not hasattr(parent, '_main_window'):
+            return
+        mw = parent._main_window
+        if mw is None:
+            return
+        status = getattr(mw, 'update_check_status', 'idle')
+        if status == 'checking':
+            self.update_status_label.setText(self.tr("正在检查..."))
+            self.check_update_btn.setEnabled(False)
+            return
+        result = getattr(mw, 'latest_version_info', None)
+        if result and getattr(mw, 'has_update', False):
+            self.apply_result(result)
+        elif status in ('no_update', 'failed'):
+            latest = result.get('latest_version', VERSION) if result else VERSION
+            self.latest_version_label.setText(self.tr("最新版本：") + latest)
+            if status == 'no_update':
+                self.update_status_label.setText(self.tr("已是最新版本"))
+            else:
+                self.update_status_label.setText(self.tr("检查失败"))
+
     # ---------- 更新检查 ----------
     def check_update_manually(self):
         if self.downloaded_setup_path and os.path.exists(self.downloaded_setup_path):
@@ -198,6 +223,10 @@ class UpdatePage(QWidget):
 
     def on_check_finished(self, result):
         self.check_update_btn.setEnabled(True)
+        self.apply_result(result)
+
+    def apply_result(self, result):
+        """应用更新检查结果（手动检查与主窗口推送共用）。"""
 
         if "error" in result:
             self.update_status_label.setText(self.tr("检查失败：") + result['error'])

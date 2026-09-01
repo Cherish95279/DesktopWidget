@@ -1,4 +1,4 @@
-﻿import sys
+import sys
 import os
 import subprocess
 from datetime import datetime
@@ -48,23 +48,10 @@ class MainWindow(PaintMixin, PerfMixin, WeatherMixin, LifecycleMixin, ServicesMi
         super().__init__()
 
         # ===== 开机自启初始化（首次运行默认开启） =====
-        try:
-            from PyQt6.QtCore import QSettings
-            from .autostart import set_autostart, get_autostart_detail
-            settings = QSettings("MyDesktopApp", "WeatherSettings")
-            autostart_on = settings.value("autostart", True, type=bool)
-            detail = get_autostart_detail()
-            # 仅在“应用还能控制”且当前未开启时尝试开启，
-            # DisabledByUser 时 request_enable_async 不会再弹提示，跳过避免空跑
-            if autostart_on and detail["available"] and not detail["enabled"] and not detail["blocked_by_user"]:
-                set_autostart(True)
-                detail = get_autostart_detail()
-            # 同步缓存到系统真实状态，避免 QSettings 与系统脱节
-            if detail["available"]:
-                settings.setValue("autostart", detail["enabled"])
-                settings.sync()
-        except Exception:
-            pass
+        # 延后到事件循环启动后执行：MSIX 首次启动需 request_enable_async 同步等待
+        # WinRT 异步，在 __init__ 里执行会阻塞主线程，赶在任务栏窗口嵌入完成前
+        # 打乱 SetParent/SetWindowPos 时序，导致信息条落点错位（仅首次启动复现）。
+        QTimer.singleShot(1000, self._init_autostart)
         TranslatorManager().init_translator(QApplication.instance())
         TranslatorManager().on_language_changed(self._on_language_changed)
         self._init_i18n()
@@ -216,6 +203,25 @@ class MainWindow(PaintMixin, PerfMixin, WeatherMixin, LifecycleMixin, ServicesMi
         self.move_to_top_right()
         if getattr(self.tray, "_main_window_visible", True):
             self.show()
+
+    def _init_autostart(self):
+        """开机自启初始化（延迟执行，避免阻塞任务栏嵌入）。"""
+        try:
+            from .autostart import set_autostart, get_autostart_detail
+            settings = QSettings("MyDesktopApp", "WeatherSettings")
+            autostart_on = settings.value("autostart", True, type=bool)
+            detail = get_autostart_detail()
+            # 仅在“应用还能控制”且当前未开启时尝试开启，
+            # DisabledByUser 时 request_enable_async 不会再弹提示，跳过避免空跑
+            if autostart_on and detail["available"] and not detail["enabled"] and not detail["blocked_by_user"]:
+                set_autostart(True)
+                detail = get_autostart_detail()
+            # 同步缓存到系统真实状态，避免 QSettings 与系统脱节
+            if detail["available"]:
+                settings.setValue("autostart", detail["enabled"])
+                settings.sync()
+        except Exception:
+            pass
 
     # ===== 新增：获取天气状态（供 ping_client 调用） =====
     def get_weather_status(self) -> str:

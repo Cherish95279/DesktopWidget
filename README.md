@@ -217,6 +217,14 @@ Personalize your desktop widget with:
 
 Theme changes apply instantly.
 
+### 🎨 Custom Themes
+
+DesktopWidget supports creating and importing custom themes.
+
+If you want to create your own theme, see:
+
+➡️ **[Theme Development Guide](docs/THEME_DEV_GUIDE_EN.md)**
+
 ---
 
 ## ⚙ System Features

@@ -5,6 +5,7 @@ from PyQt6.QtWidgets import QColorDialog
 from ..constants import DEFAULT_THEME, THEME_PRESETS
 from PyQt6.QtCore import QCoreApplication
 from ..theme_manager import get_theme_manager
+from .import_theme_dialog import ImportThemeDialog
 
 
 # ===== 统一下拉框样式 =====
@@ -22,6 +23,27 @@ COMBO_STYLE = """
         background: #e6f4ff;
         border: 1px solid #1677ff;
         color: #1677ff;
+    }
+"""
+
+
+BTN_STYLE = """
+    QPushButton {
+        font-size: 12px;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        background: #f5f5f5;
+        color: #333;
+    }
+    QPushButton:hover {
+        background: #e6f4ff;
+        border: 1px solid #1677ff;
+        color: #1677ff;
+    }
+    QPushButton:disabled {
+        color: #aaa;
+        background: #f0f0f0;
+        border: 1px solid #ddd;
     }
 """
 
@@ -47,6 +69,7 @@ class ThemePage(QWidget):
 
         self._create_label_row(main_layout)
         self._create_control_row(main_layout)
+        self._create_import_delete_row(main_layout)
         self._create_opacity_section(main_layout)
         self._create_tint_section(main_layout)
         self._create_reset_button(main_layout)
@@ -222,6 +245,83 @@ class ThemePage(QWidget):
 
         parent_layout.addLayout(btn_row)
 
+    def _create_import_delete_row(self, parent_layout):
+        """创建导入/删除主题按钮行"""
+        row = QHBoxLayout()
+        row.setSpacing(10)
+        row.setContentsMargins(0, 0, 0, 0)
+
+        self.import_btn = QPushButton(self.tr("导入主题"))
+        self.import_btn.setFixedSize(90, 28)
+        self.import_btn.setStyleSheet(BTN_STYLE)
+        self.import_btn.clicked.connect(self._on_import_theme)
+        row.addWidget(self.import_btn)
+
+        row.addStretch()
+
+        self.delete_btn = QPushButton(self.tr("删除主题"))
+        self.delete_btn.setFixedSize(90, 28)
+        self.delete_btn.setStyleSheet(BTN_STYLE)
+        self.delete_btn.clicked.connect(self._on_delete_theme)
+        row.addWidget(self.delete_btn)
+
+        parent_layout.addLayout(row)
+        # 主题切换时同步删除按钮可用状态
+        self.theme_combo.currentTextChanged.connect(self._update_delete_button_state)
+
+    # ---------- 导入 / 删除主题 ----------
+    def _update_delete_button_state(self, _text=None):
+        current = self.theme_combo.currentText()
+        if current and not self.theme_manager.is_builtin(current):
+            self.delete_btn.setEnabled(True)
+            self.delete_btn.setToolTip("")
+        else:
+            self.delete_btn.setEnabled(False)
+            self.delete_btn.setToolTip(self.tr("内置主题不可删除"))
+
+    def _on_import_theme(self):
+        dialog = ImportThemeDialog(self.theme_manager, self)
+        if dialog.exec() == QDialog.DialogCode.Accepted:
+            new_name = dialog.imported_theme_name
+            if new_name:
+                self.theme_manager.switch_theme(new_name)
+                self._refresh_theme_combo(select_name=new_name)
+                self.theme_changed.emit()
+                self._force_reload_images()
+
+    def _on_delete_theme(self):
+        current = self.theme_combo.currentText()
+        if not current or self.theme_manager.is_builtin(current):
+            return
+        confirm = QMessageBox.question(
+            self, self.tr("删除主题"),
+            self.tr("确定删除主题「%1」吗？此操作不可撤销").arg(current),
+            QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
+            QMessageBox.StandardButton.No,
+        )
+        if confirm != QMessageBox.StandardButton.Yes:
+            return
+        success, msg = self.theme_manager.delete_theme(current)
+        if success:
+            self._refresh_theme_combo(select_name=msg)
+            self.theme_changed.emit()
+            self._force_reload_images()
+        else:
+            QMessageBox.warning(self, self.tr("删除失败"), msg)
+
+    def _refresh_theme_combo(self, select_name=None):
+        self._updating = True
+        try:
+            self.theme_combo.clear()
+            self.theme_combo.addItems(self.theme_manager.list_themes())
+            target = select_name or self.theme_manager.get_current_theme()
+            idx = self.theme_combo.findText(target)
+            if idx >= 0:
+                self.theme_combo.setCurrentIndex(idx)
+        finally:
+            self._updating = False
+        self._update_delete_button_state()
+
     # ---------- 信号处理 ----------
     def _on_theme_changed(self, theme_name):
         if self._updating:
@@ -375,6 +475,8 @@ class ThemePage(QWidget):
                 else:
                     btn.setChecked(False)
             self.custom_btn.setChecked(not found)
+
+            self._update_delete_button_state()
 
         finally:
             self._updating = False

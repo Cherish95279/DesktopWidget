@@ -104,6 +104,7 @@ class ServicesMixin:
         if "error" in result:
             self.update_check_status = "failed"
             self.has_update = False
+            self._push_update_result(result)
             return
         if result.get("has_update", False):
             self.has_update = True
@@ -115,6 +116,16 @@ class ServicesMixin:
         else:
             self.has_update = False
             self.update_check_status = "no_update"
+        self._push_update_result(result)
+
+    def _push_update_result(self, result):
+        """将更新检查结果推送给已打开的更新页（避免重复请求）。"""
+        if (hasattr(self, 'settings_dialog') and self.settings_dialog
+                and getattr(self.settings_dialog, 'update_page', None) is not None):
+            try:
+                self.settings_dialog.update_page.apply_result(result)
+            except Exception:
+                pass
 
     def get_latest_version_info(self):
         return self.latest_version_info if self.has_update else None
