@@ -5,6 +5,40 @@ All notable changes to DesktopWidget are documented in this file.
 > Chinese version:
 > [CHANGELOG_CN.md](CHANGELOG_CN.md)
 
+---
+
+# 🚀 v1.5.5 (2026-09-05)
+
+## 🧩 Custom Plugin Features
+
+\- Added a display item content pool plugin feature, allowing users to create and upload their own display item configurations.
+
+\- Custom plugins can now be used to extend the display content available in the information bar.
+
+## 🎨 Custom Theme Features
+
+\- Added custom theme configuration, allowing users to create, upload, and import their preferred themes.
+
+\- Further improved theme customization, providing users with more flexible options for the interface appearance.
+
+## 📦 Plugin & Theme Repository
+
+\- The custom plugin and theme repository has been established, providing a unified platform for sharing plugins and themes.
+
+\- Developers who submit plugins or themes to the repository and pass the review may receive a small reward.
+
+## 🛠️ Microsoft Store Fix
+
+\- Fixed an issue where shortcuts became invalid after updating the Microsoft Store version.
+
+## 🐛 Stability Improvements
+
+\- Optimized other known issues.
+
+\- Improved overall application stability and user experience.
+
+---
+
 # 🚀 v1.5.4 (2026-09-01)
 
 ## 🖱️ System Tray Menu
