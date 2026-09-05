@@ -254,4 +254,25 @@ class PaintMixin:
                     painter.drawText(x, y, w, h,
                                      Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter,
                                      text)
+            else:
+                # 插件内容渲染
+                try:
+                    from ..plugin_manager import get_plugin_manager
+                    pm = get_plugin_manager()
+                    if pm.is_plugin_key(configured_key):
+                        plugin_text = pm.render_short(configured_key, self._i18n)
+                        if isinstance(plugin_text, list):
+                            lines = plugin_text
+                            line_height = h // 2
+                            for idx, line in enumerate(lines):
+                                if line:
+                                    painter.drawText(x, y + idx * line_height, w, line_height,
+                                                     Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter,
+                                                     line)
+                        elif plugin_text:
+                            painter.drawText(x, y, w, h,
+                                             Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter,
+                                             plugin_text)
+                except Exception:
+                    pass
 

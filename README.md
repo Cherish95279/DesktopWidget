@@ -157,9 +157,9 @@ Released under the MIT License, allowing users to learn, modify, and improve the
   - Freely arrange displayed components
   - Changes apply instantly without restarting
 
-If you want to add new display items to the content pool, see:
+If you want to develop content pool plugins, see:
 
-> ➡️ **[Content Pool Developer Guide](docs/CONTENT_POOL_DEV_GUIDE_EN.md)**
+> ➡️ **[Plugin Developer Guide](docs/PLUGIN_DEV_GUIDE_EN.md)**
 
 ---
 

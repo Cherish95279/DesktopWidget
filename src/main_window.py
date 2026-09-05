@@ -204,6 +204,17 @@ class MainWindow(PaintMixin, PerfMixin, WeatherMixin, LifecycleMixin, ServicesMi
         if getattr(self.tray, "_main_window_visible", True):
             self.show()
 
+        # 延迟修复桌面快捷方式（MSIX 版本更新后路径失效问题）
+        QTimer.singleShot(2000, self._fix_shortcut)
+
+    def _fix_shortcut(self):
+        """检测并修复桌面快捷方式（MSIX 版本更新后路径失效问题）。"""
+        try:
+            from .shortcut_fixer import fix_desktop_shortcut
+            fix_desktop_shortcut()
+        except Exception:
+            pass
+
     def _init_autostart(self):
         """开机自启初始化（延迟执行，避免阻塞任务栏嵌入）。"""
         try:

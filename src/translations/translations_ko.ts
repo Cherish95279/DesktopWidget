@@ -468,7 +468,12 @@
             <source>关</source>
             <translation>끄기</translation>
         </message>
-    </context>
+            <message>
+            <location filename="settings_pages/display_page.py" line="0" />
+            <source>管理插件</source>
+            <translation>플러그인 관리</translation>
+        </message>
+</context>
             <context>
         <name>WeatherPage</name>
         <message>
@@ -778,6 +783,11 @@
             <location filename="settings_pages/theme_page.py" line="0" />
             <source>着色强度</source>
             <translation>채색 강도</translation>
+        </message>
+        <message>
+            <location filename="settings_pages/theme_page.py" line="0" />
+            <source>管理主题</source>
+            <translation>테마 관리</translation>
         </message>
 </context>
     <context>
@@ -1721,6 +1731,259 @@ DesktopWidget을 계속 개선하겠습니다!
             <location filename="widgets/detail_popup.py" line="0" />
             <source>北西北</source>
             <translation>북북서</translation>
+        </message>
+    </context>
+    <context>
+        <name>ManageThemeDialog</name>
+        <message>
+            <location filename="settings_pages/manage_theme_dialog.py" line="0" />
+            <source>管理主题</source>
+            <translation>테마 관리</translation>
+        </message>
+        <message>
+            <location filename="settings_pages/manage_theme_dialog.py" line="0" />
+            <source>导入主题</source>
+            <translation>테마 가져오기</translation>
+        </message>
+        <message>
+            <location filename="settings_pages/manage_theme_dialog.py" line="0" />
+            <source>点击右侧按钮选择 .zip 文件</source>
+            <translation>오른쪽 버튼을 클릭하여 .zip 파일을 선택하세요</translation>
+        </message>
+        <message>
+            <location filename="settings_pages/manage_theme_dialog.py" line="0" />
+            <source>浏览...</source>
+            <translation>찾아보기...</translation>
+        </message>
+        <message>
+            <location filename="settings_pages/manage_theme_dialog.py" line="0" />
+            <source>更多主题下载</source>
+            <translation>테마 다운로드</translation>
+        </message>
+        <message>
+            <location filename="settings_pages/manage_theme_dialog.py" line="0" />
+            <source>主题制作指南</source>
+            <translation>테마 제작 가이드</translation>
+        </message>
+        <message>
+            <location filename="settings_pages/manage_theme_dialog.py" line="0" />
+            <source>导入</source>
+            <translation>가져오기</translation>
+        </message>
+        <message>
+            <location filename="settings_pages/manage_theme_dialog.py" line="0" />
+            <source>已安装主题</source>
+            <translation>설치된 테마</translation>
+        </message>
+        <message>
+            <location filename="settings_pages/manage_theme_dialog.py" line="0" />
+            <source>关闭</source>
+            <translation>닫기</translation>
+        </message>
+        <message>
+            <location filename="settings_pages/manage_theme_dialog.py" line="0" />
+            <source>删除所选</source>
+            <translation>선택 삭제</translation>
+        </message>
+        <message>
+            <location filename="settings_pages/manage_theme_dialog.py" line="0" />
+            <source>选择主题压缩包</source>
+            <translation>테마 압축 파일 선택</translation>
+        </message>
+        <message>
+            <location filename="settings_pages/manage_theme_dialog.py" line="0" />
+            <source>主题压缩包 (*.zip)</source>
+            <translation>테마 압축 파일 (*.zip)</translation>
+        </message>
+        <message>
+            <location filename="settings_pages/manage_theme_dialog.py" line="0" />
+            <source>主题名称</source>
+            <translation>테마 이름</translation>
+        </message>
+        <message>
+            <location filename="settings_pages/manage_theme_dialog.py" line="0" />
+            <source>缺少</source>
+            <translation>누락</translation>
+        </message>
+        <message>
+            <location filename="settings_pages/manage_theme_dialog.py" line="0" />
+            <source>校验通过</source>
+            <translation>검증 통과</translation>
+        </message>
+        <message>
+            <location filename="settings_pages/manage_theme_dialog.py" line="0" />
+            <source>缺失可选素材</source>
+            <translation>선택적 자산 누락</translation>
+        </message>
+        <message>
+            <location filename="settings_pages/manage_theme_dialog.py" line="0" />
+            <source>内置</source>
+            <translation>내장</translation>
+        </message>
+        <message>
+            <location filename="settings_pages/manage_theme_dialog.py" line="0" />
+            <source>勾选要删除的自定义主题，内置主题不可删除</source>
+            <translation>삭제할 사용자 지정 테마를 선택하세요. 내장 테마는 삭제할 수 없습니다.</translation>
+        </message>
+        <message>
+            <location filename="settings_pages/manage_theme_dialog.py" line="0" />
+            <source>已选择 {} 个主题</source>
+            <translation>{}개 테마 선택됨</translation>
+        </message>
+        <message>
+            <location filename="settings_pages/manage_theme_dialog.py" line="0" />
+            <source>删除所选({})</source>
+            <translation>선택 삭제 ({})</translation>
+        </message>
+        <message>
+            <location filename="settings_pages/manage_theme_dialog.py" line="0" />
+            <source>确认删除</source>
+            <translation>삭제 확인</translation>
+        </message>
+        <message>
+            <location filename="settings_pages/manage_theme_dialog.py" line="0" />
+            <source>确定删除以下主题吗？此操作不可撤销：
+
+{}</source>
+            <translation>다음 테마를 삭제하시겠습니까? 이 작업은 취소할 수 없습니다:
+
+{}</translation>
+        </message>
+        <message>
+            <location filename="settings_pages/manage_theme_dialog.py" line="0" />
+            <source>部分删除失败</source>
+            <translation>일부 삭제 실패</translation>
+        </message>
+        <message>
+            <location filename="settings_pages/manage_theme_dialog.py" line="0" />
+            <source>以下主题删除失败：
+{}</source>
+            <translation>다음 테마 삭제에 실패했습니다:
+{}</translation>
+        </message>
+    </context>
+    <context>
+        <name>ManagePluginDialog</name>
+        <message>
+            <location filename="settings_pages/manage_plugin_dialog.py" line="0" />
+            <source>管理插件</source>
+            <translation>플러그인 관리</translation>
+        </message>
+        <message>
+            <location filename="settings_pages/manage_plugin_dialog.py" line="0" />
+            <source>导入插件</source>
+            <translation>플러그인 가져오기</translation>
+        </message>
+        <message>
+            <location filename="settings_pages/manage_plugin_dialog.py" line="0" />
+            <source>点击右侧按钮选择 .zip 文件</source>
+            <translation>오른쪽 버튼을 클릭하여 .zip 파일을 선택하세요</translation>
+        </message>
+        <message>
+            <location filename="settings_pages/manage_plugin_dialog.py" line="0" />
+            <source>浏览...</source>
+            <translation>찾아보기...</translation>
+        </message>
+        <message>
+            <location filename="settings_pages/manage_plugin_dialog.py" line="0" />
+            <source>更多插件下载</source>
+            <translation>플러그인 다운로드</translation>
+        </message>
+        <message>
+            <location filename="settings_pages/manage_plugin_dialog.py" line="0" />
+            <source>插件开发文档</source>
+            <translation>플러그인 개발 가이드</translation>
+        </message>
+        <message>
+            <location filename="settings_pages/manage_plugin_dialog.py" line="0" />
+            <source>导入</source>
+            <translation>가져오기</translation>
+        </message>
+        <message>
+            <location filename="settings_pages/manage_plugin_dialog.py" line="0" />
+            <source>已安装插件</source>
+            <translation>설치된 플러그인</translation>
+        </message>
+        <message>
+            <location filename="settings_pages/manage_plugin_dialog.py" line="0" />
+            <source>关闭</source>
+            <translation>닫기</translation>
+        </message>
+        <message>
+            <location filename="settings_pages/manage_plugin_dialog.py" line="0" />
+            <source>删除所选</source>
+            <translation>선택 삭제</translation>
+        </message>
+        <message>
+            <location filename="settings_pages/manage_plugin_dialog.py" line="0" />
+            <source>选择插件压缩包</source>
+            <translation>플러그인 압축 파일 선택</translation>
+        </message>
+        <message>
+            <location filename="settings_pages/manage_plugin_dialog.py" line="0" />
+            <source>插件压缩包 (*.zip)</source>
+            <translation>플러그인 압축 파일 (*.zip)</translation>
+        </message>
+        <message>
+            <location filename="settings_pages/manage_plugin_dialog.py" line="0" />
+            <source>插件名称</source>
+            <translation>플러그인 이름</translation>
+        </message>
+        <message>
+            <location filename="settings_pages/manage_plugin_dialog.py" line="0" />
+            <source>校验未通过</source>
+            <translation>검증 실패</translation>
+        </message>
+        <message>
+            <location filename="settings_pages/manage_plugin_dialog.py" line="0" />
+            <source>校验通过</source>
+            <translation>검증 통과</translation>
+        </message>
+        <message>
+            <location filename="settings_pages/manage_plugin_dialog.py" line="0" />
+            <source>已禁用</source>
+            <translation>비활성화됨</translation>
+        </message>
+        <message>
+            <location filename="settings_pages/manage_plugin_dialog.py" line="0" />
+            <source>勾选要删除的插件</source>
+            <translation>삭제할 플러그인을 선택하세요</translation>
+        </message>
+        <message>
+            <location filename="settings_pages/manage_plugin_dialog.py" line="0" />
+            <source>已选择 {} 个插件</source>
+            <translation>{}개 플러그인 선택됨</translation>
+        </message>
+        <message>
+            <location filename="settings_pages/manage_plugin_dialog.py" line="0" />
+            <source>删除所选({})</source>
+            <translation>선택 삭제 ({})</translation>
+        </message>
+        <message>
+            <location filename="settings_pages/manage_plugin_dialog.py" line="0" />
+            <source>确认删除</source>
+            <translation>삭제 확인</translation>
+        </message>
+        <message>
+            <location filename="settings_pages/manage_plugin_dialog.py" line="0" />
+            <source>确定删除以下插件吗？此操作不可撤销：
+
+{}</source>
+            <translation>다음 플러그인을 삭제하시겠습니까? 이 작업은 취소할 수 없습니다:
+
+{}</translation>
+        </message>
+        <message>
+            <location filename="settings_pages/manage_plugin_dialog.py" line="0" />
+            <source>部分删除失败</source>
+            <translation>일부 삭제 실패</translation>
+        </message>
+        <message>
+            <location filename="settings_pages/manage_plugin_dialog.py" line="0" />
+            <source>以下插件删除失败：
+{}</source>
+            <translation>다음 플러그인 삭제에 실패했습니다:
+{}</translation>
         </message>
     </context>
 </TS>

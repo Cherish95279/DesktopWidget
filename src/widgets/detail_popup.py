@@ -430,6 +430,18 @@ class DetailPopup(QWidget):
                 except Exception:
                     pass
 
+        # 插件内容渲染
+        if not lines:
+            try:
+                from ..plugin_manager import get_plugin_manager
+                pm = get_plugin_manager()
+                if pm.is_plugin_key(content_key):
+                    plugin_lines = pm.render_detail(content_key, is_pro, {})
+                    if plugin_lines:
+                        lines = plugin_lines
+            except Exception:
+                pass
+
         if not lines:
             lines.append(self.tr("暂无数据"))
 

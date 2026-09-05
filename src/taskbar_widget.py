@@ -143,4 +143,12 @@ class TaskbarWidget(QWidget):
             val = mw.disk_usage.get(key, 926)
             return '{}: {}%'.format(letter, int(val))
         else:
+            # 插件内容渲染
+            try:
+                from .plugin_manager import get_plugin_manager
+                pm = get_plugin_manager()
+                if pm.is_plugin_key(key):
+                    return pm.render_taskbar(key, self._i18n)
+            except Exception:
+                pass
             return ''

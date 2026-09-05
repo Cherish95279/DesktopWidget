@@ -468,7 +468,12 @@ Neue Ankündigung!</translation>
             <source>关</source>
             <translation>Aus</translation>
         </message>
-    </context>
+            <message>
+            <location filename="settings_pages/display_page.py" line="0" />
+            <source>管理插件</source>
+            <translation>Plugins verwalten</translation>
+        </message>
+</context>
             <context>
         <name>WeatherPage</name>
         <message>
@@ -778,6 +783,11 @@ Neue Ankündigung!</translation>
             <location filename="settings_pages/theme_page.py" line="0" />
             <source>着色强度</source>
             <translation>Farbintensität</translation>
+        </message>
+        <message>
+            <location filename="settings_pages/theme_page.py" line="0" />
+            <source>管理主题</source>
+            <translation>Themen verwalten</translation>
         </message>
 </context>
     <context>
@@ -1720,6 +1730,259 @@ Ich werde DesktopWidget verbessern!
             <location filename="widgets/detail_popup.py" line="0" />
             <source>北西北</source>
             <translation>NNW</translation>
+        </message>
+    </context>
+    <context>
+        <name>ManageThemeDialog</name>
+        <message>
+            <location filename="settings_pages/manage_theme_dialog.py" line="0" />
+            <source>管理主题</source>
+            <translation>Themen verwalten</translation>
+        </message>
+        <message>
+            <location filename="settings_pages/manage_theme_dialog.py" line="0" />
+            <source>导入主题</source>
+            <translation>Thema importieren</translation>
+        </message>
+        <message>
+            <location filename="settings_pages/manage_theme_dialog.py" line="0" />
+            <source>点击右侧按钮选择 .zip 文件</source>
+            <translation>Klicken Sie auf die Schaltfläche rechts, um eine .zip-Datei auszuwählen</translation>
+        </message>
+        <message>
+            <location filename="settings_pages/manage_theme_dialog.py" line="0" />
+            <source>浏览...</source>
+            <translation>Durchsuchen...</translation>
+        </message>
+        <message>
+            <location filename="settings_pages/manage_theme_dialog.py" line="0" />
+            <source>更多主题下载</source>
+            <translation>Weitere Themen</translation>
+        </message>
+        <message>
+            <location filename="settings_pages/manage_theme_dialog.py" line="0" />
+            <source>主题制作指南</source>
+            <translation>Theme-Entwicklungsleitfaden</translation>
+        </message>
+        <message>
+            <location filename="settings_pages/manage_theme_dialog.py" line="0" />
+            <source>导入</source>
+            <translation>Importieren</translation>
+        </message>
+        <message>
+            <location filename="settings_pages/manage_theme_dialog.py" line="0" />
+            <source>已安装主题</source>
+            <translation>Installierte Themen</translation>
+        </message>
+        <message>
+            <location filename="settings_pages/manage_theme_dialog.py" line="0" />
+            <source>关闭</source>
+            <translation>Schließen</translation>
+        </message>
+        <message>
+            <location filename="settings_pages/manage_theme_dialog.py" line="0" />
+            <source>删除所选</source>
+            <translation>Auswahl löschen</translation>
+        </message>
+        <message>
+            <location filename="settings_pages/manage_theme_dialog.py" line="0" />
+            <source>选择主题压缩包</source>
+            <translation>Theme-Archiv auswählen</translation>
+        </message>
+        <message>
+            <location filename="settings_pages/manage_theme_dialog.py" line="0" />
+            <source>主题压缩包 (*.zip)</source>
+            <translation>Theme-Archiv (*.zip)</translation>
+        </message>
+        <message>
+            <location filename="settings_pages/manage_theme_dialog.py" line="0" />
+            <source>主题名称</source>
+            <translation>Theme-Name</translation>
+        </message>
+        <message>
+            <location filename="settings_pages/manage_theme_dialog.py" line="0" />
+            <source>缺少</source>
+            <translation>Fehlt</translation>
+        </message>
+        <message>
+            <location filename="settings_pages/manage_theme_dialog.py" line="0" />
+            <source>校验通过</source>
+            <translation>Validierung bestanden</translation>
+        </message>
+        <message>
+            <location filename="settings_pages/manage_theme_dialog.py" line="0" />
+            <source>缺失可选素材</source>
+            <translation>Optionale Assets fehlen</translation>
+        </message>
+        <message>
+            <location filename="settings_pages/manage_theme_dialog.py" line="0" />
+            <source>内置</source>
+            <translation>Eingebaut</translation>
+        </message>
+        <message>
+            <location filename="settings_pages/manage_theme_dialog.py" line="0" />
+            <source>勾选要删除的自定义主题，内置主题不可删除</source>
+            <translation>Wählen Sie zu löschende benutzerdefinierte Themen aus. Eingebaute Themen können nicht gelöscht werden.</translation>
+        </message>
+        <message>
+            <location filename="settings_pages/manage_theme_dialog.py" line="0" />
+            <source>已选择 {} 个主题</source>
+            <translation>{} Themen ausgewählt</translation>
+        </message>
+        <message>
+            <location filename="settings_pages/manage_theme_dialog.py" line="0" />
+            <source>删除所选({})</source>
+            <translation>Auswahl löschen ({})</translation>
+        </message>
+        <message>
+            <location filename="settings_pages/manage_theme_dialog.py" line="0" />
+            <source>确认删除</source>
+            <translation>Löschen bestätigen</translation>
+        </message>
+        <message>
+            <location filename="settings_pages/manage_theme_dialog.py" line="0" />
+            <source>确定删除以下主题吗？此操作不可撤销：
+
+{}</source>
+            <translation>Möchten Sie die folgenden Themen wirklich löschen? Diese Aktion kann nicht rückgängig gemacht werden:
+
+{}</translation>
+        </message>
+        <message>
+            <location filename="settings_pages/manage_theme_dialog.py" line="0" />
+            <source>部分删除失败</source>
+            <translation>Einige Löschungen fehlgeschlagen</translation>
+        </message>
+        <message>
+            <location filename="settings_pages/manage_theme_dialog.py" line="0" />
+            <source>以下主题删除失败：
+{}</source>
+            <translation>Folgende Themen konnten nicht gelöscht werden:
+{}</translation>
+        </message>
+    </context>
+    <context>
+        <name>ManagePluginDialog</name>
+        <message>
+            <location filename="settings_pages/manage_plugin_dialog.py" line="0" />
+            <source>管理插件</source>
+            <translation>Plugins verwalten</translation>
+        </message>
+        <message>
+            <location filename="settings_pages/manage_plugin_dialog.py" line="0" />
+            <source>导入插件</source>
+            <translation>Plugin importieren</translation>
+        </message>
+        <message>
+            <location filename="settings_pages/manage_plugin_dialog.py" line="0" />
+            <source>点击右侧按钮选择 .zip 文件</source>
+            <translation>Klicken Sie auf die Schaltfläche rechts, um eine .zip-Datei auszuwählen</translation>
+        </message>
+        <message>
+            <location filename="settings_pages/manage_plugin_dialog.py" line="0" />
+            <source>浏览...</source>
+            <translation>Durchsuchen...</translation>
+        </message>
+        <message>
+            <location filename="settings_pages/manage_plugin_dialog.py" line="0" />
+            <source>更多插件下载</source>
+            <translation>Weitere Plugins</translation>
+        </message>
+        <message>
+            <location filename="settings_pages/manage_plugin_dialog.py" line="0" />
+            <source>插件开发文档</source>
+            <translation>Plugin-Entwicklungsleitfaden</translation>
+        </message>
+        <message>
+            <location filename="settings_pages/manage_plugin_dialog.py" line="0" />
+            <source>导入</source>
+            <translation>Importieren</translation>
+        </message>
+        <message>
+            <location filename="settings_pages/manage_plugin_dialog.py" line="0" />
+            <source>已安装插件</source>
+            <translation>Installierte Plugins</translation>
+        </message>
+        <message>
+            <location filename="settings_pages/manage_plugin_dialog.py" line="0" />
+            <source>关闭</source>
+            <translation>Schließen</translation>
+        </message>
+        <message>
+            <location filename="settings_pages/manage_plugin_dialog.py" line="0" />
+            <source>删除所选</source>
+            <translation>Auswahl löschen</translation>
+        </message>
+        <message>
+            <location filename="settings_pages/manage_plugin_dialog.py" line="0" />
+            <source>选择插件压缩包</source>
+            <translation>Plugin-Archiv auswählen</translation>
+        </message>
+        <message>
+            <location filename="settings_pages/manage_plugin_dialog.py" line="0" />
+            <source>插件压缩包 (*.zip)</source>
+            <translation>Plugin-Archiv (*.zip)</translation>
+        </message>
+        <message>
+            <location filename="settings_pages/manage_plugin_dialog.py" line="0" />
+            <source>插件名称</source>
+            <translation>Plugin-Name</translation>
+        </message>
+        <message>
+            <location filename="settings_pages/manage_plugin_dialog.py" line="0" />
+            <source>校验未通过</source>
+            <translation>Validierung fehlgeschlagen</translation>
+        </message>
+        <message>
+            <location filename="settings_pages/manage_plugin_dialog.py" line="0" />
+            <source>校验通过</source>
+            <translation>Validierung bestanden</translation>
+        </message>
+        <message>
+            <location filename="settings_pages/manage_plugin_dialog.py" line="0" />
+            <source>已禁用</source>
+            <translation>Deaktiviert</translation>
+        </message>
+        <message>
+            <location filename="settings_pages/manage_plugin_dialog.py" line="0" />
+            <source>勾选要删除的插件</source>
+            <translation>Wählen Sie zu löschende Plugins aus</translation>
+        </message>
+        <message>
+            <location filename="settings_pages/manage_plugin_dialog.py" line="0" />
+            <source>已选择 {} 个插件</source>
+            <translation>{} Plugins ausgewählt</translation>
+        </message>
+        <message>
+            <location filename="settings_pages/manage_plugin_dialog.py" line="0" />
+            <source>删除所选({})</source>
+            <translation>Auswahl löschen ({})</translation>
+        </message>
+        <message>
+            <location filename="settings_pages/manage_plugin_dialog.py" line="0" />
+            <source>确认删除</source>
+            <translation>Löschen bestätigen</translation>
+        </message>
+        <message>
+            <location filename="settings_pages/manage_plugin_dialog.py" line="0" />
+            <source>确定删除以下插件吗？此操作不可撤销：
+
+{}</source>
+            <translation>Möchten Sie die folgenden Plugins wirklich löschen? Diese Aktion kann nicht rückgängig gemacht werden:
+
+{}</translation>
+        </message>
+        <message>
+            <location filename="settings_pages/manage_plugin_dialog.py" line="0" />
+            <source>部分删除失败</source>
+            <translation>Einige Löschungen fehlgeschlagen</translation>
+        </message>
+        <message>
+            <location filename="settings_pages/manage_plugin_dialog.py" line="0" />
+            <source>以下插件删除失败：
+{}</source>
+            <translation>Folgende Plugins konnten nicht gelöscht werden:
+{}</translation>
         </message>
     </context>
 </TS>

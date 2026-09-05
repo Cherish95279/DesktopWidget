@@ -194,9 +194,9 @@ DesktopWidget 致力于为 Windows 用户提供一个美观、实用且高度可
 - 自由排列显示内容
 - 修改后立即生效，无需重启
 
-如果你想为内容池添加新的显示项，可以参考：
+如果你想开发内容池插件，可以参考：
 
-> ➡️ **[内容池开发指南](docs/CONTENT_POOL_DEV_GUIDE.md)**
+> ➡️ **[插件开发指南](docs/PLUGIN_DEV_GUIDE_CN.md)**
 
 ---
 

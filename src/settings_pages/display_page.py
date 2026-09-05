@@ -1,6 +1,7 @@
 from PyQt6.QtWidgets import *
 from PyQt6.QtCore import *
 from ..constants import DEFAULT_LAYOUT
+from ..plugin_manager import get_plugin_manager
 
 
 # ===== 统一下拉框样式（与 general_page 保持一致） =====
@@ -75,6 +76,10 @@ class DisplayPage(QWidget):
             label = QCoreApplication.translate("Constants", f"{letter}盘")
             self.taskbar_pool.append((dk, label))
         self.taskbar_pool.append(("disk_total", self.tr("磁盘总计")))
+
+        # 加载插件条目
+        self._plugin_keys = set()
+        self._add_plugin_entries()
 
         # 8个位置
         self.slot_defs = [
@@ -176,8 +181,26 @@ class DisplayPage(QWidget):
         info_label.setStyleSheet("color: #888; font-size: 12px; margin: 10px 0;")
         main_layout.addWidget(info_label)
 
-        # 按钮行（恢复默认）
+        # 按钮行（管理插件 + 恢复默认）
         btn_layout = QHBoxLayout()
+        self.plugin_btn = QPushButton(self.tr("管理插件"))
+        self.plugin_btn.setFixedSize(90, 28)
+        self.plugin_btn.setStyleSheet("""
+            QPushButton {
+                font-size: 12px;
+                border: 1px solid #ccc;
+                border-radius: 4px;
+                background: #f5f5f5;
+                color: #333;
+            }
+            QPushButton:hover {
+                background: #e6f4ff;
+                border: 1px solid #1677ff;
+                color: #1677ff;
+            }
+        """)
+        self.plugin_btn.clicked.connect(self._on_manage_plugins)
+        btn_layout.addWidget(self.plugin_btn)
         btn_layout.addStretch()
         restore_btn = QPushButton(self.tr("恢复默认"))
         restore_btn.setFixedSize(90, 28)
@@ -441,6 +464,55 @@ class DisplayPage(QWidget):
         settings = QSettings("MyDesktopApp", "WeatherSettings")
         settings.setValue("hover_enabled", val == "on")
         settings.sync()
+
+    def _add_plugin_entries(self):
+        """将插件条目添加到 content_pool 和 taskbar_pool"""
+        # 先移除旧的插件条目
+        self.content_pool = [
+            (v, t) for v, t in self.content_pool if v not in self._plugin_keys
+        ]
+        self.taskbar_pool = [
+            (v, t) for v, t in self.taskbar_pool if v not in self._plugin_keys
+        ]
+        self._plugin_keys.clear()
+
+        # 从插件管理器获取条目
+        try:
+            pm = get_plugin_manager()
+            # content_pool: 所有插件
+            for key, name in pm.get_entries():
+                # 插入到 "empty" 之前
+                empty_idx = next(
+                    (i for i, (v, _) in enumerate(self.content_pool) if v == "empty"),
+                    len(self.content_pool))
+                self.content_pool.insert(empty_idx, (key, name))
+                self._plugin_keys.add(key)
+
+            # taskbar_pool: 仅支持任务栏的插件
+            for key, name in pm.get_taskbar_entries():
+                self.taskbar_pool.append((key, name))
+                self._plugin_keys.add(key)
+        except Exception:
+            pass
+
+        # 更新 all_values
+        self.all_values = [v for v, _ in self.content_pool]
+
+    def _on_manage_plugins(self):
+        """打开管理插件对话框"""
+        from .manage_plugin_dialog import ManagePluginDialog
+        try:
+            pm = get_plugin_manager()
+            dialog = ManagePluginDialog(pm, self)
+            dialog.exec()
+            # 对话框关闭后刷新插件条目和下拉框
+            self._add_plugin_entries()
+            self._rebuild_combo_options()
+            self._apply_layout_to_ui()
+            self._load_taskbar_setting()
+            self._apply_changes()
+        except Exception as e:
+            print(f"打开管理插件失败: {e}")
 
     def restore_default(self):
         self._loading = True
